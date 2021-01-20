@@ -1,0 +1,16 @@
+{
+  "name": "pixel-streamer",
+  "version": "0.0.1",
+  "description": "lightweight signaling & web server for Unrel Engine",
+  "scripts": {
+    "start": "npm install && node run.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "ws": "^7.1.2"
+  }
+}
