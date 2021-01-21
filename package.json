@@ -5,12 +5,10 @@
   "scripts": {
     "start": "npm install && node run.js"
   },
+  "repository": "https://github.com/JinHengyu/PixelStreamer",
+  "license": "Apache-2.0",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
     "express": "^4.16.2",
-    "express-session": "^1.15.6",
-    "passport": "^0.4.0",
-    "passport-local": "^1.0.0",
     "ws": "^7.1.2"
   }
 }

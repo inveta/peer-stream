@@ -1,9 +1,8 @@
 {
-	"UseHTTPS": false,
-	"httpsPort":443,
-	"UseAuthentication": false,
-	"LogToFile": true,
-	"httpPort":80,
-	"streamerPort":8888,
-	"HomepageFile": "public/index.html"
+  "UseHTTPS": false,
+  "httpsPort": 443,
+  "LogToFile": true,
+  "httpPort": 80,
+  "streamerPort": 8888,
+  "HomepageFile": "public/index.html"
 }
