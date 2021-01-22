@@ -68,8 +68,7 @@ if (UseHTTPS) {
         );
       } else {
         console.error(
-          `unable to get host name from header. Requestor ${
-            req.ip
+          `unable to get host name from header. Requestor ${req.ip
           }, url path: '${req.originalUrl}', available headers ${JSON.stringify(
             req.headers
           )}`
@@ -227,8 +226,6 @@ playerServer.on("connection", function (ws, req) {
       console.log(`<- player ${playerId}: iceCandidate`);
       msg.playerId = playerId;
       streamer.send(JSON.stringify(msg));
-    } else if (msg.type == "stats") {
-      console.log(`<- player ${playerId}: stats\n${msg.data}`);
     } else if (msg.type == "kick") {
       let playersCopy = new Map(players);
       for (let p of playersCopy.values()) {

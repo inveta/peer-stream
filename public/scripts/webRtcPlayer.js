@@ -23,40 +23,35 @@ window.webRtcPlayer = class {
   }
 
   // callbacks: defined outside
-  onWebRtcOffer() {}
-  onWebRtcCandidate() {}
-  onAggregatedStats() {}
-  onDataChannelMessage() {}
-  onDataChannelConnected() {}
+  onWebRtcOffer() { }
+  onWebRtcCandidate() { }
+  onDataChannelMessage() { }
+  onDataChannelConnected() { }
 
   // Private Functions with "_" prefixed
 
   _setupDataChannel(pc, label, options) {
     const self = this;
 
-    try {
-      var datachannel = pc.createDataChannel(label, options);
-      console.log(`Created datachannel (${label})`);
+    var datachannel = pc.createDataChannel(label, options);
+    console.log(`Created datachannel (${label})`);
 
-      datachannel.onopen = function (e) {
-        console.log(`data channel (${label}) connect`);
-        self.onDataChannelConnected();
-      };
+    datachannel.onopen = function (e) {
+      console.log(`data channel (${label}) connect`);
+      self.onDataChannelConnected();
+    };
 
-      datachannel.onclose = function (e) {
-        console.log(`data channel (${label}) closed`);
-      };
+    datachannel.onclose = function (e) {
+      console.log(`data channel (${label}) closed`);
+    };
 
-      datachannel.onmessage = function (e) {
-        console.log(`Got message (${label})`, e.data);
-        self.onDataChannelMessage(e.data);
-      };
+    datachannel.onmessage = function (e) {
+      // console.log(`Got message (${label})`, e.data);
+      self.onDataChannelMessage(e.data);
+    };
 
-      return datachannel;
-    } catch (e) {
-      console.warn("No data channel", e);
-      return null;
-    }
+    return datachannel;
+
   }
 
   async _handleCreateOffer(pc) {
@@ -99,13 +94,15 @@ window.webRtcPlayer = class {
     };
   }
 
-  _generateAggregatedStatsFunction(stats) {
+  // fetch then reduce the stats array
+  async fetchReduceStats() {
     const self = this;
+
+    const stats = await self.pcClient.getStats(null);
 
     let newStat = {};
 
     stats.forEach((stat) => {
-      //                    console.log(JSON.stringify(stat, undefined, 4));
       if (
         stat.type == "inbound-rtp" &&
         !stat.isRemote &&
@@ -119,6 +116,13 @@ window.webRtcPlayer = class {
           self.aggregatedStats.framesDecodedStart || stat.framesDecoded;
         newStat.timestampStart =
           self.aggregatedStats.timestampStart || stat.timestamp;
+
+        newStat.duration = stat.timestamp - self.aggregatedStats.timestampStart
+        newStat.durationOffset = new Date(
+          newStat.duration + (new Date()).getTimezoneOffset() * 60 * 1000
+        )
+
+
 
         if (self.aggregatedStats.timestamp) {
           if (self.aggregatedStats.bytesReceived) {
@@ -144,23 +148,20 @@ window.webRtcPlayer = class {
               (8 *
                 (newStat.bytesReceived -
                   self.aggregatedStats.bytesReceivedStart)) /
-              (newStat.timestamp - self.aggregatedStats.timestampStart);
+              (newStat.duration);
             newStat.avgBitrate = Math.floor(newStat.avgBitrate);
           }
 
           if (self.aggregatedStats.framesDecoded) {
             // framerate = frames decoded since last time / number of seconds since last time
-            newStat.framerate =
-              (newStat.framesDecoded - self.aggregatedStats.framesDecoded) /
-              ((newStat.timestamp - self.aggregatedStats.timestamp) / 1000);
-            newStat.framerate = Math.floor(newStat.framerate);
+
             newStat.lowFramerate = Math.min(
               self.aggregatedStats.lowFramerate || Infinity,
-              newStat.framerate
+              newStat.framesPerSecond
             );
             newStat.highFramerate = Math.max(
               self.aggregatedStats.highFramerate || -Infinity,
-              newStat.framerate
+              newStat.framesPerSecond
             );
           }
 
@@ -168,7 +169,7 @@ window.webRtcPlayer = class {
             newStat.avgframerate =
               (newStat.framesDecoded -
                 self.aggregatedStats.framesDecodedStart) /
-              ((newStat.timestamp - self.aggregatedStats.timestampStart) /
+              ((newStat.duration) /
                 1000);
             newStat.avgframerate = Math.floor(newStat.avgframerate);
           }
@@ -187,18 +188,16 @@ window.webRtcPlayer = class {
       }
 
       if (
-        stat.type == "candidate-pair" 
-        && stat.hasOwnProperty("currentRoundTripTime") 
-        // && stat.currentRoundTripTime != 0
+        stat.type == "candidate-pair" &&
+        stat.hasOwnProperty("currentRoundTripTime")
       ) {
-        newStat.currentRoundTripTime = stat.currentRoundTripTime;
-        console.log(1111,newStat.currentRoundTripTime)
+        Object.assign(newStat, stat);
       }
     });
 
     self.aggregatedStats = newStat;
-
-    self.onAggregatedStats(newStat);
+    console.log('reduced stat: ', newStat)
+    return newStat;
   }
 
   //This is called when revceiving new ice candidates individually instead of part of the offer
@@ -239,7 +238,6 @@ window.webRtcPlayer = class {
       this.pcClient.close();
       this.pcClient = null;
     }
-    clearInterval(this.aggregateStatsIntervalId);
   }
 
   //Sends data across the datachannel
@@ -247,20 +245,5 @@ window.webRtcPlayer = class {
     if (this.dcClient && this.dcClient.readyState == "open") {
       this.dcClient.send(data);
     }
-  }
-
-  aggregateStats(checkInterval) {
-    if (!this.pcClient) return;
-    const self = this;
-
-    let printAggregatedStats = () => {
-      self.pcClient.getStats(null).then((stats) => {
-        this._generateAggregatedStatsFunction(stats);
-      });
-    };
-    this.aggregateStatsIntervalId = setInterval(
-      printAggregatedStats,
-      checkInterval
-    );
   }
 };

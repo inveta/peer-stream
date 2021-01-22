@@ -9,5 +9,4 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   return prev;
 }, {});
 
-// console.log(args)
-module.exports = args;
+ module.exports = args;
