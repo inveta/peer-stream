@@ -9,8 +9,17 @@ npm install
 node run.js
 ```
 
+Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
-Then open UE4 and browser
+```
+-RenderOffScreen 
+-AllowPixelStreamingCommands 
+-AudioMixer 
+-PixelStreamingIP=localhost 
+-PixelStreamingPort=8888
+```
+
+
 
 
 ## Requirement

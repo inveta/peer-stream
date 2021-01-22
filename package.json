@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "lightweight signaling & web server for Unrel Engine",
   "scripts": {
-    "start": "npm install && node run.js"
+    "start": "node run.js"
   },
   "repository": "https://github.com/JinHengyu/PixelStreamer",
   "license": "Apache-2.0",

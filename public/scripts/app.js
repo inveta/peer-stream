@@ -368,7 +368,7 @@ const ToClientMessageType = {
 var VideoEncoderQP = "N/A";
 
 function setupWebRtcPlayer(htmlElement, config) {
-	webRtcPlayerObj = new webRtcPlayer({ peerConnectionOptions: config.peerConnectionOptions });
+	webRtcPlayerObj = new window.webRtcPlayer({ peerConnectionOptions: config.peerConnectionOptions });
 	htmlElement.appendChild(webRtcPlayerObj.video);
 	htmlElement.appendChild(freezeFrameOverlay);
 
@@ -387,14 +387,8 @@ function setupWebRtcPlayer(htmlElement, config) {
 		}
 	};
 
-	webRtcPlayerObj.onVideoInitialised = function () {
-		if (ws && ws.readyState === WS_OPEN_STATE) {
-			if (shouldShowPlayOverlay) {
-				showPlayOverlay();
-				resizePlayerStyle();
-			}
-		}
-	};
+ 	
+	
 
 	webRtcPlayerObj.onDataChannelConnected = function () {
 		if (ws && ws.readyState === WS_OPEN_STATE) {
@@ -485,6 +479,14 @@ function setupWebRtcPlayer(htmlElement, config) {
 	}
 
 	createWebRtcOffer();
+
+
+	if (ws && ws.readyState === WS_OPEN_STATE) {
+		if (shouldShowPlayOverlay) {
+			showPlayOverlay();
+			resizePlayerStyle();
+		}
+	}
 
 	return webRtcPlayerObj.video;
 }
@@ -1543,12 +1545,7 @@ function updateKickButton(playersCount) {
 function connect() {
 	"use strict";
 
-	window.WebSocket = window.WebSocket || window.MozWebSocket;
-
-	if (!window.WebSocket) {
-		alert('Your browser doesn\'t support WebSocket');
-		return;
-	}
+ 
 
 	ws = new WebSocket(window.location.href.replace('http://', 'ws://').replace('https://', 'wss://'));
 

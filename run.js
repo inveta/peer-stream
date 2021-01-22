@@ -9,6 +9,7 @@ const path = require("path");
 const logging = require("./modules/logging.js");
 logging.RegisterConsoleLogger();
 
+// 优先级：命令行参数 > config.json
 const {
   httpPort,
   httpsPort,
@@ -17,7 +18,7 @@ const {
   LogToFile,
   UseHTTPS,
   peerConnectionOptions,
-} = require("./config.json");
+} = Object.assign(require("./config.json"), require("./modules/argument.js"));
 
 if (LogToFile) {
   logging.RegisterFileLogger("./logs");
