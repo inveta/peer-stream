@@ -1,58 +1,64 @@
-
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head>
-	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
-	<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
 
-	<link type="text/css" rel="stylesheet" href="/css/index.css">
-    <script type="text/javascript" src="/scripts/webRtcPlayer.js"></script>
-    <script type="text/javascript" src="/scripts/app.js"></script>
+<head>
+	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" />
+	<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png" />
+	<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png" />
+	<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
+
+	<link type="text/css" rel="stylesheet" href="/css/index.css" />
+	<script type="text/javascript" src="/scripts/webRtcPlayer.js"></script>
+	<script defer type="text/javascript" src="/scripts/app.js"></script>
 </head>
 
 <body onload="load()">
-	<div id="playerUI">
-		<div id="player"></div>
-		<div id="overlay" class="overlay">
-			<div>
-				<div id="qualityStatus" class="greyStatus">&#9679</div>
-				<div id="overlayButton">+</div>
+	<div id="player"></div>
+	<div id="overlay" class="overlay">
+		<div>
+			<div id="qualityStatus" class="greyStatus">●</div>
+			<div id="overlayButton">+</div>
+		</div>
+		<div id="overlaySettings">
+			<div id="KickOthers">
+				<div class="settings-text">Kick all other players</div>
+				<label class="btn-overlay">
+					<input type="button" id="kick-other-players-button" class="overlay-button btn-flat" value="Kick" />
+				</label>
 			</div>
-			<div id="overlaySettings">
-				<div id="KickOthers">
-					<div class="settings-text">Kick all other players</div>
-					<label class="btn-overlay">
-						<input type="button" id="kick-other-players-button" class="overlay-button btn-flat" value="Kick">
-					</label>
-				</div>
-                <div id="FillWindow">
-                    <div class="settings-text">Fill Window</div>
-                    <label class="tgl-switch">
-                        <input type="checkbox" id="enlarge-display-to-fill-window-tgl" class="tgl tgl-flat"  >
-                        <div class="tgl-slider"></div>
-                    </label>
-                </div>
-                <div id="QualityControlOwnership">
-                    <div class="settings-text">Quality control ownership</div>
-                    <label class="tgl-switch">
-                        <input type="checkbox" id="quality-control-ownership-tgl" class="tgl tgl-flat">
-                        <div class="tgl-slider"></div>
-                    </label>
-                </div>
-				<div id="statsSetting"> 
-					<div class="settings-text">Show Stats</div>
-					<label class="tgl-switch">
-						<input type="checkbox" id="show-stats-tgl" class="tgl tgl-flat" checked>
-						<div class="tgl-slider"></div>
-					</label>
-					<div id="statsContainer">
-						<div id="stats"></div>
-					</div>
+			<div id="FillWindow">
+				<div class="settings-text">Fill Window</div>
+				<label class="tgl-switch">
+					<input type="checkbox" id="enlarge-display-to-fill-window-tgl" class="tgl tgl-flat" />
+					<div class="tgl-slider"></div>
+				</label>
+			</div>
+			<div >
+				<div class="settings-text">Browser Keys</div>
+				<label class="tgl-switch">
+					<input type="checkbox" class="tgl tgl-flat" onchange="preventDefault=!preventDefault" />
+					<div class="tgl-slider"></div>
+				</label>
+			</div>
+			<div id="QualityControlOwnership">
+				<div class="settings-text">Quality control ownership</div>
+				<label class="tgl-switch">
+					<input type="checkbox" id="quality-control-ownership-tgl" class="tgl tgl-flat" />
+					<div class="tgl-slider"></div>
+				</label>
+			</div>
+			<div id="statsSetting">
+				<div class="settings-text">Show Stats</div>
+				<label class="tgl-switch">
+					<input type="checkbox" id="show-stats-tgl" class="tgl tgl-flat" checked />
+					<div class="tgl-slider"></div>
+				</label>
+				<div id="statsContainer">
+					<div id="stats"></div>
 				</div>
 			</div>
 		</div>
 	</div>
 </body>
+
 </html>

@@ -19,6 +19,7 @@ window.webRtcPlayer = class {
     //Create Video element and expose that as a parameter
     this.video = document.createElement("video");
     this.video.id = "streamingVideo";
+    this.video.classList.add('actual-size', 'fit-size')
     this.video.playsInline = true;
   }
 
@@ -71,9 +72,6 @@ window.webRtcPlayer = class {
   _setupPeerConnection(pc) {
     const self = this;
 
-    if (pc.SetBitrate)
-      console.log("Hurray! there's RTCPeerConnection.SetBitrate function");
-
     //Setup peerConnection events
     pc.onsignalingstatechange = (state) =>
       console.info("signaling state change:", state);
@@ -110,19 +108,6 @@ window.webRtcPlayer = class {
       ) {
         Object.assign(newStat, stat);
 
-        newStat.bytesReceivedStart =
-          self.aggregatedStats.bytesReceivedStart || stat.bytesReceived;
-        newStat.framesDecodedStart =
-          self.aggregatedStats.framesDecodedStart || stat.framesDecoded;
-        newStat.timestampStart =
-          self.aggregatedStats.timestampStart || stat.timestamp;
-
-        newStat.duration = stat.timestamp - self.aggregatedStats.timestampStart
-        newStat.durationOffset = new Date(
-          newStat.duration + (new Date()).getTimezoneOffset() * 60 * 1000
-        )
-
-
 
         if (self.aggregatedStats.timestamp) {
           if (self.aggregatedStats.bytesReceived) {
@@ -143,15 +128,6 @@ window.webRtcPlayer = class {
             );
           }
 
-          if (self.aggregatedStats.bytesReceivedStart) {
-            newStat.avgBitrate =
-              (8 *
-                (newStat.bytesReceived -
-                  self.aggregatedStats.bytesReceivedStart)) /
-              (newStat.duration);
-            newStat.avgBitrate = Math.floor(newStat.avgBitrate);
-          }
-
           if (self.aggregatedStats.framesDecoded) {
             // framerate = frames decoded since last time / number of seconds since last time
 
@@ -165,14 +141,7 @@ window.webRtcPlayer = class {
             );
           }
 
-          if (self.aggregatedStats.framesDecodedStart) {
-            newStat.avgframerate =
-              (newStat.framesDecoded -
-                self.aggregatedStats.framesDecodedStart) /
-              ((newStat.duration) /
-                1000);
-            newStat.avgframerate = Math.floor(newStat.avgframerate);
-          }
+
         }
       }
 

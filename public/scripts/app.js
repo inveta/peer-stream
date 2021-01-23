@@ -1,9 +1,12 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 var webRtcPlayerObj = null;
 var print_inputs = false;
 var connect_on_load = false;
+const fillWindowButton = document.getElementById("enlarge-display-to-fill-window-tgl");
+const statsDiv = document.getElementById("stats");
 
+// 键盘是否阻止浏览器默认行为
+window.preventDefault = true
 var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
@@ -59,20 +62,15 @@ function log(str) {
 function setupHtmlEvents() {
 	//Window events
 	window.addEventListener("resize", resizePlayerStyle, true);
-	window.addEventListener("orientationchange", onOrientationChange);
+	window.addEventListener("orientationchange", resizePlayerStyle);
+	fillWindowButton.addEventListener('change', resizePlayerStyle);
 
 	//HTML elements controls
 	let overlayButton = document.getElementById("overlayButton");
 	overlayButton.addEventListener("click", onExpandOverlay_Click);
 
-	let resizeCheckBox = document.getElementById(
-		"enlarge-display-to-fill-window-tgl"
-	);
-	if (resizeCheckBox !== null) {
-		resizeCheckBox.onchange = function (event) {
-			resizePlayerStyle();
-		};
-	}
+
+
 
 	qualityControlOwnershipCheckBox = document.getElementById(
 		"quality-control-ownership-tgl"
@@ -155,13 +153,11 @@ function setupHtmlEvents() {
 		};
 	}
 
-	let statsCheckBox = document.getElementById("show-stats-tgl");
-	if (statsCheckBox !== null) {
-		statsCheckBox.onchange = function (event) {
-			let stats = document.getElementById("statsContainer");
-			stats.style.display = event.target.checked ? "block" : "none";
-		};
-	}
+	document.getElementById("show-stats-tgl").onchange = function (event) {
+		let stats = document.getElementById("statsContainer");
+		stats.style.display = event.target.checked ? "block" : "none";
+	};
+
 
 	var kickButton = document.getElementById("kick-other-players-button");
 	if (kickButton) {
@@ -383,6 +379,7 @@ function setupWebRtcPlayer(htmlElement, config) {
 	htmlElement.appendChild(webRtcPlayerObj.video);
 	htmlElement.appendChild(freezeFrameOverlay);
 
+
 	webRtcPlayerObj.onWebRtcOffer = function (offer) {
 		if (ws && ws.readyState === WS_OPEN_STATE) {
 			let offerStr = JSON.stringify(offer);
@@ -513,6 +510,13 @@ function setupWebRtcPlayer(htmlElement, config) {
 		}
 	}
 
+
+
+
+	webRtcPlayerObj.pcClient.addEventListener('track', e => {
+
+	})
+
 	return webRtcPlayerObj.video;
 }
 
@@ -573,8 +577,9 @@ function onAggregatedStats(reducedStat) {
 
 	qualityStatus.className = `${color}Status`;
 
+	const duration = new Date(performance.now() + (new Date()).getTimezoneOffset() * 60 * 1000).toTimeString().split(' ')[0]
 	statsText += `
-		<div>Duration: ${reducedStat.durationOffset.toTimeString().split(' ')[0]}</div>
+		<div>Duration: ${duration}</div>
 		<div>Video Resolution: ${reducedStat.frameWidth + "x" + reducedStat.frameHeight}</div>
 		<div>Received (${receivedBytesMeasurement}): ${numberFormat.format(receivedBytes)}</div>
 		<div>Frames Decoded: ${numberFormat.format(reducedStat.framesDecoded)}</div>
@@ -585,7 +590,6 @@ function onAggregatedStats(reducedStat) {
 		<div>Latency (ms): ${numberFormat.format(reducedStat.currentRoundTripTime * 1000)}</div>
 		<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
-	let statsDiv = document.getElementById("stats");
 	statsDiv.innerHTML = statsText;
 }
 
@@ -605,10 +609,7 @@ function onWebRtcIce(iceCandidate) {
 
 var styleWidth;
 var styleHeight;
-var styleTop;
-var styleLeft;
 var styleCursor = "default";
-var styleAdditional;
 
 const ControlSchemeType = {
 	// A mouse can lock inside the WebRTC player so the user can simply move the
@@ -626,11 +627,6 @@ var inputOptions = {
 	// with the WebRTC player.
 	controlScheme: ControlSchemeType.LockedMouse,
 
-	// Browser keys are those which are typically used by the browser UI. We
-	// usually want to suppress these to allow, for example, UE4 to show shader
-	// complexity with the F5 key without the web page refreshing.
-	suppressBrowserKeys: true,
-
 	// UE4 has a faketouches option which fakes a single finger touch when the
 	// user drags with their mouse. We may perform the reverse; a single finger
 	// touch may be converted into a mouse drag UE4 side. This allows a
@@ -638,116 +634,6 @@ var inputOptions = {
 	fakeMouseWithTouches: false,
 };
 
-function resizePlayerStyleToFillWindow(playerElement) {
-	let videoElement = playerElement.getElementsByTagName("VIDEO");
-
-	// Fill the player display in window, keeping picture's aspect ratio.
-	let windowAspectRatio = window.innerHeight / window.innerWidth;
-	let playerAspectRatio =
-		playerElement.clientHeight / playerElement.clientWidth;
-	// We want to keep the video ratio correct for the video stream
-	let videoAspectRatio = videoElement.videoHeight / videoElement.videoWidth;
-	if (isNaN(videoAspectRatio)) {
-		//Video is not initialised yet so set playerElement to size of window
-		styleWidth = window.innerWidth;
-		styleHeight = window.innerHeight;
-		styleTop = 0;
-		styleLeft = 0;
-		playerElement.style =
-			"top: " +
-			styleTop +
-			"px; left: " +
-			styleLeft +
-			"px; width: " +
-			styleWidth +
-			"px; height: " +
-			styleHeight +
-			"px; cursor: " +
-			styleCursor +
-			"; " +
-			styleAdditional;
-	} else if (windowAspectRatio < playerAspectRatio) {
-		// Window height is the constraining factor so to keep aspect ratio change width appropriately
-		styleWidth = Math.floor(window.innerHeight / videoAspectRatio);
-		styleHeight = window.innerHeight;
-		styleTop = 0;
-		styleLeft = Math.floor((window.innerWidth - styleWidth) * 0.5);
-		//Video is now 100% of the playerElement, so set the playerElement style
-		playerElement.style =
-			"top: " +
-			styleTop +
-			"px; left: " +
-			styleLeft +
-			"px; width: " +
-			styleWidth +
-			"px; height: " +
-			styleHeight +
-			"px; cursor: " +
-			styleCursor +
-			"; " +
-			styleAdditional;
-	} else {
-		// Window width is the constraining factor so to keep aspect ratio change height appropriately
-		styleWidth = window.innerWidth;
-		styleHeight = Math.floor(window.innerWidth * videoAspectRatio);
-		styleTop = Math.floor((window.innerHeight - styleHeight) * 0.5);
-		styleLeft = 0;
-		//Video is now 100% of the playerElement, so set the playerElement style
-		playerElement.style =
-			"top: " +
-			styleTop +
-			"px; left: " +
-			styleLeft +
-			"px; width: " +
-			styleWidth +
-			"px; height: " +
-			styleHeight +
-			"px; cursor: " +
-			styleCursor +
-			"; " +
-			styleAdditional;
-	}
-}
-
-function resizePlayerStyleToActualSize(playerElement) {
-	let videoElement = playerElement.getElementsByTagName("VIDEO");
-
-	if (videoElement.length > 0) {
-		// Display image in its actual size
-		styleWidth = videoElement[0].videoWidth;
-		styleHeight = videoElement[0].videoHeight;
-		styleTop = Math.floor((window.innerHeight - styleHeight) * 0.5);
-		styleLeft = Math.floor((window.innerWidth - styleWidth) * 0.5);
-		//Video is now 100% of the playerElement, so set the playerElement style
-		playerElement.style =
-			"top: " +
-			styleTop +
-			"px; left: " +
-			styleLeft +
-			"px; width: " +
-			styleWidth +
-			"px; height: " +
-			styleHeight +
-			"px; cursor: " +
-			styleCursor +
-			"; " +
-			styleAdditional;
-	}
-}
-
-function resizePlayerStyleToArbitrarySize(playerElement) {
-	let videoElement = playerElement.getElementsByTagName("VIDEO");
-	//Video is now 100% of the playerElement, so set the playerElement style
-	playerElement.style =
-		"top: 0px; left: 0px; width: " +
-		styleWidth +
-		"px; height: " +
-		styleHeight +
-		"px; cursor: " +
-		styleCursor +
-		"; " +
-		styleAdditional;
-}
 
 function setupFreezeFrameOverlay() {
 	freezeFrameOverlay = document.createElement("img");
@@ -772,10 +658,8 @@ function resizeFreezeFrameOverlay() {
 		let displayHeight = 0;
 		let displayTop = 0;
 		let displayLeft = 0;
-		let checkBox = document.getElementById(
-			"enlarge-display-to-fill-window-tgl"
-		);
-		if (checkBox !== null && checkBox.checked) {
+
+		if (fillWindowButton.checked) {
 			let windowAspectRatio = window.innerWidth / window.innerHeight;
 			let videoAspectRatio = freezeFrame.width / freezeFrame.height;
 			if (windowAspectRatio < videoAspectRatio) {
@@ -805,25 +689,17 @@ function resizeFreezeFrameOverlay() {
 function resizePlayerStyle(event) {
 	var playerElement = document.getElementById("player");
 
-	if (!playerElement) return;
+	if (!webRtcPlayerObj) return;
 
 	updateVideoStreamSize();
 
-	if (playerElement.classList.contains("fixed-size")) return;
 
-	let checkBox = document.getElementById("enlarge-display-to-fill-window-tgl");
-	let windowSmallerThanPlayer =
-		window.innerWidth < playerElement.videoWidth ||
-		window.innerHeight < playerElement.videoHeight;
-	if (checkBox !== null) {
-		if (checkBox.checked || windowSmallerThanPlayer) {
-			resizePlayerStyleToFillWindow(playerElement);
-		} else {
-			resizePlayerStyleToActualSize(playerElement);
-		}
+	if (fillWindowButton.checked) {
+		webRtcPlayerObj.video.classList.replace('actual-size', 'fit-size')
 	} else {
-		resizePlayerStyleToArbitrarySize(playerElement);
+		webRtcPlayerObj.video.classList.replace('fit-size', 'actual-size')
 	}
+
 
 	// Calculating and normalizing positions depends on the width and height of
 	// the player.
@@ -859,15 +735,6 @@ function updateVideoStreamSize() {
 	}
 }
 
-// Fix for bug in iOS where windowsize is not correct at instance or orientation change
-// https://github.com/dimsemenov/PhotoSwipe/issues/1315
-var _orientationChangeTimeout;
-function onOrientationChange(event) {
-	clearTimeout(_orientationChangeTimeout);
-	_orientationChangeTimeout = setTimeout(function () {
-		resizePlayerStyle();
-	}, 500);
-}
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
 const MessageType = {
@@ -1524,11 +1391,6 @@ function registerTouchEvents(playerElement) {
 	}
 }
 
-// Browser keys do not have a charCode so we only need to test keyCode.
-function isKeyCodeBrowserKey(keyCode) {
-	// Function keys or tab key.
-	return (keyCode >= 112 && keyCode <= 123) || keyCode === 9;
-}
 
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. The index of the
 // entry in the array is the special key code given below.
@@ -1556,36 +1418,20 @@ function getKeyCode(e) {
 
 function registerKeyboardEvents() {
 	document.onkeydown = function (e) {
-		if (print_inputs) {
-			console.log(`key down ${e.keyCode}, repeat = ${e.repeat}`);
-		}
+		if (preventDefault) e.preventDefault();
 		sendInputData(
 			new Uint8Array([MessageType.KeyDown, getKeyCode(e), e.repeat]).buffer
 		);
-		// Backspace is not considered a keypress in JavaScript but we need it
-		// to be so characters may be deleted in a UE4 text entry field.
-		if (e.keyCode === SpecialKeyCodes.BackSpace) {
-			document.onkeypress({ charCode: SpecialKeyCodes.BackSpace });
-		}
-		if (inputOptions.suppressBrowserKeys && isKeyCodeBrowserKey(e.keyCode)) {
-			e.preventDefault();
-		}
+		//  e.stopPropagation
 	};
 
 	document.onkeyup = function (e) {
-		if (print_inputs) {
-			console.log(`key up ${e.keyCode}`);
-		}
+		if (preventDefault) e.preventDefault();
 		sendInputData(new Uint8Array([MessageType.KeyUp, getKeyCode(e)]).buffer);
-		if (inputOptions.suppressBrowserKeys && isKeyCodeBrowserKey(e.keyCode)) {
-			e.preventDefault();
-		}
 	};
 
 	document.onkeypress = function (e) {
-		if (print_inputs) {
-			console.log(`key press ${e.charCode}`);
-		}
+		if (preventDefault) e.preventDefault();
 		let data = new DataView(new ArrayBuffer(3));
 		data.setUint8(0, MessageType.KeyPress);
 		data.setUint16(1, e.charCode, true);
@@ -1603,10 +1449,7 @@ function start() {
 	let qualityStatus = document.getElementById("qualityStatus");
 	qualityStatus.className = "grey-status";
 
-	let statsDiv = document.getElementById("stats");
-	if (statsDiv) {
-		statsDiv.innerHTML = "Not connected";
-	}
+	statsDiv.innerHTML = "Not connected";
 
 	if (!connect_on_load || is_reconnection) {
 		showConnectOverlay();
