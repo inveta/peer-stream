@@ -5,7 +5,6 @@
   --colour3: #bdd4de;
   --colour4: #efefef;
   --colour5: #ff5035;
-
   --buttonFont: Helvetica;
   --inputFont: Helvetica;
 }
@@ -41,13 +40,11 @@ canvas {
 }
 
 #overlay {
-  border-bottom-right-radius: 5px; /* future proofing */
-  border-bottom-left-radius: 5px; /* future proofing */
-
-  user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
-
-  position: absolute;
+  border-bottom-right-radius: 5px;
+  /* future proofing */
+  border-bottom-left-radius: 5px;
+  /* future proofing */
+  position: fixed;
   padding: 4px;
   top: 0;
   right: 2%;
@@ -63,12 +60,12 @@ canvas {
   color: var(--colour4);
 }
 
-.overlay-shown > #overlaySettings {
+.overlay-shown>#overlaySettings {
   padding: 50px 4px 4px 4px;
   display: block;
 }
 
-.overlay-shown > div > #overlayButton {
+.overlay-shown>div>#overlayButton {
   transform: rotate(-135deg);
 }
 
@@ -110,53 +107,10 @@ canvas {
   color: red;
 }
 
-#videoMessageOverlay {
-  z-index: 20;
-  color: var(--colour4);
-  font-size: 1.8em;
-  position: absolute;
-  margin: auto;
-  font-family: var(--inputFont);
-  width: 100%;
-}
-
-#videoPlayOverlay {
-  z-index: 30;
-  position: absolute;
-  color: var(--colour4);
-  font-size: 1.8em;
-  font-family: var(--inputFont);
-  width: 100%;
-  height: 100%;
-  background-color: rgba(100, 100, 100, 0.7);
-}
-
-/* State for element to be clickable */
-.clickableState {
-  align-items: center;
-  justify-content: center;
-  display: flex;
-  cursor: pointer;
-}
-
-/* State for element to show text, this is for informational use*/
-.textDisplayState {
-  display: flex;
-}
-
 /* State to hide overlay, WebRTC communication is in progress and or is playing */
+
 .hiddenState {
   display: none;
-}
-
-#playButton {
-  display: inline-block;
-  height: auto;
-}
-
-img#playButton {
-  max-width: 241px;
-  width: 10%;
 }
 
 #UIInteraction {
@@ -173,7 +127,8 @@ img#playButton {
 
 #hiddenInput {
   position: absolute;
-  left: -10%; /* Although invisible, push off-screen to prevent user interaction. */
+  left: -10%;
+  /* Although invisible, push off-screen to prevent user interaction. */
   width: 0px;
   opacity: 0;
 }
@@ -229,7 +184,9 @@ img#playButton {
 .btn-flat:focus {
   outline: none;
 }
+
 /*** Toggle Switch styles ***/
+
 .tgl-switch {
   float: right;
   vertical-align: middle;
@@ -239,53 +196,41 @@ img#playButton {
   display: none;
 }
 
-.tgl,
-.tgl:after,
-.tgl:before,
-.tgl *,
-.tgl *:after,
-.tgl *:before,
-.tgl + .tgl-slider {
+.tgl, .tgl:after, .tgl:before, .tgl *, .tgl *:after, .tgl *:before, .tgl+.tgl-slider {
   box-sizing: border-box;
 }
 
-.tgl::selection,
-.tgl:after::selection,
-.tgl:before::selection,
-.tgl *::selection,
-.tgl *:after::selection,
-.tgl *:before::selection,
-.tgl + .tgl-slider::selection {
+.tgl::selection, .tgl:after::selection, .tgl:before::selection, .tgl *::selection, .tgl *:after::selection, .tgl *:before::selection, .tgl+.tgl-slider::selection {
   background: none;
 }
 
-.tgl + .tgl-slider {
+.tgl+.tgl-slider {
   outline: 0;
   display: block;
   width: 40px;
   height: 18px;
   position: relative;
   cursor: pointer;
-
   user-select: none;
 }
 
-.tgl + .tgl-slider:after,
-.tgl + .tgl-slider:before {
+.tgl+.tgl-slider:after, .tgl+.tgl-slider:before {
   position: relative;
   display: block;
   content: "";
   width: 50%;
   height: 100%;
 }
-.tgl + .tgl-slider:after {
+
+.tgl+.tgl-slider:after {
   left: 0;
 }
-.tgl + .tgl-slider:before {
+
+.tgl+.tgl-slider:before {
   display: none;
 }
 
-.tgl-flat + .tgl-slider {
+.tgl-flat+.tgl-slider {
   padding: 2px;
   transition: all 0.2s ease;
   background: #fff;
@@ -293,22 +238,30 @@ img#playButton {
   border-radius: 2em;
 }
 
-.tgl-flat + .tgl-slider:after {
+.tgl-flat+.tgl-slider:after {
   transition: all 0.2s ease;
   background: var(--colour4);
   content: "";
   border-radius: 1em;
 }
 
-.tgl-flat:checked + .tgl-slider {
+.tgl-flat:checked+.tgl-slider {
   border: 3px solid var(--colour5);
 }
 
-.tgl-flat:checked + .tgl-slider:after {
+.tgl-flat:checked+.tgl-slider:after {
   left: 50%;
   background: var(--colour5);
 }
+
 /*** Toggle Switch styles ***/
+
+video {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='50px' width='200px'><text x='0' y='40' fill='white' font-size='30'>Click to Start</text></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #222;
+}
 
 video.fit-size {
   width: 100%;
@@ -325,4 +278,12 @@ video.actual-size {
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
+}
+
+#logs {
+  position: fixed;
+  z-index: 25;
+  left: 20px;
+  top: 20px;
+  color: white;
 }

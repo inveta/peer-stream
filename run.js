@@ -18,7 +18,7 @@ const {
   LogToFile,
   UseHTTPS,
   peerConnectionOptions,
-} = Object.assign(require("./config.json"), require("./modules/argument.js"));
+} = Object.assign(require("./config.js"), require("./modules/argument.js"));
 
 if (LogToFile) {
   logging.RegisterFileLogger("./logs");

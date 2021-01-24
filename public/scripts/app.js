@@ -1,12 +1,16 @@
 
 var webRtcPlayerObj = null;
-var print_inputs = false;
 var connect_on_load = false;
 const fillWindowButton = document.getElementById("enlarge-display-to-fill-window-tgl");
 const statsDiv = document.getElementById("stats");
+const logsWrapper = document.getElementById("logs");
+
+
+let playerElement;
+
 
 // 键盘是否阻止浏览器默认行为
-window.preventDefault = true
+window.preventDefault = false
 var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
@@ -21,7 +25,7 @@ var onDataChannelConnected;
 var responseEventListeners = new Map();
 
 var freezeFrameOverlay = null;
-var shouldShowPlayOverlay = true;
+
 // A freeze frame is a still JPEG image shown instead of the video.
 var freezeFrame = {
 	receiving: false,
@@ -32,18 +36,6 @@ var freezeFrame = {
 	valid: false,
 };
 
-// Optionally detect if the user is not interacting (AFK) and disconnect them.
-var afk = {
-	enabled: false, // Set to true to enable the AFK system.
-	warnTimeout: 120, // The time to elapse before warning the user they are inactive.
-	closeTimeout: 10, // The time after the warning when we disconnect the user.
-
-	active: false, // Whether the AFK system is currently looking for inactivity.
-	overlay: undefined, // The UI overlay warning the user that they are inactive.
-	warnTimer: undefined, // The timer which waits to show the inactivity warning overlay.
-	countdown: 0, // The inactivity warning overlay has a countdown to show time until disconnect.
-	countdownTimer: undefined, // The timer used to tick the seconds shown on the inactivity warning overlay.
-};
 
 // If the user focuses on a UE4 input widget then we show them a button to open
 // the on-screen keyboard. JavaScript security means we can only show the
@@ -54,10 +46,7 @@ var editTextButton = undefined;
 // on-screen keyboard.
 var hiddenInput = undefined;
 
-var t0 = Date.now();
-function log(str) {
-	console.log(`${Math.floor(Date.now() - t0)}: ` + str);
-}
+
 
 function setupHtmlEvents() {
 	//Window events
@@ -153,11 +142,6 @@ function setupHtmlEvents() {
 		};
 	}
 
-	document.getElementById("show-stats-tgl").onchange = function (event) {
-		let stats = document.getElementById("statsContainer");
-		stats.style.display = event.target.checked ? "block" : "none";
-	};
-
 
 	var kickButton = document.getElementById("kick-other-players-button");
 	if (kickButton) {
@@ -202,137 +186,22 @@ function sendQualityConsoleCommands(descriptor) {
 	}
 }
 
-function setOverlay(htmlClass, htmlElement, onClickFunction) {
-	var videoPlayOverlay = document.getElementById("videoPlayOverlay");
-	if (!videoPlayOverlay) {
-		var playerDiv = document.getElementById("player");
-		videoPlayOverlay = document.createElement("div");
-		videoPlayOverlay.id = "videoPlayOverlay";
-		playerDiv.appendChild(videoPlayOverlay);
-	}
 
-	// Remove existing html child elements so we can add the new one
-	while (videoPlayOverlay.lastChild) {
-		videoPlayOverlay.removeChild(videoPlayOverlay.lastChild);
-	}
 
-	if (htmlElement) videoPlayOverlay.appendChild(htmlElement);
+function showTextOverlay(text = '') {
+	// 左上角打印日志，2s后自动清除
 
-	if (onClickFunction) {
-		videoPlayOverlay.addEventListener("click", function onOverlayClick(event) {
-			onClickFunction(event);
-			videoPlayOverlay.removeEventListener("click", onOverlayClick);
-		});
-	}
-
-	// Remove existing html classes so we can set the new one
-	var cl = videoPlayOverlay.classList;
-	for (var i = cl.length - 1; i >= 0; i--) {
-		cl.remove(cl[i]);
-	}
-
-	videoPlayOverlay.classList.add(htmlClass);
+	console.log(text)
+	const log = document.createElement("div");
+	log.innerHTML = text;
+	logsWrapper.appendChild(log)
+	setTimeout(() => {
+		logsWrapper.removeChild(log)
+	}, 2000);
 }
 
-function showConnectOverlay() {
-	var startText = document.createElement("div");
-	startText.id = "playButton";
-	startText.innerHTML = "Click to start";
 
-	setOverlay("clickableState", startText, (event) => {
-		connect();
-		startAfkWarningTimer();
-	});
-}
 
-function showTextOverlay(text) {
-	var textOverlay = document.createElement("div");
-	textOverlay.id = "messageOverlay";
-	textOverlay.innerHTML = text ? text : "";
-	setOverlay("textDisplayState", textOverlay);
-}
-
-function showPlayOverlay() {
-	var img = document.createElement("img");
-	img.id = "playButton";
-	img.src = "/images/Play.png";
-	img.alt = "Start Streaming";
-	setOverlay("clickableState", img, (event) => {
-		if (webRtcPlayerObj) webRtcPlayerObj.video.play();
-
-		requestQualityControl();
-
-		showFreezeFrameOverlay();
-		hideOverlay();
-	});
-	shouldShowPlayOverlay = false;
-}
-
-function updateAfkOverlayText() {
-	afk.overlay.innerHTML =
-		"<center>No activity detected<br>Disconnecting in " +
-		afk.countdown +
-		" seconds<br>Click to continue<br></center>";
-}
-
-function showAfkOverlay() {
-	// Pause the timer while the user is looking at the inactivity warning overlay.
-	stopAfkWarningTimer();
-
-	// Show the inactivity warning overlay.
-	afk.overlay = document.createElement("div");
-	afk.overlay.id = "afkOverlay";
-	setOverlay("clickableState", afk.overlay, (event) => {
-		// The user clicked so start the timer again and carry on.
-		hideOverlay();
-		clearInterval(afk.countdownTimer);
-		startAfkWarningTimer();
-	});
-
-	afk.countdown = afk.closeTimeout;
-	updateAfkOverlayText();
-
-	if (inputOptions.controlScheme == ControlSchemeType.LockedMouse) {
-		document.exitPointerLock();
-	}
-
-	afk.countdownTimer = setInterval(function () {
-		afk.countdown--;
-		if (afk.countdown == 0) {
-			// The user failed to click so disconnect them.
-			hideOverlay();
-			ws.close();
-		} else {
-			// Update the countdown message.
-			updateAfkOverlayText();
-		}
-	}, 1000);
-}
-
-function hideOverlay() {
-	setOverlay("hiddenState");
-}
-
-// Start a timer which when elapsed will warn the user they are inactive.
-function startAfkWarningTimer() {
-	afk.active = afk.enabled;
-	resetAfkWarningTimer();
-}
-
-// Stop the timer which when elapsed will warn the user they are inactive.
-function stopAfkWarningTimer() {
-	afk.active = false;
-}
-
-// If the user interacts then reset the warning timer.
-function resetAfkWarningTimer() {
-	if (afk.active) {
-		clearTimeout(afk.warnTimer);
-		afk.warnTimer = setTimeout(function () {
-			showAfkOverlay();
-		}, afk.warnTimeout * 1000);
-	}
-}
 
 function createWebRtcOffer() {
 	if (webRtcPlayerObj) {
@@ -347,7 +216,6 @@ function createWebRtcOffer() {
 
 function sendInputData(data) {
 	if (webRtcPlayerObj) {
-		resetAfkWarningTimer();
 		webRtcPlayerObj.send(data);
 	}
 }
@@ -372,12 +240,12 @@ const ToClientMessageType = {
 
 var VideoEncoderQP = "N/A";
 
-function setupWebRtcPlayer(htmlElement, config) {
+function setupWebRtcPlayer(config) {
 	webRtcPlayerObj = new window.webRtcPlayer({
 		peerConnectionOptions: config.peerConnectionOptions,
 	});
-	htmlElement.appendChild(webRtcPlayerObj.video);
-	htmlElement.appendChild(freezeFrameOverlay);
+	document.body.appendChild(webRtcPlayerObj.video);
+	document.body.appendChild(freezeFrameOverlay);
 
 
 	webRtcPlayerObj.onWebRtcOffer = function (offer) {
@@ -415,18 +283,16 @@ function setupWebRtcPlayer(htmlElement, config) {
 			freezeFrame.height = freezeFrameOverlay.naturalHeight;
 			freezeFrame.width = freezeFrameOverlay.naturalWidth;
 			resizeFreezeFrameOverlay();
-			if (shouldShowPlayOverlay) {
-				showPlayOverlay();
-				resizePlayerStyle();
-			} else {
-				showFreezeFrameOverlay();
-			}
+
+			showFreezeFrameOverlay();
+
 		};
 	}
 
 	webRtcPlayerObj.onDataChannelMessage = function (data) {
 		var view = new Uint8Array(data);
 		if (freezeFrame.receiving) {
+
 			let jpeg = new Uint8Array(freezeFrame.jpeg.length + view.length);
 			jpeg.set(freezeFrame.jpeg, 0);
 			jpeg.set(view, freezeFrame.jpeg.length);
@@ -488,7 +354,7 @@ function setupWebRtcPlayer(htmlElement, config) {
 			invalidateFreezeFrameOverlay();
 		} else if (view[0] === ToClientMessageType.VideoEncoderAvgQP) {
 			VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
-			console.log(`received VideoEncoderAvgQP ${VideoEncoderQP}`);
+			// console.log(`received VideoEncoderAvgQP ${VideoEncoderQP}`);
 		} else {
 			console.error(`unrecognized data received, packet ID ${view[0]}`);
 		}
@@ -497,25 +363,52 @@ function setupWebRtcPlayer(htmlElement, config) {
 	registerInputs(webRtcPlayerObj.video);
 
 	// On a touch device we will need special ways to show the on-screen keyboard.
-	if ("ontouchstart" in document.documentElement) {
-		createOnScreenKeyboardHelpers(htmlElement);
-	}
+	// if ("ontouchstart" in document.documentElement) {
+	// 	createOnScreenKeyboardHelpers(htmlElement);
+	// }
 
 	createWebRtcOffer();
 
 	if (ws && ws.readyState === WS_OPEN_STATE) {
-		if (shouldShowPlayOverlay) {
-			showPlayOverlay();
-			resizePlayerStyle();
-		}
+
+
+		webRtcPlayerObj.video.addEventListener('click', function initStart(e) {
+			webRtcPlayerObj.video.play();
+			webRtcPlayerObj.video.removeEventListener('click', initStart)
+
+		});
+
+
+		webRtcPlayerObj.video.ondblclick = e => {
+			webRtcPlayerObj.video.requestPointerLock();
+		};
+
+		setupMouseHoverEvents();
+
+
+		requestQualityControl();
+
+		showFreezeFrameOverlay();
+
+
+		resizePlayerStyle();
+
 	}
 
 
+	document.addEventListener("pointerlockchange", () => {
+		if (document.pointerLockElement === webRtcPlayerObj.video) {
+			setupMouseLockEvents()
+
+		} else {
+			setupMouseHoverEvents()
+		}
+	}, false);
 
 
-	webRtcPlayerObj.pcClient.addEventListener('track', e => {
 
-	})
+	playerElement = webRtcPlayerObj.video;
+
 
 	return webRtcPlayerObj.video;
 }
@@ -687,9 +580,10 @@ function resizeFreezeFrameOverlay() {
 }
 
 function resizePlayerStyle(event) {
-	var playerElement = document.getElementById("player");
-
 	if (!webRtcPlayerObj) return;
+
+
+
 
 	updateVideoStreamSize();
 
@@ -703,7 +597,7 @@ function resizePlayerStyle(event) {
 
 	// Calculating and normalizing positions depends on the width and height of
 	// the player.
-	playerElementClientRect = playerElement.getBoundingClientRect();
+	// playerElementClientRect = playerElement.getBoundingClientRect();
 	setupNormalizeAndQuantize();
 	resizeFreezeFrameOverlay();
 }
@@ -715,7 +609,6 @@ function updateVideoStreamSize() {
 
 	var now = new Date().getTime();
 	if (now - lastTimeResized > 1000) {
-		var playerElement = document.getElementById("player");
 		if (!playerElement) return;
 
 		let descriptor = {
@@ -836,126 +729,64 @@ var normalizeAndQuantizeUnsigned = undefined;
 var normalizeAndQuantizeSigned = undefined;
 
 function setupNormalizeAndQuantize() {
-	let playerElement = document.getElementById("player");
-	let videoElement = playerElement.getElementsByTagName("video");
+	if (!webRtcPlayerObj.video) return
 
-	if (playerElement && videoElement.length > 0) {
-		let playerAspectRatio =
-			playerElement.clientHeight / playerElement.clientWidth;
-		let videoAspectRatio =
-			videoElement[0].videoHeight / videoElement[0].videoWidth;
 
-		// Unsigned XY positions are the ratio (0.0..1.0) along a viewport axis,
-		// quantized into an uint16 (0..65536).
-		// Signed XY deltas are the ratio (-1.0..1.0) along a viewport axis,
-		// quantized into an int16 (-32767..32767).
-		// This allows the browser viewport and client viewport to have a different
-		// size.
-		// Hack: Currently we set an out-of-range position to an extreme (65535)
-		// as we can't yet accurately detect mouse enter and leave events
-		// precisely inside a video with an aspect ratio which causes mattes.
-		if (playerAspectRatio > videoAspectRatio) {
-			if (print_inputs) {
-				console.log(
-					"Setup Normalize and Quantize for playerAspectRatio > videoAspectRatio"
-				);
-			}
-			let ratio = playerAspectRatio / videoAspectRatio;
-			// Unsigned.
-			normalizeAndQuantizeUnsigned = (x, y) => {
-				let normalizedX = x / playerElement.clientWidth;
-				let normalizedY = ratio * (y / playerElement.clientHeight - 0.5) + 0.5;
-				if (
-					normalizedX < 0.0 ||
-					normalizedX > 1.0 ||
-					normalizedY < 0.0 ||
-					normalizedY > 1.0
-				) {
-					return {
-						inRange: false,
-						x: 65535,
-						y: 65535,
-					};
-				} else {
-					return {
-						inRange: true,
-						x: normalizedX * 65536,
-						y: normalizedY * 65536,
-					};
-				}
-			};
-			unquantizeAndDenormalizeUnsigned = (x, y) => {
-				let normalizedX = x / 65536;
-				let normalizedY = (y / 65536 - 0.5) / ratio + 0.5;
-				return {
-					x: normalizedX * playerElement.clientWidth,
-					y: normalizedY * playerElement.clientHeight,
-				};
-			};
-			// Signed.
-			normalizeAndQuantizeSigned = (x, y) => {
-				let normalizedX = x / (0.5 * playerElement.clientWidth);
-				let normalizedY = (ratio * y) / (0.5 * playerElement.clientHeight);
-				return {
-					x: normalizedX * 32767,
-					y: normalizedY * 32767,
-				};
+	// Unsigned XY positions are the ratio (0.0..1.0) along a viewport axis,
+	// quantized into an uint16 (0..65536).
+	// Signed XY deltas are the ratio (-1.0..1.0) along a viewport axis,
+	// quantized into an int16 (-32767..32767).
+	// This allows the browser viewport and client viewport to have a different
+	// size.
+	// Hack: Currently we set an out-of-range position to an extreme (65535)
+	// as we can't yet accurately detect mouse enter and leave events
+	// precisely inside a video with an aspect ratio which causes mattes.
+
+	// Unsigned.
+	normalizeAndQuantizeUnsigned = (x, y) => {
+		let normalizedX = x / playerElement.clientWidth
+		let normalizedY = y / playerElement.clientHeight;
+		if (
+			normalizedX < 0.0 ||
+			normalizedX > 1.0 ||
+			normalizedY < 0.0 ||
+			normalizedY > 1.0
+		) {
+			return {
+				inRange: false,
+				x: 65535,
+				y: 65535,
 			};
 		} else {
-			if (print_inputs) {
-				console.log(
-					"Setup Normalize and Quantize for playerAspectRatio <= videoAspectRatio"
-				);
-			}
-			let ratio = videoAspectRatio / playerAspectRatio;
-			// Unsigned.
-			normalizeAndQuantizeUnsigned = (x, y) => {
-				let normalizedX = ratio * (x / playerElement.clientWidth - 0.5) + 0.5;
-				let normalizedY = y / playerElement.clientHeight;
-				if (
-					normalizedX < 0.0 ||
-					normalizedX > 1.0 ||
-					normalizedY < 0.0 ||
-					normalizedY > 1.0
-				) {
-					return {
-						inRange: false,
-						x: 65535,
-						y: 65535,
-					};
-				} else {
-					return {
-						inRange: true,
-						x: normalizedX * 65536,
-						y: normalizedY * 65536,
-					};
-				}
-			};
-			unquantizeAndDenormalizeUnsigned = (x, y) => {
-				let normalizedX = (x / 65536 - 0.5) / ratio + 0.5;
-				let normalizedY = y / 65536;
-				return {
-					x: normalizedX * playerElement.clientWidth,
-					y: normalizedY * playerElement.clientHeight,
-				};
-			};
-			// Signed.
-			normalizeAndQuantizeSigned = (x, y) => {
-				let normalizedX = (ratio * x) / (0.5 * playerElement.clientWidth);
-				let normalizedY = y / (0.5 * playerElement.clientHeight);
-				return {
-					x: normalizedX * 32767,
-					y: normalizedY * 32767,
-				};
+			return {
+				inRange: true,
+				x: normalizedX * 65536,
+				y: normalizedY * 65536,
 			};
 		}
-	}
+	};
+	unquantizeAndDenormalizeUnsigned = (x, y) => {
+		let normalizedX = x / 65536
+		let normalizedY = y / 65536;
+		return {
+			x: normalizedX * playerElement.clientWidth,
+			y: normalizedY * playerElement.clientHeight,
+		};
+	};
+	// Signed.
+	normalizeAndQuantizeSigned = (x, y) => {
+		let normalizedX = x / (0.5 * playerElement.clientWidth);
+		let normalizedY = y / (0.5 * playerElement.clientHeight);
+		return {
+			x: normalizedX * 32767,
+			y: normalizedY * 32767,
+		};
+	};
+
+
 }
 
 function emitMouseMove(x, y, deltaX, deltaY) {
-	if (print_inputs) {
-		console.log(`x: ${x}, y:${y}, dX: ${deltaX}, dY: ${deltaY}`);
-	}
 	let coord = normalizeAndQuantizeUnsigned(x, y);
 	let delta = normalizeAndQuantizeSigned(deltaX, deltaY);
 	var Data = new DataView(new ArrayBuffer(9));
@@ -968,9 +799,7 @@ function emitMouseMove(x, y, deltaX, deltaY) {
 }
 
 function emitMouseDown(button, x, y) {
-	if (print_inputs) {
-		console.log(`mouse button ${button} down at (${x}, ${y})`);
-	}
+
 	let coord = normalizeAndQuantizeUnsigned(x, y);
 	var Data = new DataView(new ArrayBuffer(6));
 	Data.setUint8(0, MessageType.MouseDown);
@@ -981,9 +810,7 @@ function emitMouseDown(button, x, y) {
 }
 
 function emitMouseUp(button, x, y) {
-	if (print_inputs) {
-		console.log(`mouse button ${button} up at (${x}, ${y})`);
-	}
+
 	let coord = normalizeAndQuantizeUnsigned(x, y);
 	var Data = new DataView(new ArrayBuffer(6));
 	Data.setUint8(0, MessageType.MouseUp);
@@ -994,9 +821,7 @@ function emitMouseUp(button, x, y) {
 }
 
 function emitMouseWheel(delta, x, y) {
-	if (print_inputs) {
-		console.log(`mouse wheel with delta ${delta} at (${x}, ${y})`);
-	}
+
 	let coord = normalizeAndQuantizeUnsigned(x, y);
 	var Data = new DataView(new ArrayBuffer(7));
 	Data.setUint8(0, MessageType.MouseWheel);
@@ -1026,6 +851,7 @@ const MouseButtonsMask = {
 
 // If the user has any mouse buttons pressed then release them.
 function releaseMouseButtons(buttons, x, y) {
+	return
 	if (buttons & MouseButtonsMask.PrimaryButton) {
 		emitMouseUp(MouseButton.MainButton, x, y);
 	}
@@ -1045,6 +871,7 @@ function releaseMouseButtons(buttons, x, y) {
 
 // If the user has any mouse buttons pressed then press them again.
 function pressMouseButtons(buttons, x, y) {
+	return
 	if (buttons & MouseButtonsMask.PrimaryButton) {
 		emitMouseDown(MouseButton.MainButton, x, y);
 	}
@@ -1111,118 +938,98 @@ function showOnScreenKeyboard(command) {
 
 function registerMouseEnterAndLeaveEvents(playerElement) {
 	playerElement.onmouseenter = function (e) {
-		if (print_inputs) {
-			console.log("mouse enter");
-		}
+
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseEnter);
 		sendInputData(Data.buffer);
-		playerElement.pressMouseButtons(e);
+		// playerElement.pressMouseButtons(e);
 	};
 
 	playerElement.onmouseleave = function (e) {
-		if (print_inputs) {
-			console.log("mouse leave");
-		}
+
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseLeave);
 		sendInputData(Data.buffer);
-		playerElement.releaseMouseButtons(e);
+		// playerElement.releaseMouseButtons(e);
 	};
 }
 
-// A locked mouse works by the user clicking in the browser player and the
-// cursor disappears and is locked. The user moves the cursor and the camera
-// moves, for example. The user presses escape to free the mouse.
-function registerLockedMouseEvents(playerElement) {
-	var x = playerElement.width / 2;
-	var y = playerElement.height / 2;
 
-	playerElement.requestPointerLock =
-		playerElement.requestPointerLock || playerElement.mozRequestPointerLock;
-	document.exitPointerLock =
-		document.exitPointerLock || document.mozExitPointerLock;
 
-	playerElement.onclick = function () {
-		playerElement.requestPointerLock();
-	};
 
-	// Respond to lock state change events
-	document.addEventListener("pointerlockchange", lockStateChange, false);
-	document.addEventListener("mozpointerlockchange", lockStateChange, false);
 
-	function lockStateChange() {
-		if (
-			document.pointerLockElement === playerElement ||
-			document.mozPointerLockElement === playerElement
-		) {
-			console.log("Pointer locked");
-			document.addEventListener("mousemove", updatePosition, false);
-		} else {
-			console.log("The pointer lock status is now unlocked");
-			document.removeEventListener("mousemove", updatePosition, false);
-		}
-	}
+
+
+
+function setupMouseLockEvents() {
+	preventDefault = true
+	showTextOverlay('进入沉浸式鼠标体验，按Esc退出')
+
+	const { videoWidth, videoHeight } = webRtcPlayerObj.video
+	let x = videoWidth / 2;
+	let y = videoHeight / 2;
 
 	function updatePosition(e) {
 		x += e.movementX;
 		y += e.movementY;
-		if (x > styleWidth) {
-			x -= styleWidth;
+		if (x > videoWidth) {
+			x -= videoWidth;
 		}
-		if (y > styleHeight) {
-			y -= styleHeight;
+		if (y > videoHeight) {
+			y -= videoHeight;
 		}
 		if (x < 0) {
-			x = styleWidth + x;
+			x = videoWidth + x;
 		}
 		if (y < 0) {
-			y = styleHeight - y;
+			y = videoHeight - y;
 		}
-		emitMouseMove(x, y, e.movementX, e.movementY);
 	}
 
-	playerElement.onmousedown = function (e) {
+	webRtcPlayerObj.video.onmousemove = (e) => {
+		updatePosition(e)
+		emitMouseMove(x, y, e.movementX, e.movementY);
+	};
+
+	webRtcPlayerObj.video.onmousedown = function (e) {
 		emitMouseDown(e.button, x, y);
 	};
 
-	playerElement.onmouseup = function (e) {
+	webRtcPlayerObj.video.onmouseup = function (e) {
 		emitMouseUp(e.button, x, y);
 	};
 
-	playerElement.onmousewheel = function (e) {
+	webRtcPlayerObj.video.onmousewheel = function (e) {
 		emitMouseWheel(e.wheelDelta, x, y);
 	};
 
-	playerElement.pressMouseButtons = function (e) {
-		pressMouseButtons(e.buttons, x, y);
-	};
-
-	playerElement.releaseMouseButtons = function (e) {
-		releaseMouseButtons(e.buttons, x, y);
-	};
 }
 
-// A hovering mouse works by the user clicking the mouse button when they want
-// the cursor to have an effect over the video. Otherwise the cursor just
-// passes over the browser.
-function registerHoveringMouseEvents(playerElement) {
-	styleCursor = "none"; // We will rely on UE4 client's software cursor.
-	//styleCursor = 'default';  // Showing cursor
 
-	playerElement.onmousemove = function (e) {
+
+
+
+
+function setupMouseHoverEvents() {
+	preventDefault = false
+
+	// styleCursor = "none"; // rely on UE4 client's software cursor.
+	styleCursor = 'default';  // Showing cursor
+
+	webRtcPlayerObj.video.onmousemove = (e) => {
+		// console.log(e.offsetX,e.offsetY)
 		emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
-		e.preventDefault();
+		if (preventDefault) e.preventDefault();
 	};
 
-	playerElement.onmousedown = function (e) {
+	webRtcPlayerObj.video.onmousedown = (e) => {
 		emitMouseDown(e.button, e.offsetX, e.offsetY);
-		e.preventDefault();
+		if (preventDefault) e.preventDefault();
 	};
 
-	playerElement.onmouseup = function (e) {
+	webRtcPlayerObj.video.onmouseup = (e) => {
 		emitMouseUp(e.button, e.offsetX, e.offsetY);
-		e.preventDefault();
+		if (preventDefault) e.preventDefault();
 	};
 
 	// When the context menu is shown then it is safest to release the button
@@ -1230,35 +1037,19 @@ function registerHoveringMouseEvents(playerElement) {
 	// get at least one mouse up corresponding to a mouse down event. Otherwise
 	// the mouse can get stuck.
 	// https://github.com/facebook/react/issues/5531
-	playerElement.oncontextmenu = function (e) {
+	webRtcPlayerObj.video.oncontextmenu = (e) => {
 		emitMouseUp(e.button, e.offsetX, e.offsetY);
-		e.preventDefault();
+		if (preventDefault) e.preventDefault();
 	};
 
-	if ("onmousewheel" in playerElement) {
-		playerElement.onmousewheel = function (e) {
-			emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
-			e.preventDefault();
-		};
-	} else {
-		playerElement.addEventListener(
-			"DOMMouseScroll",
-			function (e) {
-				emitMouseWheel(e.detail * -120, e.offsetX, e.offsetY);
-				e.preventDefault();
-			},
-			false
-		);
-	}
 
-	playerElement.pressMouseButtons = function (e) {
-		pressMouseButtons(e.buttons, e.offsetX, e.offsetY);
-	};
-
-	playerElement.releaseMouseButtons = function (e) {
-		releaseMouseButtons(e.buttons, e.offsetX, e.offsetY);
+	webRtcPlayerObj.video.onmousewheel = (e) => {
+		emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
+		if (preventDefault) e.preventDefault();
 	};
 }
+
+
 
 function registerTouchEvents(playerElement) {
 	// We need to assign a unique identifier to each finger.
@@ -1288,9 +1079,7 @@ function registerTouchEvents(playerElement) {
 			let touch = touches[t];
 			let x = touch.clientX - playerElement.offsetLeft;
 			let y = touch.clientY - playerElement.offsetTop;
-			if (print_inputs) {
-				console.log(`F${fingerIds[touch.identifier]}=(${x}, ${y})`);
-			}
+
 			let coord = normalizeAndQuantizeUnsigned(x, y);
 			data.setUint16(byte, coord.x, true);
 			byte += 2;
@@ -1346,6 +1135,7 @@ function registerTouchEvents(playerElement) {
 				if (touch.identifier === finger.id) {
 					let x = touch.clientX - playerElementClientRect.left;
 					let y = touch.clientY - playerElementClientRect.top;
+					alert(2222)
 					emitMouseMove(x, y, x - finger.x, y - finger.y);
 					finger.x = x;
 					finger.y = y;
@@ -1361,17 +1151,13 @@ function registerTouchEvents(playerElement) {
 				rememberTouch(e.changedTouches[t]);
 			}
 
-			if (print_inputs) {
-				console.log("touch start");
-			}
+
 			emitTouchData(MessageType.TouchStart, e.changedTouches);
 			e.preventDefault();
 		};
 
 		playerElement.ontouchend = function (e) {
-			if (print_inputs) {
-				console.log("touch end");
-			}
+
 			emitTouchData(MessageType.TouchEnd, e.changedTouches);
 
 			// Re-cycle unique identifiers previously assigned to each touch.
@@ -1382,9 +1168,7 @@ function registerTouchEvents(playerElement) {
 		};
 
 		playerElement.ontouchmove = function (e) {
-			if (print_inputs) {
-				console.log("touch move");
-			}
+
 			emitTouchData(MessageType.TouchMove, e.touches);
 			e.preventDefault();
 		};
@@ -1452,9 +1236,11 @@ function start() {
 	statsDiv.innerHTML = "Not connected";
 
 	if (!connect_on_load || is_reconnection) {
-		showConnectOverlay();
+		// showConnectOverlay();
+		connect();
+
+
 		invalidateFreezeFrameOverlay();
-		shouldShowPlayOverlay = true;
 		resizePlayerStyle();
 	} else {
 		connect();
@@ -1481,7 +1267,8 @@ function connect() {
 		console.log(`<- SS: ${event.data}`);
 		var msg = JSON.parse(event.data);
 		if (msg.type === "config") {
-			onConfig(msg);
+			setupWebRtcPlayer(msg);
+			resizePlayerStyle();
 		} else if (msg.type === "playerCount") {
 			updateKickButton(msg.count - 1);
 		} else if (msg.type === "answer") {
@@ -1494,7 +1281,7 @@ function connect() {
 	};
 
 	ws.onerror = function (event) {
-		console.log(`WS error: ${JSON.stringify(event)}`);
+		showTextOverlay(`WS error: ${JSON.stringify(event)}`);
 	};
 
 	ws.onclose = function (event) {
@@ -1503,9 +1290,8 @@ function connect() {
 		is_reconnection = true;
 
 		// destroy `webRtcPlayerObj` if any
-		let playerDiv = document.getElementById("player");
 		if (webRtcPlayerObj) {
-			playerDiv.removeChild(webRtcPlayerObj.video);
+			document.body.removeChild(webRtcPlayerObj.video);
 			clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
 			webRtcPlayerObj.close();
 			webRtcPlayerObj = undefined;
@@ -1516,27 +1302,6 @@ function connect() {
 	};
 }
 
-// Config data received from WebRTC sender via the  web server
-function onConfig(config) {
-	let playerDiv = document.getElementById("player");
-	let playerElement = setupWebRtcPlayer(playerDiv, config);
-	resizePlayerStyle();
-
-	switch (inputOptions.controlScheme) {
-		case ControlSchemeType.HoveringMouse:
-			registerHoveringMouseEvents(playerElement);
-			break;
-		case ControlSchemeType.LockedMouse:
-			registerLockedMouseEvents(playerElement);
-			break;
-		default:
-			console.log(
-				`ERROR: Unknown control scheme ${inputOptions.controlScheme}`
-			);
-			registerLockedMouseEvents(playerElement);
-			break;
-	}
-}
 
 function load() {
 	setupHtmlEvents();

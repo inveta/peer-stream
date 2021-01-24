@@ -165,8 +165,7 @@ window.webRtcPlayer = class {
     });
 
     self.aggregatedStats = newStat;
-    console.log('reduced stat: ', newStat)
-    return newStat;
+     return newStat;
   }
 
   //This is called when revceiving new ice candidates individually instead of part of the offer
@@ -211,7 +210,7 @@ window.webRtcPlayer = class {
 
   //Sends data across the datachannel
   send(data) {
-    if (this.dcClient && this.dcClient.readyState == "open") {
+     if (this.dcClient && this.dcClient.readyState == "open") {
       this.dcClient.send(data);
     }
   }

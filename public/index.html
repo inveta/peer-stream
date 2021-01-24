@@ -13,7 +13,7 @@
 </head>
 
 <body onload="load()">
-	<div id="player"></div>
+ 	<div id="logs"></div>
 	<div id="overlay" class="overlay">
 		<div>
 			<div id="qualityStatus" class="greyStatus">●</div>
@@ -33,13 +33,7 @@
 					<div class="tgl-slider"></div>
 				</label>
 			</div>
-			<div >
-				<div class="settings-text">Browser Keys</div>
-				<label class="tgl-switch">
-					<input type="checkbox" class="tgl tgl-flat" onchange="preventDefault=!preventDefault" />
-					<div class="tgl-slider"></div>
-				</label>
-			</div>
+ 
 			<div id="QualityControlOwnership">
 				<div class="settings-text">Quality control ownership</div>
 				<label class="tgl-switch">
@@ -47,15 +41,9 @@
 					<div class="tgl-slider"></div>
 				</label>
 			</div>
-			<div id="statsSetting">
-				<div class="settings-text">Show Stats</div>
-				<label class="tgl-switch">
-					<input type="checkbox" id="show-stats-tgl" class="tgl tgl-flat" checked />
-					<div class="tgl-slider"></div>
-				</label>
-				<div id="statsContainer">
-					<div id="stats"></div>
-				</div>
+
+			<div id="statsContainer">
+				<div id="stats"></div>
 			</div>
 		</div>
 	</div>
