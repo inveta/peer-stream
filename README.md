@@ -1,3 +1,6 @@
+![](public/favicon.png)
+
+
 # PixelStreamer
 
 Lightweight signaling & web server for Unrel Engine. Culling many expensive libraries from original package.

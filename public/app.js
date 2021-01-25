@@ -1,12 +1,12 @@
 
-var webRtcPlayerObj = null;
+let webRtcPlayerObj = new window.webRtcPlayer();
+let playerElement = webRtcPlayerObj.video;
 var connect_on_load = false;
 const fillWindowButton = document.getElementById("enlarge-display-to-fill-window-tgl");
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 
 
-let playerElement;
 
 
 // 键盘是否阻止浏览器默认行为
@@ -21,7 +21,6 @@ var matchViewportResolution;
 var lastTimeResized = new Date().getTime();
 var resizeTimeout;
 
-var onDataChannelConnected;
 var responseEventListeners = new Map();
 
 var freezeFrameOverlay = null;
@@ -36,16 +35,7 @@ var freezeFrame = {
 	valid: false,
 };
 
-
-// If the user focuses on a UE4 input widget then we show them a button to open
-// the on-screen keyboard. JavaScript security means we can only show the
-// on-screen keyboard in response to a user interaction.
-var editTextButton = undefined;
-
-// A hidden input text box which is used only for focusing and opening the
-// on-screen keyboard.
-var hiddenInput = undefined;
-
+ 
 
 
 function setupHtmlEvents() {
@@ -188,7 +178,7 @@ function sendQualityConsoleCommands(descriptor) {
 
 
 
-function showTextOverlay(text = '') {
+function showTextOverlay(text = '', timeout = 2000) {
 	// 左上角打印日志，2s后自动清除
 
 	console.log(text)
@@ -197,27 +187,7 @@ function showTextOverlay(text = '') {
 	logsWrapper.appendChild(log)
 	setTimeout(() => {
 		logsWrapper.removeChild(log)
-	}, 2000);
-}
-
-
-
-
-function createWebRtcOffer() {
-	if (webRtcPlayerObj) {
-		console.log("Creating offer");
-		showTextOverlay("Starting connection to server, please wait");
-		webRtcPlayerObj.createOffer();
-	} else {
-		console.log("WebRTC player not setup, cannot create offer");
-		showTextOverlay("Unable to setup video");
-	}
-}
-
-function sendInputData(data) {
-	if (webRtcPlayerObj) {
-		webRtcPlayerObj.send(data);
-	}
+	}, timeout);
 }
 
 function addResponseEventListener(name, listener) {
@@ -240,10 +210,7 @@ const ToClientMessageType = {
 
 var VideoEncoderQP = "N/A";
 
-function setupWebRtcPlayer(config) {
-	webRtcPlayerObj = new window.webRtcPlayer({
-		peerConnectionOptions: config.peerConnectionOptions,
-	});
+function setupWebRtcPlayer() {
 	document.body.appendChild(webRtcPlayerObj.video);
 	document.body.appendChild(freezeFrameOverlay);
 
@@ -331,7 +298,7 @@ function setupWebRtcPlayer(config) {
 			console.log(commandAsString);
 			let command = JSON.parse(commandAsString);
 			if (command.command === "onScreenKeyboard") {
-				showOnScreenKeyboard(command);
+				showTextOverlay('如果是触屏设备，应该弹出一个屏幕键盘')
 			}
 		} else if (view[0] === ToClientMessageType.FreezeFrame) {
 			freezeFrame.size = new DataView(view.slice(1, 5).buffer).getInt32(
@@ -362,29 +329,26 @@ function setupWebRtcPlayer(config) {
 
 	registerInputs(webRtcPlayerObj.video);
 
-	// On a touch device we will need special ways to show the on-screen keyboard.
-	// if ("ontouchstart" in document.documentElement) {
-	// 	createOnScreenKeyboardHelpers(htmlElement);
-	// }
+ 
 
-	createWebRtcOffer();
+	showTextOverlay("Starting connection to server, please wait");
+	webRtcPlayerObj.createOffer();
 
 	if (ws && ws.readyState === WS_OPEN_STATE) {
 
 
 		webRtcPlayerObj.video.addEventListener('click', function initStart(e) {
+			// 必须由用户触发
 			webRtcPlayerObj.video.play();
+			webRtcPlayerObj.video.requestPointerLock()
 			webRtcPlayerObj.video.removeEventListener('click', initStart)
-
 		});
 
 
+		// 双击进入沉浸式
 		webRtcPlayerObj.video.ondblclick = e => {
 			webRtcPlayerObj.video.requestPointerLock();
 		};
-
-		setupMouseHoverEvents();
-
 
 		requestQualityControl();
 
@@ -407,7 +371,6 @@ function setupWebRtcPlayer(config) {
 
 
 
-	playerElement = webRtcPlayerObj.video;
 
 
 	return webRtcPlayerObj.video;
@@ -500,32 +463,16 @@ function onWebRtcIce(iceCandidate) {
 	if (webRtcPlayerObj) webRtcPlayerObj.handleCandidateFromServer(iceCandidate);
 }
 
-var styleWidth;
-var styleHeight;
-var styleCursor = "default";
 
-const ControlSchemeType = {
-	// A mouse can lock inside the WebRTC player so the user can simply move the
-	// mouse to control the orientation of the camera. The user presses the
-	// Escape key to unlock the mouse.
-	LockedMouse: 0,
 
-	// A mouse can hover over the WebRTC player so the user needs to click and
-	// drag to control the orientation of the camera.
-	HoveringMouse: 1,
-};
 
-var inputOptions = {
-	// The control scheme controls the behaviour of the mouse when it interacts
-	// with the WebRTC player.
-	controlScheme: ControlSchemeType.LockedMouse,
 
-	// UE4 has a faketouches option which fakes a single finger touch when the
-	// user drags with their mouse. We may perform the reverse; a single finger
-	// touch may be converted into a mouse drag UE4 side. This allows a
-	// non-touch application to be controlled partially via a touch device.
-	fakeMouseWithTouches: false,
-};
+// UE4 has a faketouches option which fakes a single finger touch when the
+// user drags with their mouse. We may perform the reverse; a single finger
+// touch may be converted into a mouse drag UE4 side. This allows a
+// non-touch application to be controlled partially via a touch device.
+let fakeMouseWithTouches = false
+
 
 
 function setupFreezeFrameOverlay() {
@@ -693,7 +640,7 @@ function emitDescriptor(messageType, descriptor) {
 		data.setUint16(byteIdx, descriptorAsString.charCodeAt(i), true);
 		byteIdx += 2;
 	}
-	sendInputData(data.buffer);
+	webRtcPlayerObj.send(data.buffer);
 }
 
 // A UI interation will occur when the user presses a button powered by
@@ -721,7 +668,7 @@ function emitCommand(descriptor) {
 }
 
 function requestQualityControl() {
-	sendInputData(new Uint8Array([MessageType.RequestQualityControl]).buffer);
+	webRtcPlayerObj.send(new Uint8Array([MessageType.RequestQualityControl]).buffer);
 }
 
 var playerElementClientRect = undefined;
@@ -795,7 +742,7 @@ function emitMouseMove(x, y, deltaX, deltaY) {
 	Data.setUint16(3, coord.y, true);
 	Data.setInt16(5, delta.x, true);
 	Data.setInt16(7, delta.y, true);
-	sendInputData(Data.buffer);
+	webRtcPlayerObj.send(Data.buffer);
 }
 
 function emitMouseDown(button, x, y) {
@@ -806,7 +753,7 @@ function emitMouseDown(button, x, y) {
 	Data.setUint8(1, button);
 	Data.setUint16(2, coord.x, true);
 	Data.setUint16(4, coord.y, true);
-	sendInputData(Data.buffer);
+	webRtcPlayerObj.send(Data.buffer);
 }
 
 function emitMouseUp(button, x, y) {
@@ -817,7 +764,7 @@ function emitMouseUp(button, x, y) {
 	Data.setUint8(1, button);
 	Data.setUint16(2, coord.x, true);
 	Data.setUint16(4, coord.y, true);
-	sendInputData(Data.buffer);
+	webRtcPlayerObj.send(Data.buffer);
 }
 
 function emitMouseWheel(delta, x, y) {
@@ -828,7 +775,7 @@ function emitMouseWheel(delta, x, y) {
 	Data.setInt16(1, delta, true);
 	Data.setUint16(3, coord.x, true);
 	Data.setUint16(5, coord.y, true);
-	sendInputData(Data.buffer);
+	webRtcPlayerObj.send(Data.buffer);
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
@@ -896,52 +843,15 @@ function registerInputs(playerElement) {
 	registerTouchEvents(playerElement);
 }
 
-function createOnScreenKeyboardHelpers(htmlElement) {
-	if (document.getElementById("hiddenInput") === null) {
-		hiddenInput = document.createElement("input");
-		hiddenInput.id = "hiddenInput";
-		hiddenInput.maxLength = 0;
-		htmlElement.appendChild(hiddenInput);
-	}
+ 
 
-	if (document.getElementById("editTextButton") === null) {
-		editTextButton = document.createElement("button");
-		editTextButton.id = "editTextButton";
-		editTextButton.innerHTML = "edit text";
-		htmlElement.appendChild(editTextButton);
-
-		// Hide the 'edit text' button.
-		editTextButton.classList.add("hiddenState");
-
-		editTextButton.addEventListener("click", function () {
-			// Show the on-screen keyboard.
-			hiddenInput.focus();
-		});
-	}
-}
-
-function showOnScreenKeyboard(command) {
-	if (command.showOnScreenKeyboard) {
-		// Show the 'edit text' button.
-		editTextButton.classList.remove("hiddenState");
-		// Place the 'edit text' button near the UE4 input widget.
-		let pos = unquantizeAndDenormalizeUnsigned(command.x, command.y);
-		editTextButton.style.top = pos.y.toString() + "px";
-		editTextButton.style.left = (pos.x - 40).toString() + "px";
-	} else {
-		// Hide the 'edit text' button.
-		editTextButton.classList.add("hiddenState");
-		// Hide the on-screen keyboard.
-		hiddenInput.blur();
-	}
-}
-
+ 
 function registerMouseEnterAndLeaveEvents(playerElement) {
 	playerElement.onmouseenter = function (e) {
 
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseEnter);
-		sendInputData(Data.buffer);
+		webRtcPlayerObj.send(Data.buffer);
 		// playerElement.pressMouseButtons(e);
 	};
 
@@ -949,7 +859,7 @@ function registerMouseEnterAndLeaveEvents(playerElement) {
 
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseLeave);
-		sendInputData(Data.buffer);
+		webRtcPlayerObj.send(Data.buffer);
 		// playerElement.releaseMouseButtons(e);
 	};
 }
@@ -1013,8 +923,6 @@ function setupMouseLockEvents() {
 function setupMouseHoverEvents() {
 	preventDefault = false
 
-	// styleCursor = "none"; // rely on UE4 client's software cursor.
-	styleCursor = 'default';  // Showing cursor
 
 	webRtcPlayerObj.video.onmousemove = (e) => {
 		// console.log(e.offsetX,e.offsetY)
@@ -1090,10 +998,10 @@ function registerTouchEvents(playerElement) {
 			data.setUint8(byte, 255 * touch.force, true); // force is between 0.0 and 1.0 so quantize into byte.
 			byte += 1;
 		}
-		sendInputData(data.buffer);
+		webRtcPlayerObj.send(data.buffer);
 	}
 
-	if (inputOptions.fakeMouseWithTouches) {
+	if (fakeMouseWithTouches) {
 		var finger = undefined;
 
 		playerElement.ontouchstart = function (e) {
@@ -1203,7 +1111,7 @@ function getKeyCode(e) {
 function registerKeyboardEvents() {
 	document.onkeydown = function (e) {
 		if (preventDefault) e.preventDefault();
-		sendInputData(
+		webRtcPlayerObj.send(
 			new Uint8Array([MessageType.KeyDown, getKeyCode(e), e.repeat]).buffer
 		);
 		//  e.stopPropagation
@@ -1211,15 +1119,16 @@ function registerKeyboardEvents() {
 
 	document.onkeyup = function (e) {
 		if (preventDefault) e.preventDefault();
-		sendInputData(new Uint8Array([MessageType.KeyUp, getKeyCode(e)]).buffer);
+		webRtcPlayerObj.send(new Uint8Array([MessageType.KeyUp, getKeyCode(e)]).buffer);
 	};
 
 	document.onkeypress = function (e) {
+		console.log(e.keyCode)
 		if (preventDefault) e.preventDefault();
 		let data = new DataView(new ArrayBuffer(3));
 		data.setUint8(0, MessageType.KeyPress);
 		data.setUint16(1, e.charCode, true);
-		sendInputData(data.buffer);
+		webRtcPlayerObj.send(data.buffer);
 	};
 }
 
@@ -1235,6 +1144,8 @@ function start() {
 
 	statsDiv.innerHTML = "Not connected";
 
+
+
 	if (!connect_on_load || is_reconnection) {
 		// showConnectOverlay();
 		connect();
@@ -1245,6 +1156,7 @@ function start() {
 	} else {
 		connect();
 	}
+
 
 	updateKickButton(0);
 }
@@ -1267,7 +1179,7 @@ function connect() {
 		console.log(`<- SS: ${event.data}`);
 		var msg = JSON.parse(event.data);
 		if (msg.type === "config") {
-			setupWebRtcPlayer(msg);
+			setupWebRtcPlayer();
 			resizePlayerStyle();
 		} else if (msg.type === "playerCount") {
 			updateKickButton(msg.count - 1);
@@ -1291,7 +1203,8 @@ function connect() {
 
 		// destroy `webRtcPlayerObj` if any
 		if (webRtcPlayerObj) {
-			document.body.removeChild(webRtcPlayerObj.video);
+			if (webRtcPlayerObj.video.playerElement === document.body)
+				document.body.removeChild(webRtcPlayerObj.video);
 			clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
 			webRtcPlayerObj.close();
 			webRtcPlayerObj = undefined;

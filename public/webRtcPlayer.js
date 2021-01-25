@@ -1,7 +1,5 @@
 window.webRtcPlayer = class {
-  constructor(parOptions = {}) {
-    this.cfg = parOptions.peerConnectionOptions || {};
-    this.cfg.sdpSemantics = "unified-plan";
+  constructor() {
 
     this.pcClient = null; // RTCPeerConnection
     this.dcClient = null; // RTCDataChannel
@@ -21,6 +19,9 @@ window.webRtcPlayer = class {
     this.video.id = "streamingVideo";
     this.video.classList.add('actual-size', 'fit-size')
     this.video.playsInline = true;
+    this.video.onresize=e=>{
+      console.log(`resolution change to `+e.target.videoWidth+'x'+e.target.videoHeight)
+    }
   }
 
   // callbacks: defined outside
@@ -165,7 +166,7 @@ window.webRtcPlayer = class {
     });
 
     self.aggregatedStats = newStat;
-     return newStat;
+    return newStat;
   }
 
   //This is called when revceiving new ice candidates individually instead of part of the offer
@@ -183,7 +184,9 @@ window.webRtcPlayer = class {
       this.pcClient.close();
       this.pcClient = null;
     }
-    this.pcClient = new RTCPeerConnection(this.cfg);
+    this.pcClient = new RTCPeerConnection({
+      sdpSemantics: "unified-plan"
+    });
     this._setupPeerConnection(this.pcClient);
     this.dcClient = this._setupDataChannel(
       this.pcClient,
@@ -210,7 +213,7 @@ window.webRtcPlayer = class {
 
   //Sends data across the datachannel
   send(data) {
-     if (this.dcClient && this.dcClient.readyState == "open") {
+    if (this.dcClient && this.dcClient.readyState == "open") {
       this.dcClient.send(data);
     }
   }

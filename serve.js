@@ -1,42 +1,26 @@
-//-- Server side logic. Serves pixel streaming WebRTC-based page, proxies data back to Streamer --//
+//  开启web服务和信令服务
+
+
 
 var express = require("express");
 var app = express();
 
-const fs = require("fs");
 const path = require("path");
 
-const logging = require("./modules/logging.js");
-logging.RegisterConsoleLogger();
 
 // 优先级：命令行参数 > config.json
 const {
   httpPort,
-  httpsPort,
   streamerPort,
   homepageFile,
-  LogToFile,
-  UseHTTPS,
   peerConnectionOptions,
 } = Object.assign(require("./config.js"), require("./modules/argument.js"));
 
-if (LogToFile) {
-  logging.RegisterFileLogger("./logs");
-}
+
 
 var http = require("http").Server(app);
 
-if (UseHTTPS) {
-  //HTTPS certificate details
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, "./certificates/client-key.pem")),
-    cert: fs.readFileSync(
-      path.join(__dirname, "./certificates/client-cert.pem")
-    ),
-  };
 
-  var https = require("https").Server(options, app);
-}
 
 // `clientConfig` is send to Streamer and Players
 // Example of STUN server setting
@@ -52,33 +36,6 @@ if (typeof peerConnectionOptions != "undefined") {
   );
 }
 
-if (UseHTTPS) {
-  //Setup http -> https redirect
-  console.log("Redirecting http->https");
-  app.use(function (req, res, next) {
-    if (!req.secure) {
-      if (req.get("Host")) {
-        var hostAddressParts = req.get("Host").split(":");
-        var hostAddress = hostAddressParts[0];
-        if (httpsPort != 443) {
-          hostAddress = `${hostAddress}:${httpsPort}`;
-        }
-        return res.redirect(
-          ["https://", hostAddress, req.originalUrl].join("")
-        );
-      } else {
-        console.error(
-          `unable to get host name from header. Requestor ${req.ip
-          }, url path: '${req.originalUrl}', available headers ${JSON.stringify(
-            req.headers
-          )}`
-        );
-        return res.status(400).send("Bad Request");
-      }
-    }
-    next();
-  });
-}
 
 app.use("/", express.static(path.join(__dirname, "/public")));
 
@@ -88,34 +45,31 @@ app.get("/", function (req, res) {
   res.sendFile(homepageFilePath);
 });
 
-//Setup http and https servers
 http.listen(httpPort, function () {
-  console.logColor(logging.Green, "Http listening on *: " + httpPort);
+  console.log("Http listening on *: " + httpPort);
 });
 
-if (UseHTTPS) {
-  https.listen(httpsPort, function () {
-    console.logColor(logging.Green, "Https listening on *: " + httpsPort);
-  });
-}
+// console.log(123,app.toString())
+
+
+// 以下是信令服务
 
 const WebSocket = require("ws");
 
 let streamerServer = new WebSocket.Server({ port: streamerPort, backlog: 1 });
-console.logColor(
-  logging.Green,
+console.log(
+
   `WebSocket listening to Streamer connections on :${streamerPort}`
 );
 let streamer; // WebSocket connected to Streamer
 
 streamerServer.on("connection", function (ws, req) {
-  console.logColor(
-    logging.Cyan,
+  console.log(
     `Streamer connected: ${req.socket.remoteAddress}:${req.socket.remotePort}`
   );
 
   ws.on("message", function onStreamerMessage(msg) {
-    console.logColor(logging.Blue, `<- Streamer: ${msg}`);
+    console.log(`<- Streamer: ${msg}`);
 
     try {
       msg = JSON.parse(msg);
@@ -173,10 +127,9 @@ streamerServer.on("connection", function (ws, req) {
 });
 
 let playerServer = new WebSocket.Server({
-  server: UseHTTPS ? https : http,
+  server: http,
 });
-console.logColor(
-  logging.Green,
+console.log(
   `WebSocket listening to Players connections on :${httpPort}`
 );
 
@@ -191,8 +144,7 @@ playerServer.on("connection", function (ws, req) {
   }
 
   let playerId = ++nextPlayerId;
-  console.logColor(
-    logging.Cyan,
+  console.log(
     `player ${playerId} (${req.socket.remoteAddress}:${req.socket.remotePort}) connected`
   );
   players.set(playerId, { ws: ws, id: playerId });
@@ -208,7 +160,7 @@ playerServer.on("connection", function (ws, req) {
   }
 
   ws.on("message", function (msg) {
-    console.logColor(logging.Blue, `<- player ${playerId}: ${msg}`);
+    console.log(`<- player ${playerId}: ${msg}`);
 
     try {
       msg = JSON.parse(msg);
@@ -252,8 +204,7 @@ playerServer.on("connection", function (ws, req) {
   }
 
   ws.on("close", function (code, reason) {
-    console.logColor(
-      logging.Yellow,
+    console.log(
       `player ${playerId} connection closed: ${code} - ${reason}`
     );
     onPlayerDisconnected();

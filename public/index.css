@@ -27,18 +27,6 @@ body {
   color: lime;
 }
 
-canvas {
-  image-rendering: crisp-edges;
-  position: absolute;
-}
-
-#player {
-  width: 1280px;
-  height: 720px;
-  position: relative;
-  background-color: #000;
-}
-
 #overlay {
   border-bottom-right-radius: 5px;
   /* future proofing */
@@ -51,9 +39,6 @@ canvas {
   z-index: 100;
   border: 2px solid var(--colour4);
   border-top-width: 0px;
-}
-
-.overlay {
   background-color: var(--colour2);
   font-family: var(--buttonFont);
   font-weight: lighter;
@@ -109,10 +94,6 @@ canvas {
 
 /* State to hide overlay, WebRTC communication is in progress and or is playing */
 
-.hiddenState {
-  display: none;
-}
-
 #UIInteraction {
   position: fixed;
 }
@@ -123,20 +104,6 @@ canvas {
 
 #UIInteractionButton {
   cursor: pointer;
-}
-
-#hiddenInput {
-  position: absolute;
-  left: -10%;
-  /* Although invisible, push off-screen to prevent user interaction. */
-  width: 0px;
-  opacity: 0;
-}
-
-#editTextButton {
-  position: absolute;
-  height: 40px;
-  width: 40px;
 }
 
 .settings-text {
