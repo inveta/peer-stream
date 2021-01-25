@@ -9,7 +9,7 @@ Lightweight signaling & web server for Unrel Engine. Culling many expensive libr
  
 ```
 npm install
-node run.js
+npm start
 ```
 
 Editor Preferences > Level Editor > Play > Additional Launch Parameters
