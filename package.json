@@ -1,14 +1,14 @@
 {
   "name": "pixel-streamer",
   "version": "0.0.1",
-  "description": "lightweight signaling & web server for Unrel Engine",
+  "description": "lightweight signaling & web server for Unreal Engine",
   "scripts": {
     "start": "node serve.js"
   },
   "repository": "https://github.com/JinHengyu/PixelStreamer",
   "license": "Apache-2.0",
   "dependencies": {
-    "express": "^4.16.2",
-    "ws": "^7.1.2"
+    "express": "^4.17.1",
+    "ws": "^7.4.2"
   }
 }

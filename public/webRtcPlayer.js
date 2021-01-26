@@ -17,8 +17,7 @@ window.webRtcPlayer = class {
     //Create Video element and expose that as a parameter
     this.video = document.createElement("video");
     this.video.id = "streamingVideo";
-    this.video.classList.add('actual-size', 'fit-size')
-    this.video.playsInline = true;
+     this.video.playsInline = true;
     this.video.onresize=e=>{
       console.log(`resolution change to `+e.target.videoWidth+'x'+e.target.videoHeight)
     }

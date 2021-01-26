@@ -2,14 +2,13 @@
 let webRtcPlayerObj = new window.webRtcPlayer();
 let playerElement = webRtcPlayerObj.video;
 var connect_on_load = false;
-const fillWindowButton = document.getElementById("enlarge-display-to-fill-window-tgl");
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 
 
 
 
-// 键盘是否阻止浏览器默认行为
+// whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 window.preventDefault = false
 var is_reconnection = false;
 var ws;
@@ -21,28 +20,15 @@ var matchViewportResolution;
 var lastTimeResized = new Date().getTime();
 var resizeTimeout;
 
-var responseEventListeners = new Map();
 
-var freezeFrameOverlay = null;
 
-// A freeze frame is a still JPEG image shown instead of the video.
-var freezeFrame = {
-	receiving: false,
-	size: 0,
-	jpeg: undefined,
-	height: 0,
-	width: 0,
-	valid: false,
-};
 
- 
 
 
 function setupHtmlEvents() {
 	//Window events
-	window.addEventListener("resize", resizePlayerStyle, true);
-	window.addEventListener("orientationchange", resizePlayerStyle);
-	fillWindowButton.addEventListener('change', resizePlayerStyle);
+	// window.addEventListener("resize", resizePlayerStyle, true);
+	// window.addEventListener("orientationchange", resizePlayerStyle);
 
 	//HTML elements controls
 	let overlayButton = document.getElementById("overlayButton");
@@ -113,24 +99,7 @@ function setupHtmlEvents() {
 		};
 	}
 
-	let showFPSButton = document.getElementById("show-fps-button");
-	if (showFPSButton !== null) {
-		showFPSButton.onclick = function (event) {
-			let consoleDescriptor = {
-				Console: "stat fps",
-			};
-			emitUIInteraction(consoleDescriptor);
-		};
-	}
 
-	let matchViewportResolutionCheckBox = document.getElementById(
-		"match-viewport-res-tgl"
-	);
-	if (matchViewportResolutionCheckBox !== null) {
-		matchViewportResolutionCheckBox.onchange = function (event) {
-			matchViewportResolution = matchViewportResolutionCheckBox.checked;
-		};
-	}
 
 
 	var kickButton = document.getElementById("kick-other-players-button");
@@ -179,7 +148,7 @@ function sendQualityConsoleCommands(descriptor) {
 
 
 function showTextOverlay(text = '', timeout = 2000) {
-	// 左上角打印日志，2s后自动清除
+	// show log top left, disappear after timeout
 
 	console.log(text)
 	const log = document.createElement("div");
@@ -190,13 +159,6 @@ function showTextOverlay(text = '', timeout = 2000) {
 	}, timeout);
 }
 
-function addResponseEventListener(name, listener) {
-	responseEventListeners.set(name, listener);
-}
-
-function removeResponseEventListener(name) {
-	responseEventListeners.remove(name);
-}
 
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
 const ToClientMessageType = {
@@ -212,7 +174,6 @@ var VideoEncoderQP = "N/A";
 
 function setupWebRtcPlayer() {
 	document.body.appendChild(webRtcPlayerObj.video);
-	document.body.appendChild(freezeFrameOverlay);
 
 
 	webRtcPlayerObj.onWebRtcOffer = function (offer) {
@@ -238,49 +199,11 @@ function setupWebRtcPlayer() {
 		}
 	};
 
-	function showFreezeFrame() {
-		let base64 = btoa(
-			freezeFrame.jpeg.reduce(
-				(data, byte) => data + String.fromCharCode(byte),
-				""
-			)
-		);
-		freezeFrameOverlay.src = "data:image/jpeg;base64," + base64;
-		freezeFrameOverlay.onload = function () {
-			freezeFrame.height = freezeFrameOverlay.naturalHeight;
-			freezeFrame.width = freezeFrameOverlay.naturalWidth;
-			resizeFreezeFrameOverlay();
 
-			showFreezeFrameOverlay();
-
-		};
-	}
 
 	webRtcPlayerObj.onDataChannelMessage = function (data) {
 		var view = new Uint8Array(data);
-		if (freezeFrame.receiving) {
-
-			let jpeg = new Uint8Array(freezeFrame.jpeg.length + view.length);
-			jpeg.set(freezeFrame.jpeg, 0);
-			jpeg.set(view, freezeFrame.jpeg.length);
-			freezeFrame.jpeg = jpeg;
-			if (freezeFrame.jpeg.length === freezeFrame.size) {
-				freezeFrame.receiving = false;
-				freezeFrame.valid = true;
-				console.log(`received complete freeze frame ${freezeFrame.size}`);
-				showFreezeFrame();
-			} else if (freezeFrame.jpeg.length > freezeFrame.size) {
-				console.error(
-					`received bigger freeze frame than advertised: ${freezeFrame.jpeg.length}/${freezeFrame.size}`
-				);
-				freezeFrame.jpeg = undefined;
-				freezeFrame.receiving = false;
-			} else {
-				console.log(
-					`received next chunk (${view.length} bytes) of freeze frame: ${freezeFrame.jpeg.length}/${freezeFrame.size}`
-				);
-			}
-		} else if (view[0] === ToClientMessageType.QualityControlOwnership) {
+		if (view[0] === ToClientMessageType.QualityControlOwnership) {
 			let ownership = view[1] === 0 ? false : true;
 			// If we own the quality control, we can't relenquish it. We only loose
 			// quality control when another peer asks for it
@@ -290,35 +213,23 @@ function setupWebRtcPlayer() {
 			}
 		} else if (view[0] === ToClientMessageType.Response) {
 			let response = new TextDecoder("utf-16").decode(data.slice(1));
-			for (let listener of responseEventListeners.values()) {
-				listener(response);
-			}
+
 		} else if (view[0] === ToClientMessageType.Command) {
 			let commandAsString = new TextDecoder("utf-16").decode(data.slice(1));
 			console.log(commandAsString);
 			let command = JSON.parse(commandAsString);
 			if (command.command === "onScreenKeyboard") {
-				showTextOverlay('如果是触屏设备，应该弹出一个屏幕键盘')
+				showTextOverlay('You should setup a on-screen keyboard')
 			}
 		} else if (view[0] === ToClientMessageType.FreezeFrame) {
-			freezeFrame.size = new DataView(view.slice(1, 5).buffer).getInt32(
+			let size = new DataView(view.slice(1, 5).buffer).getInt32(
 				0,
 				true
 			);
-			freezeFrame.jpeg = view.slice(1 + 4);
-			if (freezeFrame.jpeg.length < freezeFrame.size) {
-				console.log(
-					`received first chunk of freeze frame: ${freezeFrame.jpeg.length}/${freezeFrame.size}`
-				);
-				freezeFrame.receiving = true;
-			} else {
-				console.log(
-					`received complete freeze frame: ${freezeFrame.jpeg.length}/${freezeFrame.size}`
-				);
-				showFreezeFrame();
-			}
+			let jpeg = view.slice(1 + 4);
+
 		} else if (view[0] === ToClientMessageType.UnfreezeFrame) {
-			invalidateFreezeFrameOverlay();
+			// 
 		} else if (view[0] === ToClientMessageType.VideoEncoderAvgQP) {
 			VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
 			// console.log(`received VideoEncoderAvgQP ${VideoEncoderQP}`);
@@ -329,7 +240,7 @@ function setupWebRtcPlayer() {
 
 	registerInputs(webRtcPlayerObj.video);
 
- 
+
 
 	showTextOverlay("Starting connection to server, please wait");
 	webRtcPlayerObj.createOffer();
@@ -351,12 +262,6 @@ function setupWebRtcPlayer() {
 		};
 
 		requestQualityControl();
-
-		showFreezeFrameOverlay();
-
-
-		resizePlayerStyle();
-
 	}
 
 
@@ -473,108 +378,9 @@ function onWebRtcIce(iceCandidate) {
 // non-touch application to be controlled partially via a touch device.
 let fakeMouseWithTouches = false
 
+playerElementClientRect = playerElement.getBoundingClientRect();
 
-
-function setupFreezeFrameOverlay() {
-	freezeFrameOverlay = document.createElement("img");
-	freezeFrameOverlay.id = "freezeFrameOverlay";
-	freezeFrameOverlay.style.display = "none";
-	freezeFrameOverlay.style.pointerEvents = "none";
-	freezeFrameOverlay.style.position = "absolute";
-	freezeFrameOverlay.style.zIndex = "30";
-}
-function showFreezeFrameOverlay() {
-	if (freezeFrame.valid) {
-		freezeFrameOverlay.style.display = "block";
-	}
-}
-function invalidateFreezeFrameOverlay() {
-	freezeFrameOverlay.style.display = "none";
-	freezeFrame.valid = false;
-}
-function resizeFreezeFrameOverlay() {
-	if (freezeFrame.width !== 0 && freezeFrame.height !== 0) {
-		let displayWidth = 0;
-		let displayHeight = 0;
-		let displayTop = 0;
-		let displayLeft = 0;
-
-		if (fillWindowButton.checked) {
-			let windowAspectRatio = window.innerWidth / window.innerHeight;
-			let videoAspectRatio = freezeFrame.width / freezeFrame.height;
-			if (windowAspectRatio < videoAspectRatio) {
-				displayWidth = window.innerWidth;
-				displayHeight = Math.floor(window.innerWidth / videoAspectRatio);
-				displayTop = Math.floor((window.innerHeight - displayHeight) * 0.5);
-				displayLeft = 0;
-			} else {
-				displayWidth = Math.floor(window.innerHeight * videoAspectRatio);
-				displayHeight = window.innerHeight;
-				displayTop = 0;
-				displayLeft = Math.floor((window.innerWidth - displayWidth) * 0.5);
-			}
-		} else {
-			displayWidth = freezeFrame.width;
-			displayHeight = freezeFrame.height;
-			displayTop = 0;
-			displayLeft = 0;
-		}
-		freezeFrameOverlay.style.width = displayWidth + "px";
-		freezeFrameOverlay.style.height = displayHeight + "px";
-		freezeFrameOverlay.style.left = displayLeft + "px";
-		freezeFrameOverlay.style.top = displayTop + "px";
-	}
-}
-
-function resizePlayerStyle(event) {
-	if (!webRtcPlayerObj) return;
-
-
-
-
-	updateVideoStreamSize();
-
-
-	if (fillWindowButton.checked) {
-		webRtcPlayerObj.video.classList.replace('actual-size', 'fit-size')
-	} else {
-		webRtcPlayerObj.video.classList.replace('fit-size', 'actual-size')
-	}
-
-
-	// Calculating and normalizing positions depends on the width and height of
-	// the player.
-	// playerElementClientRect = playerElement.getBoundingClientRect();
-	setupNormalizeAndQuantize();
-	resizeFreezeFrameOverlay();
-}
-
-function updateVideoStreamSize() {
-	if (!matchViewportResolution) {
-		return;
-	}
-
-	var now = new Date().getTime();
-	if (now - lastTimeResized > 1000) {
-		if (!playerElement) return;
-
-		let descriptor = {
-			Console:
-				"setres " +
-				playerElement.clientWidth +
-				"x" +
-				playerElement.clientHeight,
-		};
-		emitUIInteraction(descriptor);
-		console.log(descriptor);
-		lastTimeResized = new Date().getTime();
-	} else {
-		console.log("Resizing too often - skipping");
-		clearTimeout(resizeTimeout);
-		resizeTimeout = setTimeout(updateVideoStreamSize, 1000);
-	}
-}
-
+ 
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
 const MessageType = {
@@ -672,76 +478,41 @@ function requestQualityControl() {
 }
 
 var playerElementClientRect = undefined;
-var normalizeAndQuantizeUnsigned = undefined;
-var normalizeAndQuantizeSigned = undefined;
-
-function setupNormalizeAndQuantize() {
-	if (!webRtcPlayerObj.video) return
-
-
-	// Unsigned XY positions are the ratio (0.0..1.0) along a viewport axis,
-	// quantized into an uint16 (0..65536).
-	// Signed XY deltas are the ratio (-1.0..1.0) along a viewport axis,
-	// quantized into an int16 (-32767..32767).
-	// This allows the browser viewport and client viewport to have a different
-	// size.
-	// Hack: Currently we set an out-of-range position to an extreme (65535)
-	// as we can't yet accurately detect mouse enter and leave events
-	// precisely inside a video with an aspect ratio which causes mattes.
-
-	// Unsigned.
-	normalizeAndQuantizeUnsigned = (x, y) => {
-		let normalizedX = x / playerElement.clientWidth
-		let normalizedY = y / playerElement.clientHeight;
-		if (
-			normalizedX < 0.0 ||
-			normalizedX > 1.0 ||
-			normalizedY < 0.0 ||
-			normalizedY > 1.0
-		) {
-			return {
-				inRange: false,
-				x: 65535,
-				y: 65535,
-			};
-		} else {
-			return {
-				inRange: true,
-				x: normalizedX * 65536,
-				y: normalizedY * 65536,
-			};
-		}
-	};
-	unquantizeAndDenormalizeUnsigned = (x, y) => {
-		let normalizedX = x / 65536
-		let normalizedY = y / 65536;
+function normalizeAndQuantizeUnsigned(x, y) {
+	let normalizedX = x / playerElement.clientWidth
+	let normalizedY = y / playerElement.clientHeight;
+	if (
+		normalizedX < 0.0 ||
+		normalizedX > 1.0 ||
+		normalizedY < 0.0 ||
+		normalizedY > 1.0
+	) {
 		return {
-			x: normalizedX * playerElement.clientWidth,
-			y: normalizedY * playerElement.clientHeight,
+			inRange: false,
+			x: 65535,
+			y: 65535,
 		};
-	};
-	// Signed.
-	normalizeAndQuantizeSigned = (x, y) => {
-		let normalizedX = x / (0.5 * playerElement.clientWidth);
-		let normalizedY = y / (0.5 * playerElement.clientHeight);
+	} else {
 		return {
-			x: normalizedX * 32767,
-			y: normalizedY * 32767,
+			inRange: true,
+			x: normalizedX * 65536,
+			y: normalizedY * 65536,
 		};
-	};
+	}
+};;
 
 
-}
 
 function emitMouseMove(x, y, deltaX, deltaY) {
 	let coord = normalizeAndQuantizeUnsigned(x, y);
-	let delta = normalizeAndQuantizeSigned(deltaX, deltaY);
+	deltaX = deltaX * 65536 / playerElement.clientWidth
+	deltaY = deltaY * 65536 / playerElement.clientHeight
 	var Data = new DataView(new ArrayBuffer(9));
 	Data.setUint8(0, MessageType.MouseMove);
 	Data.setUint16(1, coord.x, true);
 	Data.setUint16(3, coord.y, true);
-	Data.setInt16(5, delta.x, true);
-	Data.setInt16(7, delta.y, true);
+	Data.setInt16(5, deltaX, true);
+	Data.setInt16(7, deltaY, true);
 	webRtcPlayerObj.send(Data.buffer);
 }
 
@@ -843,9 +614,9 @@ function registerInputs(playerElement) {
 	registerTouchEvents(playerElement);
 }
 
- 
 
- 
+
+
 function registerMouseEnterAndLeaveEvents(playerElement) {
 	playerElement.onmouseenter = function (e) {
 
@@ -1123,7 +894,6 @@ function registerKeyboardEvents() {
 	};
 
 	document.onkeypress = function (e) {
-		console.log(e.keyCode)
 		if (preventDefault) e.preventDefault();
 		let data = new DataView(new ArrayBuffer(3));
 		data.setUint8(0, MessageType.KeyPress);
@@ -1147,13 +917,8 @@ function start() {
 
 
 	if (!connect_on_load || is_reconnection) {
-		// showConnectOverlay();
-		connect();
-
-
-		invalidateFreezeFrameOverlay();
-		resizePlayerStyle();
-	} else {
+ 		connect();
+ 	} else {
 		connect();
 	}
 
@@ -1180,8 +945,7 @@ function connect() {
 		var msg = JSON.parse(event.data);
 		if (msg.type === "config") {
 			setupWebRtcPlayer();
-			resizePlayerStyle();
-		} else if (msg.type === "playerCount") {
+ 		} else if (msg.type === "playerCount") {
 			updateKickButton(msg.count - 1);
 		} else if (msg.type === "answer") {
 			onWebRtcAnswer(msg);
@@ -1203,7 +967,7 @@ function connect() {
 
 		// destroy `webRtcPlayerObj` if any
 		if (webRtcPlayerObj) {
-			if (webRtcPlayerObj.video.playerElement === document.body)
+			if (webRtcPlayerObj.video.parentElement === document.body)
 				document.body.removeChild(webRtcPlayerObj.video);
 			clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
 			webRtcPlayerObj.close();
@@ -1218,7 +982,6 @@ function connect() {
 
 function load() {
 	setupHtmlEvents();
-	setupFreezeFrameOverlay();
 	registerKeyboardEvents();
 	start();
 }

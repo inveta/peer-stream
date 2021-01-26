@@ -1,9 +1,9 @@
 ![](public/favicon.png)
 
 
-# PixelStreamer
+# Pixel Streamer
 
-Lightweight signaling & web server for Unrel Engine. Culling many expensive libraries from original package.
+Lightweight signaling & web server for UnrealEngine's PixelStreaming. Culling many expensive libraries and redundant functions from original package.
 
 ## Usage
  

@@ -223,22 +223,11 @@ body {
 
 /*** Toggle Switch styles ***/
 
-video {
+video#streamingVideo {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='50px' width='200px'><text x='0' y='40' fill='white' font-size='30'>Click to Start</text></svg>");
   background-repeat: no-repeat;
   background-position: center;
   background-color: #222;
-}
-
-video.fit-size {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-}
-
-video.actual-size {
   width: unset;
   height: unset;
   position: fixed;
