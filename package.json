@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node serve.js"
   },
-  "repository": "https://github.com/JinHengyu/PixelStreamer",
+  "repository": "",
   "license": "Apache-2.0",
   "dependencies": {
     "express": "^4.17.1",

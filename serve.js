@@ -1,4 +1,4 @@
-//  开启web服务和信令服务
+// web & signalling server
 
 
 
@@ -8,7 +8,7 @@ var app = express();
 const path = require("path");
 
 
-// 优先级：命令行参数 > config.json
+// priority: command line > config.json
 const {
   httpPort,
   streamerPort,
@@ -49,10 +49,9 @@ http.listen(httpPort, function () {
   console.log("Http listening on *: " + httpPort);
 });
 
-// console.log(123,app.toString())
 
 
-// 以下是信令服务
+// below are signalling services
 
 const WebSocket = require("ws");
 

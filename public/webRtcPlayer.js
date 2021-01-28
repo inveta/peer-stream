@@ -17,9 +17,10 @@ window.webRtcPlayer = class {
     //Create Video element and expose that as a parameter
     this.video = document.createElement("video");
     this.video.id = "streamingVideo";
-     this.video.playsInline = true;
-    this.video.onresize=e=>{
-      console.log(`resolution change to `+e.target.videoWidth+'x'+e.target.videoHeight)
+    this.video.tabIndex = 0 // easy to focus..
+    this.video.playsInline = true;
+    this.video.onresize = e => {
+      console.log(`resolution change to ` + e.target.videoWidth + 'x' + e.target.videoHeight)
     }
   }
 
@@ -189,7 +190,7 @@ window.webRtcPlayer = class {
     this._setupPeerConnection(this.pcClient);
     this.dcClient = this._setupDataChannel(
       this.pcClient,
-      "金恒昱",
+      "hello world",
       this.dataChannelOptions
     );
     this._handleCreateOffer(this.pcClient);

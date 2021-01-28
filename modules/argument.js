@@ -1,4 +1,5 @@
-// 格式：空格分隔键值对，键值对用“=”连接
+// command line format: key-value pairs connected by "=", separated by " ", for example:
+// node serve.js httpPort=80 streamerPort=8888
 
 
 // argv[0]: path/to/node.exe
@@ -9,4 +10,4 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   return prev;
 }, {});
 
- module.exports = args;
+module.exports = args;

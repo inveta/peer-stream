@@ -1,7 +1,7 @@
 
 let webRtcPlayerObj = new window.webRtcPlayer();
 let playerElement = webRtcPlayerObj.video;
-var connect_on_load = false;
+
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 
@@ -10,7 +10,6 @@ const logsWrapper = document.getElementById("logs");
 
 // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 window.preventDefault = false
-var is_reconnection = false;
 var ws;
 const WS_OPEN_STATE = 1;
 
@@ -29,10 +28,6 @@ function setupHtmlEvents() {
 	//Window events
 	// window.addEventListener("resize", resizePlayerStyle, true);
 	// window.addEventListener("orientationchange", resizePlayerStyle);
-
-	//HTML elements controls
-	let overlayButton = document.getElementById("overlayButton");
-	overlayButton.addEventListener("click", onExpandOverlay_Click);
 
 
 
@@ -212,6 +207,7 @@ function setupWebRtcPlayer() {
 				qualityControlOwnershipCheckBox.checked = ownership;
 			}
 		} else if (view[0] === ToClientMessageType.Response) {
+			// user custom message
 			let response = new TextDecoder("utf-16").decode(data.slice(1));
 
 		} else if (view[0] === ToClientMessageType.Command) {
@@ -249,14 +245,14 @@ function setupWebRtcPlayer() {
 
 
 		webRtcPlayerObj.video.addEventListener('click', function initStart(e) {
-			// 必须由用户触发
+			// must be triggered by user
 			webRtcPlayerObj.video.play();
 			webRtcPlayerObj.video.requestPointerLock()
 			webRtcPlayerObj.video.removeEventListener('click', initStart)
 		});
 
 
-		// 双击进入沉浸式
+		// double click: pointer lock mode
 		webRtcPlayerObj.video.ondblclick = e => {
 			webRtcPlayerObj.video.requestPointerLock();
 		};
@@ -380,7 +376,7 @@ let fakeMouseWithTouches = false
 
 playerElementClientRect = playerElement.getBoundingClientRect();
 
- 
+
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
 const MessageType = {
@@ -567,45 +563,9 @@ const MouseButtonsMask = {
 	FifthButton: 16, // Browser Forward button.
 };
 
-// If the user has any mouse buttons pressed then release them.
-function releaseMouseButtons(buttons, x, y) {
-	return
-	if (buttons & MouseButtonsMask.PrimaryButton) {
-		emitMouseUp(MouseButton.MainButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.SecondaryButton) {
-		emitMouseUp(MouseButton.SecondaryButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.AuxiliaryButton) {
-		emitMouseUp(MouseButton.AuxiliaryButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.FourthButton) {
-		emitMouseUp(MouseButton.FourthButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.FifthButton) {
-		emitMouseUp(MouseButton.FifthButton, x, y);
-	}
-}
 
-// If the user has any mouse buttons pressed then press them again.
-function pressMouseButtons(buttons, x, y) {
-	return
-	if (buttons & MouseButtonsMask.PrimaryButton) {
-		emitMouseDown(MouseButton.MainButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.SecondaryButton) {
-		emitMouseDown(MouseButton.SecondaryButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.AuxiliaryButton) {
-		emitMouseDown(MouseButton.AuxiliaryButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.FourthButton) {
-		emitMouseDown(MouseButton.FourthButton, x, y);
-	}
-	if (buttons & MouseButtonsMask.FifthButton) {
-		emitMouseDown(MouseButton.FifthButton, x, y);
-	}
-}
+
+
 
 function registerInputs(playerElement) {
 	if (!playerElement) return;
@@ -623,7 +583,6 @@ function registerMouseEnterAndLeaveEvents(playerElement) {
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseEnter);
 		webRtcPlayerObj.send(Data.buffer);
-		// playerElement.pressMouseButtons(e);
 	};
 
 	playerElement.onmouseleave = function (e) {
@@ -631,7 +590,6 @@ function registerMouseEnterAndLeaveEvents(playerElement) {
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseLeave);
 		webRtcPlayerObj.send(Data.buffer);
-		// playerElement.releaseMouseButtons(e);
 	};
 }
 
@@ -644,7 +602,7 @@ function registerMouseEnterAndLeaveEvents(playerElement) {
 
 function setupMouseLockEvents() {
 	preventDefault = true
-	showTextOverlay('进入沉浸式鼠标体验，按Esc退出')
+	showTextOverlay('Point locked in, Esc to exit')
 
 	const { videoWidth, videoHeight } = webRtcPlayerObj.video
 	let x = videoWidth / 2;
@@ -880,7 +838,7 @@ function getKeyCode(e) {
 }
 
 function registerKeyboardEvents() {
-	document.onkeydown = function (e) {
+	webRtcPlayerObj.video.onkeydown = function (e) {
 		if (preventDefault) e.preventDefault();
 		webRtcPlayerObj.send(
 			new Uint8Array([MessageType.KeyDown, getKeyCode(e), e.repeat]).buffer
@@ -888,12 +846,12 @@ function registerKeyboardEvents() {
 		//  e.stopPropagation
 	};
 
-	document.onkeyup = function (e) {
+	webRtcPlayerObj.video.onkeyup = function (e) {
 		if (preventDefault) e.preventDefault();
 		webRtcPlayerObj.send(new Uint8Array([MessageType.KeyUp, getKeyCode(e)]).buffer);
 	};
 
-	document.onkeypress = function (e) {
+	webRtcPlayerObj.video.onkeypress = function (e) {
 		if (preventDefault) e.preventDefault();
 		let data = new DataView(new ArrayBuffer(3));
 		data.setUint8(0, MessageType.KeyPress);
@@ -916,11 +874,9 @@ function start() {
 
 
 
-	if (!connect_on_load || is_reconnection) {
- 		connect();
- 	} else {
-		connect();
-	}
+
+	connect();
+
 
 
 	updateKickButton(0);
@@ -945,7 +901,8 @@ function connect() {
 		var msg = JSON.parse(event.data);
 		if (msg.type === "config") {
 			setupWebRtcPlayer();
- 		} else if (msg.type === "playerCount") {
+			registerKeyboardEvents();
+		} else if (msg.type === "playerCount") {
 			updateKickButton(msg.count - 1);
 		} else if (msg.type === "answer") {
 			onWebRtcAnswer(msg);
@@ -961,9 +918,8 @@ function connect() {
 	};
 
 	ws.onclose = function (event) {
-		console.log(`WS closed: ${JSON.stringify(event.code)} - ${event.reason}`);
+		showTextOverlay(`WS closed: ${JSON.stringify(event.code)} - ${event.reason}`);
 		ws = undefined;
-		is_reconnection = true;
 
 		// destroy `webRtcPlayerObj` if any
 		if (webRtcPlayerObj) {
@@ -971,7 +927,7 @@ function connect() {
 				document.body.removeChild(webRtcPlayerObj.video);
 			clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
 			webRtcPlayerObj.close();
-			webRtcPlayerObj = undefined;
+			// webRtcPlayerObj = undefined;
 		}
 
 		showTextOverlay(`Disconnected: ${event.reason}`);
@@ -982,6 +938,5 @@ function connect() {
 
 function load() {
 	setupHtmlEvents();
-	registerKeyboardEvents();
 	start();
 }
