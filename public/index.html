@@ -4,15 +4,15 @@
 <head>
 	<link rel="shortcut icon" type="image/png" href="/favicon.png" />
 	<link type="text/css" rel="stylesheet" href="/index.css" />
-	<script type="text/javascript" src="/webRtcPlayer.js"></script>
+	<script type="text/javascript" src="/WebRTC.js"></script>
 	<script defer type="text/javascript" src="/app.js"></script>
 </head>
 
-<body onload="load()">
+<body onload="start()">
 	<div id="logs"></div>
 	<div id="overlay">
 		<div>
-			<div id="qualityStatus" class="greyStatus">●</div>
+			<div id="qualityStatus" style="color: gray;">●</div>
 			<div id="overlayButton" onclick="onExpandOverlay_Click()">+</div>
 		</div>
 		<div id="overlaySettings">
@@ -32,9 +32,7 @@
 				</label>
 			</div>
 
-			<div id="statsContainer">
-				<div id="stats"></div>
-			</div>
+			<div id="stats"></div>
 		</div>
 	</div>
 </body>

@@ -14,13 +14,10 @@ body {
   background-color: black;
 }
 
-#statsContainer {
+#stats {
   background-color: rgba(0, 0, 0, 0.8);
   text-align: left;
   display: block;
-}
-
-#stats {
   font-size: 14px;
   font-weight: bold;
   padding: 6px;
@@ -74,36 +71,6 @@ body {
 #overlaySettings {
   width: 300px;
   display: none;
-}
-
-.greyStatus {
-  color: grey;
-}
-
-.limeStatus {
-  color: lime;
-}
-
-.orangeStatus {
-  color: orange;
-}
-
-.redStatus {
-  color: red;
-}
-
-/* State to hide overlay, WebRTC communication is in progress and or is playing */
-
-#UIInteraction {
-  position: fixed;
-}
-
-#UIInteractionButtonBoundary {
-  padding: 2px;
-}
-
-#UIInteractionButton {
-  cursor: pointer;
 }
 
 .settings-text {

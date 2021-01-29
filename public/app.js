@@ -1,5 +1,5 @@
 
-let webRtcPlayerObj = new window.webRtcPlayer();
+let webRtcPlayerObj = new window.WebRTC();
 let playerElement = webRtcPlayerObj.video;
 
 const statsDiv = document.getElementById("stats");
@@ -14,12 +14,6 @@ var ws;
 const WS_OPEN_STATE = 1;
 
 var qualityControlOwnershipCheckBox;
-var matchViewportResolution;
-// TODO: Remove this - workaround because of bug causing UE to crash when switching resolutions too quickly
-var lastTimeResized = new Date().getTime();
-var resizeTimeout;
-
-
 
 
 
@@ -228,7 +222,7 @@ function setupWebRtcPlayer() {
 			// 
 		} else if (view[0] === ToClientMessageType.VideoEncoderAvgQP) {
 			VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
-			// console.log(`received VideoEncoderAvgQP ${VideoEncoderQP}`);
+			console.log(`received VideoEncoderAvgQP ${VideoEncoderQP}`);
 		} else {
 			console.error(`unrecognized data received, packet ID ${view[0]}`);
 		}
@@ -332,7 +326,7 @@ function onAggregatedStats(reducedStat) {
 		statsText += `<div style="color: ${color}">Spotty network connection</div>`;
 	}
 
-	qualityStatus.className = `${color}Status`;
+	qualityStatus.style.color = color
 
 	const duration = new Date(performance.now() + (new Date()).getTimezoneOffset() * 60 * 1000).toTimeString().split(' ')[0]
 	statsText += `
@@ -866,19 +860,12 @@ function onExpandOverlay_Click(/* e */) {
 }
 
 function start() {
+	setupHtmlEvents();
+
+
 	// update "quality status" to "disconnected" state
-	let qualityStatus = document.getElementById("qualityStatus");
-	qualityStatus.className = "grey-status";
-
 	statsDiv.innerHTML = "Not connected";
-
-
-
-
 	connect();
-
-
-
 	updateKickButton(0);
 }
 
@@ -918,25 +905,18 @@ function connect() {
 	};
 
 	ws.onclose = function (event) {
-		showTextOverlay(`WS closed: ${JSON.stringify(event.code)} - ${event.reason}`);
 		ws = undefined;
 
-		// destroy `webRtcPlayerObj` if any
-		if (webRtcPlayerObj) {
-			if (webRtcPlayerObj.video.parentElement === document.body)
-				document.body.removeChild(webRtcPlayerObj.video);
-			clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
-			webRtcPlayerObj.close();
-			// webRtcPlayerObj = undefined;
-		}
+		if (webRtcPlayerObj.video.parentElement === document.body)
+			document.body.removeChild(webRtcPlayerObj.video);
+		clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
+		webRtcPlayerObj.close();
+		// webRtcPlayerObj = undefined;
 
-		showTextOverlay(`Disconnected: ${event.reason}`);
+
+		showTextOverlay(`WS closed: ${event.reason}`);
 		var reclickToStart = setTimeout(start, 4000);
 	};
 }
 
 
-function load() {
-	setupHtmlEvents();
-	start();
-}

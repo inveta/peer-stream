@@ -1,4 +1,4 @@
-window.webRtcPlayer = class {
+window.WebRTC = class {
   constructor() {
 
     this.pcClient = null; // RTCPeerConnection
