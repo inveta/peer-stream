@@ -6,7 +6,7 @@
 Lightweight signaling & web server for UnrealEngine's PixelStreaming. Culling many expensive libraries and redundant functions from original package.
 
 ## Usage
- 
+
 ```
 npm install
 npm start

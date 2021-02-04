@@ -8,13 +8,14 @@ var app = express();
 const path = require("path");
 
 
-// priority: command line > config.json
+const cfg = require("./modules/argument.js")
 const {
-  httpPort,
-  streamerPort,
-  homepageFile,
+  httpPort = 80,
+  streamerPort = 8888,
   peerConnectionOptions,
-} = Object.assign(require("./config.js"), require("./modules/argument.js"));
+} = cfg
+
+
 
 
 
@@ -40,9 +41,7 @@ if (typeof peerConnectionOptions != "undefined") {
 app.use("/", express.static(path.join(__dirname, "/public")));
 
 app.get("/", function (req, res) {
-  const homepageFilePath = path.join(__dirname, homepageFile);
-
-  res.sendFile(homepageFilePath);
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 http.listen(httpPort, function () {
@@ -56,19 +55,16 @@ http.listen(httpPort, function () {
 const WebSocket = require("ws");
 
 let streamerServer = new WebSocket.Server({ port: streamerPort, backlog: 1 });
-console.log(
+console.log(`WebSocket listening to Unreal Engine on :${streamerPort}`);
 
-  `WebSocket listening to Streamer connections on :${streamerPort}`
-);
 let streamer; // WebSocket connected to Streamer
 
 streamerServer.on("connection", function (ws, req) {
   console.log(
-    `Streamer connected: ${req.socket.remoteAddress}:${req.socket.remotePort}`
+    `Unreal Engine connected: ${req.socket.remoteAddress}:${req.socket.remotePort}`
   );
 
   ws.on("message", function onStreamerMessage(msg) {
-    console.log(`<- Streamer: ${msg}`);
 
     try {
       msg = JSON.parse(msg);
@@ -77,6 +73,8 @@ streamerServer.on("connection", function (ws, req) {
       streamer.close(1008, "Cannot parse");
       return;
     }
+
+    console.log(`Unreal Engine:`, msg);
 
     if (msg.type == "ping") {
       streamer.send(JSON.stringify({ type: "pong", time: msg.time }));
@@ -100,24 +98,20 @@ streamerServer.on("connection", function (ws, req) {
     } else if (msg.type == "disconnectPlayer") {
       player.ws.close(1011 /* internal error */, msg.reason);
     } else {
-      console.error(`unsupported Streamer message type: ${msg.type}`);
+      console.error(`unsupported Unreal Engine message type: ${msg.type}`);
       streamer.close(1008, "Unsupported message type");
     }
   });
 
-  function onStreamerDisconnected() {
-    disconnectAllPlayers();
-  }
-
   ws.on("close", function (code, reason) {
-    console.error(`streamer disconnected: ${code} - ${reason}`);
-    onStreamerDisconnected();
+    console.error(`Unreal Engine disconnected: ${code} - ${reason}`);
+    disconnectAllPlayers();
   });
 
   ws.on("error", function (error) {
-    console.error(`streamer connection error: ${error}`);
+    console.error(`Unreal Engine connection error: ${error}`);
     ws.close(1006 /* abnormal closure */, error);
-    onStreamerDisconnected();
+    disconnectAllPlayers();
   });
 
   streamer = ws;
@@ -125,12 +119,15 @@ streamerServer.on("connection", function (ws, req) {
   streamer.send(JSON.stringify(clientConfig));
 });
 
+
+
+
+
 let playerServer = new WebSocket.Server({
   server: http,
 });
-console.log(
-  `WebSocket listening to Players connections on :${httpPort}`
-);
+
+console.log(`WebSocket listening to Players connections on :${httpPort}`);
 
 let players = new Map(); // playerId <-> player, where player is either a web-browser or a native webrtc player
 let nextPlayerId = 100;
@@ -138,7 +135,7 @@ let nextPlayerId = 100;
 playerServer.on("connection", function (ws, req) {
   // Reject connection if streamer is not connected
   if (!streamer || streamer.readyState != 1 /* OPEN */) {
-    ws.close(1013 /* Try again later */, "Streamer is not connected");
+    ws.close(1013 /* Try again later */, "Unreal Engine is not connected");
     return;
   }
 

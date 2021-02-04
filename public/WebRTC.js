@@ -29,6 +29,7 @@ window.WebRTC = class {
   onWebRtcCandidate() { }
   onDataChannelMessage() { }
   onDataChannelConnected() { }
+  onClosed() { }
 
   // Private Functions with "_" prefixed
 
@@ -45,6 +46,7 @@ window.WebRTC = class {
 
     datachannel.onclose = function (e) {
       console.log(`data channel (${label}) closed`);
+      self.onClosed()
     };
 
     datachannel.onmessage = function (e) {
@@ -76,8 +78,10 @@ window.WebRTC = class {
     //Setup peerConnection events
     pc.onsignalingstatechange = (state) =>
       console.info("signaling state change:", state);
-    pc.oniceconnectionstatechange = (state) =>
+    pc.oniceconnectionstatechange = (state) => {
+      // alert(state)
       console.info("ice connection state change:", state);
+    }
 
     pc.onicegatheringstatechange = (state) =>
       console.info("ice gathering state change:", state);
@@ -91,6 +95,7 @@ window.WebRTC = class {
         self.onWebRtcCandidate(e.candidate);
       }
     };
+
   }
 
   // fetch then reduce the stats array
@@ -207,7 +212,7 @@ window.WebRTC = class {
     if (this.pcClient) {
       console.log("Closing existing peerClient");
       this.pcClient.close();
-      this.pcClient = null;
+      // this.pcClient = null;
     }
   }
 

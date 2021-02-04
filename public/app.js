@@ -13,7 +13,6 @@ window.preventDefault = false
 var ws;
 const WS_OPEN_STATE = 1;
 
-var qualityControlOwnershipCheckBox;
 
 
 
@@ -23,114 +22,12 @@ function setupHtmlEvents() {
 	// window.addEventListener("resize", resizePlayerStyle, true);
 	// window.addEventListener("orientationchange", resizePlayerStyle);
 
-
-
-
-	qualityControlOwnershipCheckBox = document.getElementById(
-		"quality-control-ownership-tgl"
-	);
-	if (qualityControlOwnershipCheckBox !== null) {
-		qualityControlOwnershipCheckBox.onchange = function (event) {
-			requestQualityControl();
-		};
-	}
-
-	let prioritiseQualityCheckbox = document.getElementById(
-		"prioritise-quality-tgl"
-	);
-	let qualityParamsSubmit = document.getElementById("quality-params-submit");
-
-	if (prioritiseQualityCheckbox !== null) {
-		prioritiseQualityCheckbox.onchange = function (event) {
-			if (prioritiseQualityCheckbox.checked) {
-				// TODO: This state should be read from the UE Application rather than from the initial values in the HTML
-				let lowBitrate = document.getElementById("low-bitrate-text").value;
-				let highBitrate = document.getElementById("high-bitrate-text").value;
-				let minFPS = document.getElementById("min-fps-text").value;
-
-				let initialDescriptor = {
-					PrioritiseQuality: 1,
-					LowBitrate: lowBitrate,
-					HighBitrate: highBitrate,
-					MinFPS: minFPS,
-				};
-				// TODO: The descriptor should be sent as is to a generic handler on the UE side
-				// but for now we're just sending it as separate console commands
-				//emitUIInteraction(initialDescriptor);
-				sendQualityConsoleCommands(initialDescriptor);
-				console.log(initialDescriptor);
-
-				qualityParamsSubmit.onclick = function (event) {
-					let lowBitrate = document.getElementById("low-bitrate-text").value;
-					let highBitrate = document.getElementById("high-bitrate-text").value;
-					let minFPS = document.getElementById("min-fps-text").value;
-					let descriptor = {
-						PrioritiseQuality: 1,
-						LowBitrate: lowBitrate,
-						HighBitrate: highBitrate,
-						MinFPS: minFPS,
-					};
-					//emitUIInteraction(descriptor);
-					sendQualityConsoleCommands(descriptor);
-					console.log(descriptor);
-				};
-			} else {
-				// Prioritise Quality unchecked
-				let initialDescriptor = {
-					PrioritiseQuality: 0,
-				};
-				//emitUIInteraction(initialDescriptor);
-				sendQualityConsoleCommands(initialDescriptor);
-				console.log(initialDescriptor);
-
-				qualityParamsSubmit.onclick = null;
-			}
-		};
-	}
-
-
-
-
 	var kickButton = document.getElementById("kick-other-players-button");
 	if (kickButton) {
 		kickButton.onclick = function (event) {
 			console.log(`-> SS: kick`);
 			ws.send(JSON.stringify({ type: "kick" }));
 		};
-	}
-}
-
-function sendQualityConsoleCommands(descriptor) {
-	if (descriptor.PrioritiseQuality !== null) {
-		let command = "Streamer.PrioritiseQuality " + descriptor.PrioritiseQuality;
-		let consoleDescriptor = {
-			Console: command,
-		};
-		emitUIInteraction(consoleDescriptor);
-	}
-
-	if (descriptor.LowBitrate !== null) {
-		let command = "Streamer.LowBitrate " + descriptor.LowBitrate;
-		let consoleDescriptor = {
-			Console: command,
-		};
-		emitUIInteraction(consoleDescriptor);
-	}
-
-	if (descriptor.HighBitrate !== null) {
-		let command = "Streamer.HighBitrate " + descriptor.HighBitrate;
-		let consoleDescriptor = {
-			Console: command,
-		};
-		emitUIInteraction(consoleDescriptor);
-	}
-
-	if (descriptor.MinFPS !== null) {
-		var command = "Streamer.MinFPS " + descriptor.MinFPS;
-		let consoleDescriptor = {
-			Console: command,
-		};
-		emitUIInteraction(consoleDescriptor);
 	}
 }
 
@@ -193,13 +90,8 @@ function setupWebRtcPlayer() {
 	webRtcPlayerObj.onDataChannelMessage = function (data) {
 		var view = new Uint8Array(data);
 		if (view[0] === ToClientMessageType.QualityControlOwnership) {
-			let ownership = view[1] === 0 ? false : true;
-			// If we own the quality control, we can't relenquish it. We only loose
-			// quality control when another peer asks for it
-			if (qualityControlOwnershipCheckBox !== null) {
-				qualityControlOwnershipCheckBox.disabled = ownership;
-				qualityControlOwnershipCheckBox.checked = ownership;
-			}
+			let ownership = view[1] !== 0;
+
 		} else if (view[0] === ToClientMessageType.Response) {
 			// user custom message
 			let response = new TextDecoder("utf-16").decode(data.slice(1));
@@ -228,7 +120,10 @@ function setupWebRtcPlayer() {
 		}
 	};
 
-	registerInputs(webRtcPlayerObj.video);
+
+
+	registerMouseEnterAndLeaveEvents(webRtcPlayerObj.video);
+	registerTouchEvents(webRtcPlayerObj.video);
 
 
 
@@ -251,7 +146,6 @@ function setupWebRtcPlayer() {
 			webRtcPlayerObj.video.requestPointerLock();
 		};
 
-		requestQualityControl();
 	}
 
 
@@ -278,8 +172,7 @@ function onAggregatedStats(reducedStat) {
 
 	receivedBytesMeasurement = "B";
 	receivedBytes = reducedStat.bytesReceived || 0;
-	let dataMeasurements = ["KB", "MB", "GB"];
-	dataMeasurements.find(dataMeasurement => {
+	["KB", "MB", "GB"].find(dataMeasurement => {
 		if (receivedBytes < 100 * 1000) return true;
 		receivedBytes /= 1000;
 		receivedBytesMeasurement = dataMeasurement;
@@ -288,27 +181,7 @@ function onAggregatedStats(reducedStat) {
 
 	let qualityStatus = document.getElementById("qualityStatus");
 
-	// "blinks" quality status element for 1 sec by making it transparent, speed = number of blinks
-	let blinkQualityStatus = function (speed) {
-		let iter = speed;
-		let opacity = 1; // [0..1]
-		let tickId = setInterval(
-			function () {
-				opacity -= 0.1;
-				// map `opacity` to [-0.5..0.5] range, decrement by 0.2 per step and take `abs` to make it blink: 1 -> 0 -> 1
-				qualityStatus.style = `opacity: ${Math.abs((opacity - 0.5) * 2)}`;
-				if (opacity <= 0.1) {
-					if (--iter == 0) {
-						clearInterval(tickId);
-					} else {
-						// next blink
-						opacity = 1;
-					}
-				}
-			},
-			100 / speed // msecs
-		);
-	};
+
 
 	const orangeQP = 26;
 	const redQP = 35;
@@ -318,11 +191,9 @@ function onAggregatedStats(reducedStat) {
 	let color = "lime";
 	if (VideoEncoderQP > redQP) {
 		color = "red";
-		blinkQualityStatus(2);
 		statsText += `<div style="color: ${color}">Bad network connection</div>`;
 	} else if (VideoEncoderQP > orangeQP) {
 		color = "orange";
-		blinkQualityStatus(1);
 		statsText += `<div style="color: ${color}">Spotty network connection</div>`;
 	}
 
@@ -351,7 +222,9 @@ function onWebRtcAnswer(webRTCData) {
 		const stat = await webRtcPlayerObj.fetchReduceStats();
 		onAggregatedStats(stat);
 	}, 1000);
-
+	webRtcPlayerObj.onClosed = () => {
+		clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
+	}
 }
 
 function onWebRtcIce(iceCandidate) {
@@ -463,9 +336,6 @@ function emitCommand(descriptor) {
 	emitDescriptor(MessageType.Command, descriptor);
 }
 
-function requestQualityControl() {
-	webRtcPlayerObj.send(new Uint8Array([MessageType.RequestQualityControl]).buffer);
-}
 
 var playerElementClientRect = undefined;
 function normalizeAndQuantizeUnsigned(x, y) {
@@ -559,28 +429,14 @@ const MouseButtonsMask = {
 
 
 
-
-
-function registerInputs(playerElement) {
-	if (!playerElement) return;
-
-	registerMouseEnterAndLeaveEvents(playerElement);
-	registerTouchEvents(playerElement);
-}
-
-
-
-
-function registerMouseEnterAndLeaveEvents(playerElement) {
-	playerElement.onmouseenter = function (e) {
-
+function registerMouseEnterAndLeaveEvents(video) {
+	video.onmouseenter = function (e) {
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseEnter);
 		webRtcPlayerObj.send(Data.buffer);
 	};
 
-	playerElement.onmouseleave = function (e) {
-
+	video.onmouseleave = function (e) {
 		var Data = new DataView(new ArrayBuffer(1));
 		Data.setUint8(0, MessageType.MouseLeave);
 		webRtcPlayerObj.send(Data.buffer);
@@ -596,26 +452,26 @@ function registerMouseEnterAndLeaveEvents(playerElement) {
 
 function setupMouseLockEvents() {
 	preventDefault = true
-	showTextOverlay('Point locked in, Esc to exit')
+	showTextOverlay('mouse locked in, ESC to exit')
 
-	const { videoWidth, videoHeight } = webRtcPlayerObj.video
-	let x = videoWidth / 2;
-	let y = videoHeight / 2;
+	const { clientWidth, clientHeight } = webRtcPlayerObj.video
+	let x = clientWidth / 2;
+	let y = clientHeight / 2;
 
 	function updatePosition(e) {
 		x += e.movementX;
 		y += e.movementY;
-		if (x > videoWidth) {
-			x -= videoWidth;
+		if (x > clientWidth) {
+			x -= clientWidth;
 		}
-		if (y > videoHeight) {
-			y -= videoHeight;
+		if (y > clientHeight) {
+			y -= clientHeight;
 		}
 		if (x < 0) {
-			x = videoWidth + x;
+			x = clientWidth + x;
 		}
 		if (y < 0) {
-			y = videoHeight - y;
+			y = clientHeight - y;
 		}
 	}
 
@@ -806,50 +662,40 @@ function registerTouchEvents(playerElement) {
 	}
 }
 
-
-// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. The index of the
-// entry in the array is the special key code given below.
-const SpecialKeyCodes = {
-	BackSpace: 8,
-	Shift: 16,
-	Control: 17,
-	Alt: 18,
-	RightShift: 253,
-	RightControl: 254,
-	RightAlt: 255,
-};
-
-// We want to be able to differentiate between left and right versions of some
-// keys.
-function getKeyCode(e) {
-	if (e.keyCode === SpecialKeyCodes.Shift && e.code === "ShiftRight")
-		return SpecialKeyCodes.RightShift;
-	else if (e.keyCode === SpecialKeyCodes.Control && e.code === "ControlRight")
-		return SpecialKeyCodes.RightControl;
-	else if (e.keyCode === SpecialKeyCodes.Alt && e.code === "AltRight")
-		return SpecialKeyCodes.RightAlt;
-	else return e.keyCode;
-}
-
 function registerKeyboardEvents() {
+
+	// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. The index of the
+	// entry in the array is the special key code given below.
+	// special keycodes different from KeyboardEvent.keyCode 
+	const SpecialKeyCodes = {
+		Backspace: 8,
+		ShiftLeft: 16,
+		ControlLeft: 17,
+		AltLeft: 18,
+		ShiftRight: 253,
+		ControlRight: 254,
+		AltRight: 255,
+	};
+
+
 	webRtcPlayerObj.video.onkeydown = function (e) {
 		if (preventDefault) e.preventDefault();
 		webRtcPlayerObj.send(
-			new Uint8Array([MessageType.KeyDown, getKeyCode(e), e.repeat]).buffer
+			new Uint8Array([MessageType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]).buffer
 		);
 		//  e.stopPropagation
 	};
 
 	webRtcPlayerObj.video.onkeyup = function (e) {
 		if (preventDefault) e.preventDefault();
-		webRtcPlayerObj.send(new Uint8Array([MessageType.KeyUp, getKeyCode(e)]).buffer);
+		webRtcPlayerObj.send(new Uint8Array([MessageType.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]).buffer);
 	};
 
 	webRtcPlayerObj.video.onkeypress = function (e) {
 		if (preventDefault) e.preventDefault();
 		let data = new DataView(new ArrayBuffer(3));
 		data.setUint8(0, MessageType.KeyPress);
-		data.setUint16(1, e.charCode, true);
+		data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
 		webRtcPlayerObj.send(data.buffer);
 	};
 }
@@ -907,15 +753,15 @@ function connect() {
 	ws.onclose = function (event) {
 		ws = undefined;
 
-		if (webRtcPlayerObj.video.parentElement === document.body)
-			document.body.removeChild(webRtcPlayerObj.video);
-		clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
+		// if (webRtcPlayerObj.video.parentElement === document.body)
+		webRtcPlayerObj.video.remove();
 		webRtcPlayerObj.close();
-		// webRtcPlayerObj = undefined;
 
 
 		showTextOverlay(`WS closed: ${event.reason}`);
-		var reclickToStart = setTimeout(start, 4000);
+
+		// 3s后重连
+		setTimeout(start, 3000);
 	};
 }
 
