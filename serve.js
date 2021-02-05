@@ -8,12 +8,36 @@ var app = express();
 const path = require("path");
 
 
-const cfg = require("./modules/argument.js")
-const {
-  httpPort = 80,
-  streamerPort = 8888,
-  peerConnectionOptions,
-} = cfg
+// command line format: key-value pairs connected by "=", separated by " ", for example:
+// node serve.js httpPort=80 streamerPort=8888 useHTTPS
+
+
+// process.argc[0] == 'path/to/node.exe'
+// process.argc[1] === __filename
+const args = process.argv.slice(2).reduce((prev, curr) => {
+  let [key, ...value] = curr.split('=')
+  value = value.join('') || 'true'
+
+  try {
+    value = JSON.parse(value)
+  } catch { }
+
+  prev[key] = value;
+  return prev;
+}, {});
+
+
+
+
+
+Object.assign(global || this,
+  {
+    httpPort: 80,
+    streamerPort: 8888,
+    peerConnectionOptions: {},
+  },
+  args
+)
 
 
 
@@ -26,16 +50,7 @@ var http = require("http").Server(app);
 // `clientConfig` is send to Streamer and Players
 // Example of STUN server setting
 // let clientConfig = {peerConnectionOptions: { 'iceServers': [{'urls': ['stun:34.250.222.95:19302']}] }};
-var clientConfig = { type: "config", peerConnectionOptions: {} };
-
-if (typeof peerConnectionOptions != "undefined") {
-  clientConfig.peerConnectionOptions = JSON.parse(peerConnectionOptions);
-  console.log(
-    `peerConnectionOptions = ${JSON.stringify(
-      clientConfig.peerConnectionOptions
-    )}`
-  );
-}
+var clientConfig = { type: "config", peerConnectionOptions };
 
 
 app.use("/", express.static(path.join(__dirname, "/public")));
@@ -55,7 +70,7 @@ http.listen(httpPort, function () {
 const WebSocket = require("ws");
 
 let streamerServer = new WebSocket.Server({ port: streamerPort, backlog: 1 });
-console.log(`WebSocket listening to Unreal Engine on :${streamerPort}`);
+console.log(`WebSocket waiting for Unreal Engine on :${streamerPort}`);
 
 let streamer; // WebSocket connected to Streamer
 
@@ -69,7 +84,7 @@ streamerServer.on("connection", function (ws, req) {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`cannot parse Streamer message: ${msg}\nError: ${err}`);
+      console.error(`cannot parse Unreal Engine message: ${msg}\nError: ${err}`);
       streamer.close(1008, "Cannot parse");
       return;
     }
@@ -127,7 +142,7 @@ let playerServer = new WebSocket.Server({
   server: http,
 });
 
-console.log(`WebSocket listening to Players connections on :${httpPort}`);
+console.log(`WebSocket waitint for players on :${httpPort}`);
 
 let players = new Map(); // playerId <-> player, where player is either a web-browser or a native webrtc player
 let nextPlayerId = 100;
