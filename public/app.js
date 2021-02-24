@@ -7,9 +7,11 @@ const logsWrapper = document.getElementById("logs");
 
 
 
-
 // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 window.preventDefault = false
+// 触屏模拟鼠标
+window.fakeMouseWithTouches = false
+
 var ws;
 const WS_OPEN_STATE = 1;
 
@@ -17,19 +19,8 @@ const WS_OPEN_STATE = 1;
 
 
 
-function setupHtmlEvents() {
-	//Window events
-	// window.addEventListener("resize", resizePlayerStyle, true);
-	// window.addEventListener("orientationchange", resizePlayerStyle);
-
-	var kickButton = document.getElementById("kick-other-players-button");
-	if (kickButton) {
-		kickButton.onclick = function (event) {
-			console.log(`-> SS: kick`);
-			ws.send(JSON.stringify({ type: "kick" }));
-		};
-	}
-}
+// window.addEventListener("resize", resizePlayerStyle, true);
+// window.addEventListener("orientationchange", resizePlayerStyle);
 
 
 
@@ -132,15 +123,6 @@ function setupWebRtcPlayer() {
 
 	if (ws && ws.readyState === WS_OPEN_STATE) {
 
-
-		webRtcPlayerObj.video.addEventListener('click', function initStart(e) {
-			// must be triggered by user
-			webRtcPlayerObj.video.play();
-			webRtcPlayerObj.video.requestPointerLock()
-			webRtcPlayerObj.video.removeEventListener('click', initStart)
-		});
-
-
 		// double click: pointer lock mode
 		webRtcPlayerObj.video.ondblclick = e => {
 			webRtcPlayerObj.video.requestPointerLock();
@@ -152,15 +134,12 @@ function setupWebRtcPlayer() {
 	document.addEventListener("pointerlockchange", () => {
 		if (document.pointerLockElement === webRtcPlayerObj.video) {
 			setupMouseLockEvents()
-
 		} else {
 			setupMouseHoverEvents()
 		}
 	}, false);
 
-
-
-
+	setupMouseHoverEvents()
 
 	return webRtcPlayerObj.video;
 }
@@ -231,17 +210,6 @@ function onWebRtcIce(iceCandidate) {
 	if (webRtcPlayerObj) webRtcPlayerObj.handleCandidateFromServer(iceCandidate);
 }
 
-
-
-
-
-// UE4 has a faketouches option which fakes a single finger touch when the
-// user drags with their mouse. We may perform the reverse; a single finger
-// touch may be converted into a mouse drag UE4 side. This allows a
-// non-touch application to be controlled partially via a touch device.
-let fakeMouseWithTouches = false
-
-playerElementClientRect = playerElement.getBoundingClientRect();
 
 
 
@@ -337,7 +305,6 @@ function emitCommand(descriptor) {
 }
 
 
-var playerElementClientRect = undefined;
 function normalizeAndQuantizeUnsigned(x, y) {
 	let normalizedX = x / playerElement.clientWidth
 	let normalizedY = y / playerElement.clientHeight;
@@ -443,13 +410,6 @@ function registerMouseEnterAndLeaveEvents(video) {
 	};
 }
 
-
-
-
-
-
-
-
 function setupMouseLockEvents() {
 	preventDefault = true
 	showTextOverlay('mouse locked in, ESC to exit')
@@ -500,7 +460,7 @@ function setupMouseLockEvents() {
 
 
 function setupMouseHoverEvents() {
-	preventDefault = false
+	window.preventDefault = false
 
 
 	webRtcPlayerObj.video.onmousemove = (e) => {
@@ -583,6 +543,8 @@ function registerTouchEvents(playerElement) {
 	if (fakeMouseWithTouches) {
 		var finger = undefined;
 
+		const playerElementClientRect = playerElement.getBoundingClientRect()
+
 		playerElement.ontouchstart = function (e) {
 			if (finger === undefined) {
 				let firstTouch = e.changedTouches[0];
@@ -597,7 +559,7 @@ function registerTouchEvents(playerElement) {
 				playerElement.onmouseenter(e);
 				emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
 			}
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 
 		playerElement.ontouchend = function (e) {
@@ -613,7 +575,7 @@ function registerTouchEvents(playerElement) {
 					break;
 				}
 			}
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 
 		playerElement.ontouchmove = function (e) {
@@ -622,14 +584,13 @@ function registerTouchEvents(playerElement) {
 				if (touch.identifier === finger.id) {
 					let x = touch.clientX - playerElementClientRect.left;
 					let y = touch.clientY - playerElementClientRect.top;
-					alert(2222)
 					emitMouseMove(x, y, x - finger.x, y - finger.y);
 					finger.x = x;
 					finger.y = y;
 					break;
 				}
 			}
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 	} else {
 		playerElement.ontouchstart = function (e) {
@@ -640,7 +601,7 @@ function registerTouchEvents(playerElement) {
 
 
 			emitTouchData(MessageType.TouchStart, e.changedTouches);
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 
 		playerElement.ontouchend = function (e) {
@@ -651,13 +612,13 @@ function registerTouchEvents(playerElement) {
 			for (let t = 0; t < e.changedTouches.length; t++) {
 				forgetTouch(e.changedTouches[t]);
 			}
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 
 		playerElement.ontouchmove = function (e) {
 
 			emitTouchData(MessageType.TouchMove, e.touches);
-			e.preventDefault();
+			if (preventDefault) e.preventDefault();
 		};
 	}
 }
@@ -705,29 +666,9 @@ function onExpandOverlay_Click(/* e */) {
 	overlay.classList.toggle("overlay-shown");
 }
 
-function start() {
-	setupHtmlEvents();
+function connect(url = location.href.replace("http://", "ws://").replace("https://", "wss://")) {
 
-
-	// update "quality status" to "disconnected" state
-	statsDiv.innerHTML = "Not connected";
-	connect();
-	updateKickButton(0);
-}
-
-function updateKickButton(playersCount) {
-	var kickButton = document.getElementById("kick-other-players-button");
-	if (kickButton) kickButton.value = `Kick (${playersCount})`;
-}
-
-function connect() {
-	"use strict";
-
-	ws = new WebSocket(
-		window.location.href
-			.replace("http://", "ws://")
-			.replace("https://", "wss://")
-	);
+	ws = new WebSocket(url);
 
 	ws.onmessage = function (event) {
 		console.log(`<- SS: ${event.data}`);
@@ -735,14 +676,12 @@ function connect() {
 		if (msg.type === "config") {
 			setupWebRtcPlayer();
 			registerKeyboardEvents();
-		} else if (msg.type === "playerCount") {
-			updateKickButton(msg.count - 1);
 		} else if (msg.type === "answer") {
 			onWebRtcAnswer(msg);
 		} else if (msg.type === "iceCandidate") {
 			onWebRtcIce(msg.candidate);
 		} else {
-			console.log(`invalid SS message type: ${msg.type}`);
+			console.log(`WS: invalid message type: ${msg.type}`);
 		}
 	};
 
@@ -753,7 +692,7 @@ function connect() {
 	ws.onclose = function (event) {
 		ws = undefined;
 
-		// if (webRtcPlayerObj.video.parentElement === document.body)
+		// remove from parent
 		webRtcPlayerObj.video.remove();
 		webRtcPlayerObj.close();
 
@@ -761,7 +700,7 @@ function connect() {
 		showTextOverlay(`WS closed: ${event.reason}`);
 
 		// 3s后重连
-		setTimeout(start, 3000);
+		setTimeout(connect, 3000);
 	};
 }
 

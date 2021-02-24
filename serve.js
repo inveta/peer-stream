@@ -56,7 +56,7 @@ var clientConfig = { type: "config", peerConnectionOptions };
 app.use("/", express.static(path.join(__dirname, "/public")));
 
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(__dirname, 'public/test.html'));
 });
 
 http.listen(httpPort, function () {
@@ -142,7 +142,7 @@ let playerServer = new WebSocket.Server({
   server: http,
 });
 
-console.log(`WebSocket waitint for players on :${httpPort}`);
+console.log(`WebSocket waiting for players on :${httpPort}`);
 
 let players = new Map(); // playerId <-> player, where player is either a web-browser or a native webrtc player
 let nextPlayerId = 100;
@@ -159,16 +159,6 @@ playerServer.on("connection", function (ws, req) {
     `player ${playerId} (${req.socket.remoteAddress}:${req.socket.remotePort}) connected`
   );
   players.set(playerId, { ws: ws, id: playerId });
-
-  function sendPlayersCount() {
-    let playerCountMsg = JSON.stringify({
-      type: "playerCount",
-      count: players.size,
-    });
-    for (let p of players.values()) {
-      p.ws.send(playerCountMsg);
-    }
-  }
 
   ws.on("message", function (msg) {
     console.log(`<- player ${playerId}: ${msg}`);
@@ -189,14 +179,6 @@ playerServer.on("connection", function (ws, req) {
       console.log(`<- player ${playerId}: iceCandidate`);
       msg.playerId = playerId;
       streamer.send(JSON.stringify(msg));
-    } else if (msg.type == "kick") {
-      let playersCopy = new Map(players);
-      for (let p of playersCopy.values()) {
-        if (p.id != playerId) {
-          console.log(`kicking player ${p.id}`);
-          p.ws.close(4000, "kicked");
-        }
-      }
     } else {
       console.error(
         `<- player ${playerId}: unsupported message type: ${msg.type}`
@@ -211,7 +193,6 @@ playerServer.on("connection", function (ws, req) {
     streamer.send(
       JSON.stringify({ type: "playerDisconnected", playerId: playerId })
     );
-    sendPlayersCount();
   }
 
   ws.on("close", function (code, reason) {
@@ -229,7 +210,6 @@ playerServer.on("connection", function (ws, req) {
 
   ws.send(JSON.stringify(clientConfig));
 
-  sendPlayersCount();
 });
 
 function disconnectAllPlayers(code, reason) {

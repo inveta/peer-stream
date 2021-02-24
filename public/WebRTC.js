@@ -19,6 +19,11 @@ window.WebRTC = class {
     this.video.id = "streamingVideo";
     this.video.tabIndex = 0 // easy to focus..
     this.video.playsInline = true;
+    
+    // Recently many browsers can only autoplay the videos with sound off
+    this.video.muted = true;
+    this.video.autoplay = true;
+
     this.video.onresize = e => {
       console.log(`resolution change to ` + e.target.videoWidth + 'x' + e.target.videoHeight)
     }

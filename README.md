@@ -32,9 +32,5 @@ Editor Preferences > Level Editor > Play > Additional Launch Parameters
 - Unreal Engine 4+
 
 
-## config.json
-
-
-
 ## Command Line Parameters
 

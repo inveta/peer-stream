@@ -8,7 +8,7 @@
 	<script defer type="text/javascript" src="/app.js"></script>
 </head>
 
-<body onload="start()">
+<body onload="connect()">
 	<div id="logs"></div>
 	<div id="overlay">
 		<div>
@@ -16,15 +16,9 @@
 			<div id="overlayButton" onclick="onExpandOverlay_Click()">+</div>
 		</div>
 		<div id="overlaySettings">
-			<div id="KickOthers">
-				<div class="settings-text">Kick all other players</div>
-				<label class="btn-overlay">
-					<input type="button" id="kick-other-players-button" class="overlay-button btn-flat" value="Kick" />
-				</label>
-			</div>
 
 
-			<div id="stats"></div>
+			<div id="stats">Not connected</div>
 		</div>
 	</div>
 </body>
