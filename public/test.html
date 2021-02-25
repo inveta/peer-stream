@@ -2,6 +2,8 @@
 <html>
 
 <head>
+	<!-- https://webrtc.github.io/adapter/adapter-latest.js -->
+
 	<link rel="shortcut icon" type="image/png" href="/favicon.png" />
 	<link type="text/css" rel="stylesheet" href="/index.css" />
 	<script type="text/javascript" src="/WebRTC.js"></script>
@@ -22,5 +24,43 @@
 		</div>
 	</div>
 </body>
+
+<script>
+
+
+	const statsDiv = document.getElementById("stats");
+	const logsWrapper = document.getElementById("logs");
+
+
+
+	console.info = (text = '', timeout = 2000) => {
+		console.log(text)
+		// show log top left, disappear after timeout
+
+		const log = document.createElement("div");
+		log.innerHTML = text;
+		logsWrapper.appendChild(log)
+		setTimeout(() => {
+			logsWrapper.removeChild(log)
+		}, timeout);
+	}
+
+
+
+	function onExpandOverlay_Click(/* e */) {
+		let overlay = document.getElementById("overlay");
+		overlay.classList.toggle("overlay-shown");
+	}
+
+
+
+
+	// document.body.onload=e=>{
+	// 	window. webRtcPlayerObj = new window.WebRTC();
+	// 	webRtcPlayerObj.connect()
+
+	// }
+
+</script>
 
 </html>

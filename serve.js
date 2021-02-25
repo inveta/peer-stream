@@ -60,7 +60,7 @@ app.get("/", function (req, res) {
 });
 
 http.listen(httpPort, function () {
-  console.log("Http listening on *: " + httpPort);
+  console.log("Http listening on", httpPort);
 });
 
 
@@ -70,26 +70,26 @@ http.listen(httpPort, function () {
 const WebSocket = require("ws");
 
 let streamerServer = new WebSocket.Server({ port: streamerPort, backlog: 1 });
-console.log(`WebSocket waiting for Unreal Engine on :${streamerPort}`);
+console.log(`WebSocket waiting for UE4 on`, streamerPort);
 
 let streamer; // WebSocket connected to Streamer
 
 streamerServer.on("connection", function (ws, req) {
   console.log(
-    `Unreal Engine connected: ${req.socket.remoteAddress}:${req.socket.remotePort}`
+    `UE4 connected:`, req.socket.remoteAddress, req.socket.remotePort
   );
 
-  ws.on("message", function onStreamerMessage(msg) {
+  ws.on("message", function (msg) {
 
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`cannot parse Unreal Engine message: ${msg}\nError: ${err}`);
+      console.error(`cannot JSON.parse UE4 message: ${msg}\nError: ${err}`);
       streamer.close(1008, "Cannot parse");
       return;
     }
 
-    console.log(`Unreal Engine:`, msg);
+    console.log(`UE4:`, msg.type, msg.playerId || '');
 
     if (msg.type == "ping") {
       streamer.send(JSON.stringify({ type: "pong", time: msg.time }));
@@ -100,31 +100,29 @@ streamerServer.on("connection", function (ws, req) {
     delete msg.playerId; // no need to send it to the player
     let player = players.get(playerId);
     if (!player) {
-      console.log(
+      console.error(
         `dropped message ${msg.type} as the player ${playerId} is not found`
       );
       return;
     }
 
-    if (msg.type == "answer") {
-      player.ws.send(JSON.stringify(msg));
-    } else if (msg.type == "iceCandidate") {
+    if (["answer", "iceCandidate"].includes(msg.type)) {
       player.ws.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
       player.ws.close(1011 /* internal error */, msg.reason);
     } else {
-      console.error(`unsupported Unreal Engine message type: ${msg.type}`);
+      console.error(`unsupported UE message type: ${msg.type}`);
       streamer.close(1008, "Unsupported message type");
     }
   });
 
   ws.on("close", function (code, reason) {
-    console.error(`Unreal Engine disconnected: ${code} - ${reason}`);
+    console.error(`UE4 disconnected: ${code} - ${reason}`);
     disconnectAllPlayers();
   });
 
   ws.on("error", function (error) {
-    console.error(`Unreal Engine connection error: ${error}`);
+    console.error(`UE4 connection error: ${error}`);
     ws.close(1006 /* abnormal closure */, error);
     disconnectAllPlayers();
   });
@@ -142,42 +140,43 @@ let playerServer = new WebSocket.Server({
   server: http,
 });
 
-console.log(`WebSocket waiting for players on :${httpPort}`);
+console.log(`WebSocket waiting for players on`, httpPort);
 
 let players = new Map(); // playerId <-> player, where player is either a web-browser or a native webrtc player
 let nextPlayerId = 100;
 
+// every player
 playerServer.on("connection", function (ws, req) {
   // Reject connection if streamer is not connected
   if (!streamer || streamer.readyState != 1 /* OPEN */) {
-    ws.close(1013 /* Try again later */, "Unreal Engine is not connected");
+    ws.close(1013 /* Try again later */, "UE4 is not connected");
     return;
   }
 
+  // 必须是uint32
   let playerId = ++nextPlayerId;
+
   console.log(
-    `player ${playerId} (${req.socket.remoteAddress}:${req.socket.remotePort}) connected`
+    `player`, playerId, 'connected:', req.socket.remoteAddress, req.socket.remotePort
   );
   players.set(playerId, { ws: ws, id: playerId });
 
   ws.on("message", function (msg) {
-    console.log(`<- player ${playerId}: ${msg}`);
+    // offer or iceCandidate
 
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`Cannot parse player ${playerId} message: ${err}`);
+      console.error(`cannot JSON.parse player ${playerId} message: ${err}`);
       ws.close(1008, "Cannot parse");
       return;
     }
 
-    if (msg.type == "offer") {
-      console.log(`<- player ${playerId}: offer`);
-      msg.playerId = playerId;
-      streamer.send(JSON.stringify(msg));
-    } else if (msg.type == "iceCandidate") {
-      console.log(`<- player ${playerId}: iceCandidate`);
-      msg.playerId = playerId;
+    console.log(`player`, playerId, msg.type);
+
+    msg.playerId = playerId;
+    if (['offer', 'iceCandidate'].includes(msg.type)) {
+
       streamer.send(JSON.stringify(msg));
     } else {
       console.error(
@@ -185,7 +184,9 @@ playerServer.on("connection", function (ws, req) {
       );
       ws.close(1008, "Unsupported message type");
       return;
+
     }
+
   });
 
   function onPlayerDisconnected() {
@@ -197,7 +198,7 @@ playerServer.on("connection", function (ws, req) {
 
   ws.on("close", function (code, reason) {
     console.log(
-      `player ${playerId} connection closed: ${code} - ${reason}`
+      `player`, playerId, 'connection closed', code, reason
     );
     onPlayerDisconnected();
   });

@@ -2,39 +2,11 @@
 let webRtcPlayerObj = new window.WebRTC();
 let playerElement = webRtcPlayerObj.video;
 
-const statsDiv = document.getElementById("stats");
-const logsWrapper = document.getElementById("logs");
-
-
 
 // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
-window.preventDefault = false
-// 触屏模拟鼠标
-window.fakeMouseWithTouches = false
+window.preventDefault = true;
 
 var ws;
-const WS_OPEN_STATE = 1;
-
-
-
-
-
-// window.addEventListener("resize", resizePlayerStyle, true);
-// window.addEventListener("orientationchange", resizePlayerStyle);
-
-
-
-function showTextOverlay(text = '', timeout = 2000) {
-	// show log top left, disappear after timeout
-
-	console.log(text)
-	const log = document.createElement("div");
-	log.innerHTML = text;
-	logsWrapper.appendChild(log)
-	setTimeout(() => {
-		logsWrapper.removeChild(log)
-	}, timeout);
-}
 
 
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
@@ -54,7 +26,7 @@ function setupWebRtcPlayer() {
 
 
 	webRtcPlayerObj.onWebRtcOffer = function (offer) {
-		if (ws && ws.readyState === WS_OPEN_STATE) {
+		if (ws && ws.readyState === 1) {
 			let offerStr = JSON.stringify(offer);
 			console.log(`-> SS: offer:\n${offerStr}`);
 			ws.send(offerStr);
@@ -62,7 +34,7 @@ function setupWebRtcPlayer() {
 	};
 
 	webRtcPlayerObj.onWebRtcCandidate = function (candidate) {
-		if (ws && ws.readyState === WS_OPEN_STATE) {
+		if (ws && ws.readyState === 1) {
 			console.log(
 				`-> SS: iceCandidate\n${JSON.stringify(candidate, undefined, 4)}`
 			);
@@ -70,11 +42,6 @@ function setupWebRtcPlayer() {
 		}
 	};
 
-	webRtcPlayerObj.onDataChannelConnected = function () {
-		if (ws && ws.readyState === WS_OPEN_STATE) {
-			showTextOverlay("WebRTC connected, waiting for video");
-		}
-	};
 
 
 
@@ -92,7 +59,7 @@ function setupWebRtcPlayer() {
 			console.log(commandAsString);
 			let command = JSON.parse(commandAsString);
 			if (command.command === "onScreenKeyboard") {
-				showTextOverlay('You should setup a on-screen keyboard')
+				console.info('You should setup a on-screen keyboard')
 			}
 		} else if (view[0] === ToClientMessageType.FreezeFrame) {
 			let size = new DataView(view.slice(1, 5).buffer).getInt32(
@@ -114,14 +81,16 @@ function setupWebRtcPlayer() {
 
 
 	registerMouseEnterAndLeaveEvents(webRtcPlayerObj.video);
-	registerTouchEvents(webRtcPlayerObj.video);
+	registerFakeMouseEvents()
+	//  registerTouchEvents(webRtcPlayerObj.video);
+
+	registerKeyboardEvents();
 
 
-
-	showTextOverlay("Starting connection to server, please wait");
+	console.info("Starting connection to server, please wait");
 	webRtcPlayerObj.createOffer();
 
-	if (ws && ws.readyState === WS_OPEN_STATE) {
+	if (ws && ws.readyState === 1) {
 
 		// double click: pointer lock mode
 		webRtcPlayerObj.video.ondblclick = e => {
@@ -133,13 +102,13 @@ function setupWebRtcPlayer() {
 
 	document.addEventListener("pointerlockchange", () => {
 		if (document.pointerLockElement === webRtcPlayerObj.video) {
-			setupMouseLockEvents()
+			registerMouseLockEvents()
 		} else {
-			setupMouseHoverEvents()
+			registerMouseHoverEvents()
 		}
 	}, false);
 
-	setupMouseHoverEvents()
+	registerMouseHoverEvents()
 
 	return webRtcPlayerObj.video;
 }
@@ -193,24 +162,6 @@ function onAggregatedStats(reducedStat) {
 
 	statsDiv.innerHTML = statsText;
 }
-
-function onWebRtcAnswer(webRTCData) {
-	webRtcPlayerObj.receiveAnswer(webRTCData);
-
-	webRtcPlayerObj.aggregateStatsIntervalId = setInterval(async () => {
-		const stat = await webRtcPlayerObj.fetchReduceStats();
-		onAggregatedStats(stat);
-	}, 1000);
-	webRtcPlayerObj.onClosed = () => {
-		clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
-	}
-}
-
-function onWebRtcIce(iceCandidate) {
-	if (webRtcPlayerObj) webRtcPlayerObj.handleCandidateFromServer(iceCandidate);
-}
-
-
 
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
@@ -287,19 +238,7 @@ function emitUIInteraction(descriptor) {
 	emitDescriptor(MessageType.UIInteraction, descriptor);
 }
 
-// A build-in command can be sent to UE4 client. The commands are defined by a
-// JSON descriptor and will be executed automatically.
-// The currently supported commands are:
-//
-// 1. A command to run any console command:
-//    "{ ConsoleCommand: <string> }"
-//
-// 2. A command to change the resolution to the given width and height.
-//    "{ Resolution: { Width: <value>, Height: <value> } }"
-//
-// 3. A command to change the encoder settings by reducing the bitrate by the
-//    given percentage.
-//    "{ Encoder: { BitrateReduction: <value> } }"
+
 function emitCommand(descriptor) {
 	emitDescriptor(MessageType.Command, descriptor);
 }
@@ -385,14 +324,6 @@ const MouseButton = {
 	FifthButton: 4, // Browser Forward button.
 };
 
-// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
-const MouseButtonsMask = {
-	PrimaryButton: 1, // Left button.
-	SecondaryButton: 2, // Right button.
-	AuxiliaryButton: 4, // Wheel button.
-	FourthButton: 8, // Browser Back button.
-	FifthButton: 16, // Browser Forward button.
-};
 
 
 
@@ -410,9 +341,9 @@ function registerMouseEnterAndLeaveEvents(video) {
 	};
 }
 
-function setupMouseLockEvents() {
+function registerMouseLockEvents() {
 	preventDefault = true
-	showTextOverlay('mouse locked in, ESC to exit')
+	console.info('mouse locked in, ESC to exit')
 
 	const { clientWidth, clientHeight } = webRtcPlayerObj.video
 	let x = clientWidth / 2;
@@ -459,12 +390,11 @@ function setupMouseLockEvents() {
 
 
 
-function setupMouseHoverEvents() {
+function registerMouseHoverEvents() {
 	window.preventDefault = false
 
 
 	webRtcPlayerObj.video.onmousemove = (e) => {
-		// console.log(e.offsetX,e.offsetY)
 		emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
 		if (preventDefault) e.preventDefault();
 	};
@@ -496,7 +426,86 @@ function setupMouseHoverEvents() {
 	};
 }
 
+function emitTouchData(type, touches, fingerIds) {
+	let data = new DataView(new ArrayBuffer(2 + 6 * touches.length));
+	data.setUint8(0, type);
+	data.setUint8(1, touches.length);
+	let byte = 2;
+	for (let t = 0; t < touches.length; t++) {
+		let touch = touches[t];
+		let x = touch.clientX - playerElement.offsetLeft;
+		let y = touch.clientY - playerElement.offsetTop;
 
+		let coord = normalizeAndQuantizeUnsigned(x, y);
+		data.setUint16(byte, coord.x, true);
+		byte += 2;
+		data.setUint16(byte, coord.y, true);
+		byte += 2;
+		data.setUint8(byte, fingerIds[touch.identifier], true);
+		byte += 1;
+		data.setUint8(byte, 255 * touch.force, true); // force is between 0.0 and 1.0 so quantize into byte.
+		byte += 1;
+	}
+	webRtcPlayerObj.send(data.buffer);
+}
+
+
+
+
+function registerFakeMouseEvents() {
+	// window.preventDefault=true;
+	var finger = undefined;
+
+	const playerElementClientRect = playerElement.getBoundingClientRect()
+
+	playerElement.ontouchstart = function (e) {
+		if (finger === undefined) {
+			let firstTouch = e.changedTouches[0];
+			finger = {
+				id: firstTouch.identifier,
+				x: firstTouch.clientX - playerElementClientRect.left,
+				y: firstTouch.clientY - playerElementClientRect.top,
+			};
+			// Hack: Mouse events require an enter and leave so we just
+			// enter and leave manually with each touch as this event
+			// is not fired with a touch device.
+			playerElement.onmouseenter(e);
+			emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
+		}
+		if (preventDefault) e.preventDefault();
+	};
+
+	playerElement.ontouchend = function (e) {
+		for (let t = 0; t < e.changedTouches.length; t++) {
+			let touch = e.changedTouches[t];
+			if (touch.identifier === finger.id) {
+				let x = touch.clientX - playerElementClientRect.left;
+				let y = touch.clientY - playerElementClientRect.top;
+				emitMouseUp(MouseButton.MainButton, x, y);
+				// Hack: Manual mouse leave event.
+				playerElement.onmouseleave(e);
+				finger = undefined;
+				break;
+			}
+		}
+		if (preventDefault) e.preventDefault();
+	};
+
+	playerElement.ontouchmove = function (e) {
+		for (let t = 0; t < e.touches.length; t++) {
+			let touch = e.touches[t];
+			if (touch.identifier === finger.id) {
+				let x = touch.clientX - playerElementClientRect.left;
+				let y = touch.clientY - playerElementClientRect.top;
+				emitMouseMove(x, y, x - finger.x, y - finger.y);
+				finger.x = x;
+				finger.y = y;
+				break;
+			}
+		}
+		if (preventDefault) e.preventDefault();
+	};
+}
 
 function registerTouchEvents(playerElement) {
 	// We need to assign a unique identifier to each finger.
@@ -507,7 +516,7 @@ function registerTouchEvents(playerElement) {
 	function rememberTouch(touch) {
 		let finger = fingers.pop();
 		if (finger === undefined) {
-			console.log("exhausted touch indentifiers");
+			console.info("exhausted touch indentifiers");
 		}
 		fingerIds[touch.identifier] = finger;
 	}
@@ -517,128 +526,52 @@ function registerTouchEvents(playerElement) {
 		delete fingerIds[touch.identifier];
 	}
 
-	function emitTouchData(type, touches) {
-		let data = new DataView(new ArrayBuffer(2 + 6 * touches.length));
-		data.setUint8(0, type);
-		data.setUint8(1, touches.length);
-		let byte = 2;
-		for (let t = 0; t < touches.length; t++) {
-			let touch = touches[t];
-			let x = touch.clientX - playerElement.offsetLeft;
-			let y = touch.clientY - playerElement.offsetTop;
 
-			let coord = normalizeAndQuantizeUnsigned(x, y);
-			data.setUint16(byte, coord.x, true);
-			byte += 2;
-			data.setUint16(byte, coord.y, true);
-			byte += 2;
-			data.setUint8(byte, fingerIds[touch.identifier], true);
-			byte += 1;
-			data.setUint8(byte, 255 * touch.force, true); // force is between 0.0 and 1.0 so quantize into byte.
-			byte += 1;
+	playerElement.ontouchstart = function (e) {
+		// Assign a unique identifier to each touch.
+		for (let t = 0; t < e.changedTouches.length; t++) {
+			rememberTouch(e.changedTouches[t]);
 		}
-		webRtcPlayerObj.send(data.buffer);
-	}
-
-	if (fakeMouseWithTouches) {
-		var finger = undefined;
-
-		const playerElementClientRect = playerElement.getBoundingClientRect()
-
-		playerElement.ontouchstart = function (e) {
-			if (finger === undefined) {
-				let firstTouch = e.changedTouches[0];
-				finger = {
-					id: firstTouch.identifier,
-					x: firstTouch.clientX - playerElementClientRect.left,
-					y: firstTouch.clientY - playerElementClientRect.top,
-				};
-				// Hack: Mouse events require an enter and leave so we just
-				// enter and leave manually with each touch as this event
-				// is not fired with a touch device.
-				playerElement.onmouseenter(e);
-				emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
-			}
-			if (preventDefault) e.preventDefault();
-		};
-
-		playerElement.ontouchend = function (e) {
-			for (let t = 0; t < e.changedTouches.length; t++) {
-				let touch = e.changedTouches[t];
-				if (touch.identifier === finger.id) {
-					let x = touch.clientX - playerElementClientRect.left;
-					let y = touch.clientY - playerElementClientRect.top;
-					emitMouseUp(MouseButton.MainButton, x, y);
-					// Hack: Manual mouse leave event.
-					playerElement.onmouseleave(e);
-					finger = undefined;
-					break;
-				}
-			}
-			if (preventDefault) e.preventDefault();
-		};
-
-		playerElement.ontouchmove = function (e) {
-			for (let t = 0; t < e.touches.length; t++) {
-				let touch = e.touches[t];
-				if (touch.identifier === finger.id) {
-					let x = touch.clientX - playerElementClientRect.left;
-					let y = touch.clientY - playerElementClientRect.top;
-					emitMouseMove(x, y, x - finger.x, y - finger.y);
-					finger.x = x;
-					finger.y = y;
-					break;
-				}
-			}
-			if (preventDefault) e.preventDefault();
-		};
-	} else {
-		playerElement.ontouchstart = function (e) {
-			// Assign a unique identifier to each touch.
-			for (let t = 0; t < e.changedTouches.length; t++) {
-				rememberTouch(e.changedTouches[t]);
-			}
 
 
-			emitTouchData(MessageType.TouchStart, e.changedTouches);
-			if (preventDefault) e.preventDefault();
-		};
-
-		playerElement.ontouchend = function (e) {
-
-			emitTouchData(MessageType.TouchEnd, e.changedTouches);
-
-			// Re-cycle unique identifiers previously assigned to each touch.
-			for (let t = 0; t < e.changedTouches.length; t++) {
-				forgetTouch(e.changedTouches[t]);
-			}
-			if (preventDefault) e.preventDefault();
-		};
-
-		playerElement.ontouchmove = function (e) {
-
-			emitTouchData(MessageType.TouchMove, e.touches);
-			if (preventDefault) e.preventDefault();
-		};
-	}
-}
-
-function registerKeyboardEvents() {
-
-	// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. The index of the
-	// entry in the array is the special key code given below.
-	// special keycodes different from KeyboardEvent.keyCode 
-	const SpecialKeyCodes = {
-		Backspace: 8,
-		ShiftLeft: 16,
-		ControlLeft: 17,
-		AltLeft: 18,
-		ShiftRight: 253,
-		ControlRight: 254,
-		AltRight: 255,
+		emitTouchData(MessageType.TouchStart, e.changedTouches, fingerIds);
+		if (preventDefault) e.preventDefault();
 	};
 
+	playerElement.ontouchend = function (e) {
 
+		emitTouchData(MessageType.TouchEnd, e.changedTouches, fingerIds);
+
+		// Re-cycle unique identifiers previously assigned to each touch.
+		for (let t = 0; t < e.changedTouches.length; t++) {
+			forgetTouch(e.changedTouches[t]);
+		}
+		if (preventDefault) e.preventDefault();
+	};
+
+	playerElement.ontouchmove = function (e) {
+
+		emitTouchData(MessageType.TouchMove, e.touches, fingerIds);
+		if (preventDefault) e.preventDefault();
+	};
+
+}
+
+
+// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. 
+// special keycodes different from KeyboardEvent.keyCode 
+const SpecialKeyCodes = {
+	Backspace: 8,
+	ShiftLeft: 16,
+	ControlLeft: 17,
+	AltLeft: 18,
+	ShiftRight: 253,
+	ControlRight: 254,
+	AltRight: 255,
+};
+
+
+function registerKeyboardEvents() {
 	webRtcPlayerObj.video.onkeydown = function (e) {
 		if (preventDefault) e.preventDefault();
 		webRtcPlayerObj.send(
@@ -661,10 +594,6 @@ function registerKeyboardEvents() {
 	};
 }
 
-function onExpandOverlay_Click(/* e */) {
-	let overlay = document.getElementById("overlay");
-	overlay.classList.toggle("overlay-shown");
-}
 
 function connect(url = location.href.replace("http://", "ws://").replace("https://", "wss://")) {
 
@@ -675,18 +604,25 @@ function connect(url = location.href.replace("http://", "ws://").replace("https:
 		var msg = JSON.parse(event.data);
 		if (msg.type === "config") {
 			setupWebRtcPlayer();
-			registerKeyboardEvents();
 		} else if (msg.type === "answer") {
-			onWebRtcAnswer(msg);
+			webRtcPlayerObj.receiveAnswer(msg);
+
+			webRtcPlayerObj.aggregateStatsIntervalId = setInterval(async () => {
+				const stat = await webRtcPlayerObj.fetchReduceStats();
+				onAggregatedStats(stat);
+			}, 1000);
+			webRtcPlayerObj.onClosed = () => {
+				clearInterval(webRtcPlayerObj.aggregateStatsIntervalId);
+			}
 		} else if (msg.type === "iceCandidate") {
-			onWebRtcIce(msg.candidate);
+			webRtcPlayerObj.handleCandidateFromServer(msg.candidate);
 		} else {
-			console.log(`WS: invalid message type: ${msg.type}`);
+			console.error(`WS: invalid message type: ${msg.type}`);
 		}
 	};
 
 	ws.onerror = function (event) {
-		showTextOverlay(`WS error: ${JSON.stringify(event)}`);
+		console.error(`WS error: ${JSON.stringify(event)}`);
 	};
 
 	ws.onclose = function (event) {
@@ -697,7 +633,7 @@ function connect(url = location.href.replace("http://", "ws://").replace("https:
 		webRtcPlayerObj.close();
 
 
-		showTextOverlay(`WS closed: ${event.reason}`);
+		console.info(`WS closed: ${event.reason}`);
 
 		// 3s后重连
 		setTimeout(connect, 3000);

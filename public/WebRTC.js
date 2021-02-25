@@ -16,24 +16,34 @@ window.WebRTC = class {
 
     //Create Video element and expose that as a parameter
     this.video = document.createElement("video");
-    this.video.id = "streamingVideo";
     this.video.tabIndex = 0 // easy to focus..
     this.video.playsInline = true;
-    
+
     // Recently many browsers can only autoplay the videos with sound off
     this.video.muted = true;
     this.video.autoplay = true;
 
     this.video.onresize = e => {
-      console.log(`resolution change to ` + e.target.videoWidth + 'x' + e.target.videoHeight)
     }
+
+    this.video.style = `
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='50px' width='200px'><text x='0' y='40' fill='white' font-size='30'> loading </text></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: #222;
+      width: unset;
+      height: unset;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      object-fit: fill; `
   }
 
   // callbacks: defined outside
   onWebRtcOffer() { }
   onWebRtcCandidate() { }
   onDataChannelMessage() { }
-  onDataChannelConnected() { }
   onClosed() { }
 
   // Private Functions with "_" prefixed
@@ -45,8 +55,7 @@ window.WebRTC = class {
     console.log(`Created datachannel (${label})`);
 
     datachannel.onopen = function (e) {
-      console.log(`data channel (${label}) connect`);
-      self.onDataChannelConnected();
+      console.log(`data channel (${label}) connect, waiting for video`);
     };
 
     datachannel.onclose = function (e) {
