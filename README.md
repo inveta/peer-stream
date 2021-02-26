@@ -1,4 +1,4 @@
-![](public/favicon.png)
+![](test/favicon.png)
 
 
 # Pixel Streamer

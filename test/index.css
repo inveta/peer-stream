@@ -11,18 +11,17 @@
  #stats {
    background-color: rgba(0, 0, 0, 0.8);
    text-align: left;
-   display: block;
    font-size: 14px;
    font-weight: bold;
    padding: 6px;
    color: lime;
+   width: 300px;
+   display: none;
  }
 
  #overlay {
    border-bottom-right-radius: 5px;
-   /* future proofing */
    border-bottom-left-radius: 5px;
-   /* future proofing */
    position: fixed;
    padding: 4px;
    top: 0;
@@ -35,7 +34,7 @@
    color: #efefef;
  }
 
- .overlay-shown>#overlaySettings {
+ .overlay-shown>#stats {
    padding: 50px 4px 4px 4px;
    display: block;
  }
@@ -59,11 +58,6 @@
    float: left;
    font-size: 37px;
    padding-right: 4px;
- }
-
- #overlaySettings {
-   width: 300px;
-   display: none;
  }
 
  #logs {

@@ -2,13 +2,10 @@
   "name": "pixel-streamer",
   "version": "0.0.2",
   "description": "lightweight signaling & web server for Unreal Engine",
-  "scripts": {
-    "start": "node serve.js"
-  },
+  "scripts": {},
   "repository": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "express": "^4.17.1",
     "ws": "^7.4.3"
   }
 }

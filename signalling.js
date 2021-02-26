@@ -1,15 +1,7 @@
-// web & signalling server
-
-
-
-var express = require("express");
-var app = express();
-
-const path = require("path");
 
 
 // command line format: key-value pairs connected by "=", separated by " ", for example:
-// node serve.js httpPort=80 streamerPort=8888 useHTTPS
+// node serve.js playerPort=80 UE4port=8888 useWSS
 
 
 // process.argc[0] == 'path/to/node.exe'
@@ -26,24 +18,14 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   return prev;
 }, {});
 
-
-
-
-
 Object.assign(global || this,
   {
-    httpPort: 80,
-    streamerPort: 8888,
+    playerPort: 80,
+    UE4port: 8888,
     peerConnectionOptions: {},
   },
   args
 )
-
-
-
-
-
-var http = require("http").Server(app);
 
 
 
@@ -52,25 +34,10 @@ var http = require("http").Server(app);
 // let clientConfig = {peerConnectionOptions: { 'iceServers': [{'urls': ['stun:34.250.222.95:19302']}] }};
 var clientConfig = { type: "config", peerConnectionOptions };
 
-
-app.use("/", express.static(path.join(__dirname, "/public")));
-
-app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, 'public/test.html'));
-});
-
-http.listen(httpPort, function () {
-  console.log("Http listening on", httpPort);
-});
-
-
-
-// below are signalling services
-
 const WebSocket = require("ws");
 
-let streamerServer = new WebSocket.Server({ port: streamerPort, backlog: 1 });
-console.log(`WebSocket waiting for UE4 on`, streamerPort);
+let streamerServer = new WebSocket.Server({ port: UE4port, backlog: 1 });
+console.log(`WebSocket waiting for UE4 on`, UE4port);
 
 let streamer; // WebSocket connected to Streamer
 
@@ -136,11 +103,9 @@ streamerServer.on("connection", function (ws, req) {
 
 
 
-let playerServer = new WebSocket.Server({
-  server: http,
-});
+let playerServer = new WebSocket.Server({ port: playerPort, backlog: 1 });
 
-console.log(`WebSocket waiting for players on`, httpPort);
+console.log(`WebSocket waiting for players on`, playerPort);
 
 let players = new Map(); // playerId <-> player, where player is either a web-browser or a native webrtc player
 let nextPlayerId = 100;
