@@ -1,28 +1,31 @@
-![](test/favicon.png)
+![](logo.png)
 
 
 # Pixel Streamer
 
-Lightweight signaling & web server for UnrealEngine's PixelStreaming. Culling many expensive libraries and redundant functions from original package.
+Lightweight PixelStreaming frontend SDK (with signalling channel) for UnrealEngine's PixelStreaming plugin. Culling many expensive libraries and useless codes from original version.
 
-Source Version:
-Epic Games\UE_4.26\Engine\Source\Programs\PixelStreaming\WebServers\SignallingWebServer
+Original Version:
+https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Source/Programs/PixelStreaming/WebServers/SignallingWebServer
 
 Adapter for IOS:
 https://webrtc.github.io/adapter/adapter-latest.js
 
 
 
-## Usage
 
+
+## Signalling Server
 ```
-npm install
-npm start
+npm install ws
+node signalling.js playerPort=80 UE4port=8888
 ```
 
-Editor Preferences > Level Editor > Play > Additional Launch Parameters
-
+ 
+## UE4
 ```
+// Editor Preferences > Level Editor > Play > Additional Launch Parameters
+
 -RenderOffScreen 
 -AllowPixelStreamingCommands 
 -AudioMixer 
@@ -32,9 +35,29 @@ Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
 
 
+## Frontend
+```
+import 'PixelStream.js';
+
+const ps = new PixelStream('ws://localhost');
+
+ps.registerMouseHoverEvents();
+ps.registerKeyboardEvents();
+ps.registerTouchEvents();
+
+ps.addEventListener('connected', e => {
+    document.body.appendChild(ps.video);
+});
+ps.addEventListener('message', ({detail}) => {
+    ps.emitDescriptor('received');
+});
+```
+
+
+
+
 
 ## Requirement
-
 - Chrome
 - NodeJS 10+
 - Unreal Engine 4+

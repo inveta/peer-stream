@@ -34,7 +34,6 @@ const ToClientMessageType = {
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
 const MessageType = {
-  /**********************************************************************/
 
   /*
    * Control Messages. Range = 0..49.
@@ -46,7 +45,6 @@ const MessageType = {
   StartStreaming: 4,
   StopStreaming: 5,
 
-  /**********************************************************************/
 
   /*
    * Input Messages. Range = 50..89.
@@ -74,25 +72,25 @@ const MessageType = {
   TouchEnd: 81,
   TouchMove: 82,
 
-  /**************************************************************************/
 };
 
 
 
 
 
-window.PixelStream = class {
-  constructor() {
+window.PixelStream = class extends EventTarget {
+  constructor(url) {
+    super()
 
     // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
     this.preventDefault = true;
     this.VideoEncoderQP = "N/A";
 
     this.ws = undefined;  // WebSocket
-    this.pcClient = new RTCPeerConnection({
+    this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan"
     });
-    this.dcClient = null; // RTCDataChannel
+    this.dc = null; // RTCDataChannel
 
     this.sdpConstraints = {
       offerToReceiveAudio: 1,
@@ -108,28 +106,53 @@ window.PixelStream = class {
 
 
     document.addEventListener("pointerlockchange", () => {
-      if (document.pointerLockElement === self.video) {
-        self.registerMouseLockEvents()
+      if (document.pointerLockElement === this.video) {
+        this.registerMouseLockEvents()
       } else {
-        self.registerMouseHoverEvents()
+        this.registerMouseHoverEvents()
       }
     }, false);
+
+
+    this.connect(url)
 
   }
 
 
 
+  async onWebSocketMessage(data) {
+    let msg = JSON.parse(data)
+    if (msg.type === "config") {
+
+      console.info("Starting connection to UE4, please wait");
+      this.createOffer();
+
+
+    } else if (msg.type === "answer") {
+      console.log(`Received answer`, msg);
+      let answerDesc = new RTCSessionDescription(msg);
+      this.pc.setRemoteDescription(answerDesc);
+
+    } else if (msg.type === "iceCandidate") {
+
+      let candidate = new RTCIceCandidate(msg.candidate);
+      await this.pc.addIceCandidate(candidate);
+      console.log("ICE candidate successfully added", msg.candidate);
+    } else {
+      console.error(`WS: invalid message type`, msg.type);
+    }
+  }
 
 
   onDataChannelMessage(data) {
-    var view = new Uint8Array(data);
+    let view = new Uint8Array(data);
     if (view[0] === ToClientMessageType.QualityControlOwnership) {
       let ownership = view[1] !== 0;
 
     } else if (view[0] === ToClientMessageType.Response) {
       // user custom message
       let response = new TextDecoder("utf-16").decode(data.slice(1));
-
+      this.dispatchEvent(new CustomEvent('message', { detail: response }))
     } else if (view[0] === ToClientMessageType.Command) {
       let commandAsString = new TextDecoder("utf-16").decode(data.slice(1));
       console.log(commandAsString);
@@ -158,7 +181,6 @@ window.PixelStream = class {
 
   setupVideo() {
 
-    //Create Video element and expose that as a parameter
     this.video = document.createElement("video");
     this.video.tabIndex = 0 // easy to focus..
     this.video.playsInline = true;
@@ -179,9 +201,6 @@ window.PixelStream = class {
     // this.video.onresize 
 
     this.video.style = `
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='50px' width='200px'><text x='0' y='40' fill='white' font-size='30'> loading </text></svg>");
-      background-repeat: no-repeat;
-      background-position: center;
       background-color: #222;
       width: unset;
       height: unset;
@@ -198,23 +217,23 @@ window.PixelStream = class {
   }
 
   setupDataChannel(label = 'hello world') {
-    const self = this;
 
-    this.dcClient = this.pcClient.createDataChannel(label, { ordered: true });
-    console.log(`Created datachannel (${label})`);
+    this.dc = this.pc.createDataChannel(label, { ordered: true });
+    console.log(`Created DataChannel`, label);
 
-    this.dcClient.onopen = (e) => {
+    this.dc.onopen = (e) => {
       console.log(`data channel (${label}) connect, waiting for video`);
       this.video.style.display = 'block'
     };
 
-    this.dcClient.onclose = (e) => {
+    this.dc.onclose = (e) => {
       console.log(`data channel (${label}) closed`);
       this.video.style.display = 'none'
+      this.dispatchEvent('close')
     };
 
-    this.dcClient.onmessage = (e) => {
-      self.onDataChannelMessage(e.data);
+    this.dc.onmessage = (e) => {
+      this.onDataChannelMessage(e.data);
     };
 
 
@@ -223,14 +242,15 @@ window.PixelStream = class {
 
   setupPeerConnection() {
 
-    this.pcClient.ontrack = (e) => {
+    this.pc.ontrack = (e) => {
       console.log("handleOnTrack", e.streams);
       this.video.srcObject = e.streams[0];
+      this.dispatchEvent(new CustomEvent('connected'))
     };
-    this.pcClient.onicecandidate = (e) => {
+    this.pc.onicecandidate = (e) => {
       if (e.candidate && e.candidate.candidate) {
         console.log(
-          `got iceCandidate`, e.candidate
+          `sending candidate:`, e.candidate
         );
         this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
       }
@@ -242,8 +262,8 @@ window.PixelStream = class {
   async fetchReduceStats() {
     const self = this;
 
-    if (!self.pcClient) return
-    const stats = await self.pcClient.getStats(null);
+    if (!self.pc) return
+    const stats = await self.pc.getStats(null);
 
     let newStat = {};
 
@@ -317,17 +337,17 @@ window.PixelStream = class {
 
   //Called externaly to create an offer for the server
   async createOffer() {
-    this.pcClient.close();
+    this.pc.close();
 
-    this.pcClient = new RTCPeerConnection({
+    this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan"
     });
 
     this.setupPeerConnection();
     this.setupDataChannel();
-    const offer = await this.pcClient.createOffer(this.sdpConstraints);
+    const offer = await this.pc.createOffer(this.sdpConstraints);
 
-    this.pcClient.setLocalDescription(offer);
+    this.pc.setLocalDescription(offer);
     // (andriy): increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps
     // (100 mbps means we don't restrict encoder at all)
     // after we `setLocalDescription` because other browsers are not c happy to see google-specific config
@@ -342,56 +362,28 @@ window.PixelStream = class {
 
 
 
-  async connect(url = location.href.replace("http://", "ws://").replace("https://", "wss://")) {
+  connect(url = location.href.replace("http://", "ws://").replace("https://", "wss://")) {
+    this.ws = new WebSocket(url);
 
-    const self = this;
+    // this.ws.onopen  
+    this.ws.onerror = e => {
+      console.warn(e)
+    }
 
-    return new Promise((resolve, reject) => {
-
-      this.ws = new WebSocket(url);
-
-      this.ws.onopen = resolve;
-      this.ws.onerror = reject;
-
-      this.ws.onmessage = async (event) => {
-        var msg = JSON.parse(event.data);
-        if (msg.type === "config") {
-
-          console.info("Starting connection to UE4, please wait");
-          self.createOffer();
+    this.ws.onmessage = (event) => {
+      this.onWebSocketMessage(event.data)
+    };
 
 
-        } else if (msg.type === "answer") {
-          console.log(`Received answer`, msg);
-          var answerDesc = new RTCSessionDescription(msg);
-          self.pcClient.setRemoteDescription(answerDesc);
+    this.ws.onclose = (e) => {
+      this.pc.close();
+      console.info(`WS & WebRTC closed:`, e.reason || e.code);
 
-        } else if (msg.type === "iceCandidate") {
-
-          let candidate = new RTCIceCandidate(msg.candidate);
-          await this.pcClient.addIceCandidate(candidate);
-          console.log("ICE candidate successfully added", msg.candidate);
-        } else {
-          console.error(`WS: invalid message type: ${msg.type}`);
-        }
-      };
-
-
-      this.ws.onclose = (e) => {
-
-        this.pcClient.close();
-
-
-        console.info(`WS & WebRTC closed:`, e.reason || e.code);
-
-        // 3s后重连
-        setTimeout(() => {
-          self.connect(url).catch(err => {
-            console.warn(err, 'try again later')
-          })
-        }, 2000);
-      }
-    })
+      // 3s后重连
+      setTimeout(() => {
+        this.connect(url)
+      }, 2000);
+    }
 
   }
 
@@ -406,7 +398,7 @@ window.PixelStream = class {
 
     self.video.onkeydown = function (e) {
       if (self.preventDefault) e.preventDefault();
-      self.dcClient.send(
+      self.dc.send(
         new Uint8Array([MessageType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]).buffer
       );
       //  e.stopPropagation
@@ -414,7 +406,7 @@ window.PixelStream = class {
 
     self.video.onkeyup = function (e) {
       if (self.preventDefault) e.preventDefault();
-      self.dcClient.send(new Uint8Array([MessageType.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]).buffer);
+      self.dc.send(new Uint8Array([MessageType.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]).buffer);
     };
 
     self.video.onkeypress = function (e) {
@@ -422,7 +414,7 @@ window.PixelStream = class {
       let data = new DataView(new ArrayBuffer(3));
       data.setUint8(0, MessageType.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
-      self.dcClient.send(data.buffer);
+      self.dc.send(data.buffer);
     };
   }
 
@@ -433,8 +425,8 @@ window.PixelStream = class {
 
     // We need to assign a unique identifier to each finger.
     // We do this by mapping each Touch object to the identifier.
-    var fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-    var fingerIds = {};
+    let fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    let fingerIds = {};
 
     function rememberTouch(touch) {
       let finger = fingers.pop();
@@ -484,7 +476,7 @@ window.PixelStream = class {
   registerFakeMouseEvents() {
     const self = this;
 
-    var finger = undefined;
+    let finger = undefined;
 
     const boundingRect = self.video.getBoundingClientRect()
 
@@ -641,15 +633,15 @@ window.PixelStream = class {
     const self = this;
 
     self.video.onmouseenter = function (e) {
-      var Data = new DataView(new ArrayBuffer(1));
+      let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, MessageType.MouseEnter);
-      self.dcClient.send(Data.buffer);
+      self.dc.send(Data.buffer);
     };
 
     self.video.onmouseleave = function (e) {
-      var Data = new DataView(new ArrayBuffer(1));
+      let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, MessageType.MouseLeave);
-      self.dcClient.send(Data.buffer);
+      self.dc.send(Data.buffer);
     };
   }
 
@@ -665,46 +657,46 @@ window.PixelStream = class {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     deltaX = deltaX * 65536 / this.video.clientWidth
     deltaY = deltaY * 65536 / this.video.clientHeight
-    var Data = new DataView(new ArrayBuffer(9));
+    let Data = new DataView(new ArrayBuffer(9));
     Data.setUint8(0, MessageType.MouseMove);
     Data.setUint16(1, coord.x, true);
     Data.setUint16(3, coord.y, true);
     Data.setInt16(5, deltaX, true);
     Data.setInt16(7, deltaY, true);
-    this.dcClient.send(Data.buffer);
+    this.dc.send(Data.buffer);
   }
 
   emitMouseDown(button, x, y) {
 
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
-    var Data = new DataView(new ArrayBuffer(6));
+    let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, MessageType.MouseDown);
     Data.setUint8(1, button);
     Data.setUint16(2, coord.x, true);
     Data.setUint16(4, coord.y, true);
-    this.dcClient.send(Data.buffer);
+    this.dc.send(Data.buffer);
   }
 
   emitMouseUp(button, x, y) {
 
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
-    var Data = new DataView(new ArrayBuffer(6));
+    let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, MessageType.MouseUp);
     Data.setUint8(1, button);
     Data.setUint16(2, coord.x, true);
     Data.setUint16(4, coord.y, true);
-    this.dcClient.send(Data.buffer);
+    this.dc.send(Data.buffer);
   }
 
   emitMouseWheel(delta, x, y) {
 
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
-    var Data = new DataView(new ArrayBuffer(7));
+    let Data = new DataView(new ArrayBuffer(7));
     Data.setUint8(0, MessageType.MouseWheel);
     Data.setInt16(1, delta, true);
     Data.setUint16(3, coord.x, true);
     Data.setUint16(5, coord.y, true);
-    this.dcClient.send(Data.buffer);
+    this.dc.send(Data.buffer);
   }
 
 
@@ -731,7 +723,7 @@ window.PixelStream = class {
       data.setUint8(byte, 255 * touch.force, true); // force is between 0.0 and 1.0 so quantize into byte.
       byte += 1;
     }
-    this.dcClient.send(data.buffer);
+    this.dc.send(data.buffer);
   }
 
 
@@ -756,7 +748,7 @@ window.PixelStream = class {
       data.setUint16(byteIdx, descriptorAsString.charCodeAt(i), true);
       byteIdx += 2;
     }
-    this.dcClient.send(data.buffer);
+    this.dc.send(data.buffer);
   }
 
 

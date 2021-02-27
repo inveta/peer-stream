@@ -82,28 +82,28 @@ function onAggregatedStats(reducedStat, VideoEncoderQP) {
 
 
 document.body.onload = () => {
-    window.ps = new window.PixelStream();
+    window.ps = new PixelStream('ws://localhost');
 
 
     //  registerTouchEvents( );
-    ps.registerMouseEnterAndLeaveEvents();
+    // ps.registerMouseEnterAndLeaveEvents();
     ps.registerFakeMouseEvents()
     ps.registerKeyboardEvents();
     ps.registerMouseHoverEvents()
 
-    ps.connect('ws://localhost')
-        .then(() => {
+    ps.addEventListener('message', e => {
+        console.log(e.detail)
+    })
 
-            document.body.appendChild(ps.video);
-            // ps.video.play()
+    ps.addEventListener('connected', e => {
+        document.body.appendChild(ps.video);
+        // ps.video.play()
 
-            setInterval(async () => {
-                const stat = await ps.fetchReduceStats();
-                if (stat)
-                    onAggregatedStats(stat, ps.VideoEncoderQP);
-            }, 1000);
-        }).catch(err => {
-            console.log('WS error:', err)
-        })
+        setInterval(async () => {
+            const stat = await ps.fetchReduceStats();
+            if (stat)
+                onAggregatedStats(stat, ps.VideoEncoderQP);
+        }, 1000);
+    })
 
 }

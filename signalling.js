@@ -32,7 +32,7 @@ Object.assign(global || this,
 // `clientConfig` is send to Streamer and Players
 // Example of STUN server setting
 // let clientConfig = {peerConnectionOptions: { 'iceServers': [{'urls': ['stun:34.250.222.95:19302']}] }};
-var clientConfig = { type: "config", peerConnectionOptions };
+let clientConfig = { type: "config", peerConnectionOptions };
 
 const WebSocket = require("ws");
 
@@ -51,7 +51,7 @@ streamerServer.on("connection", function (ws, req) {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`cannot JSON.parse UE4 message: ${msg}\nError: ${err}`);
+      console.error(`cannot JSON.parse UE4 message:`, msg);
       streamer.close(1008, "Cannot parse");
       return;
     }
@@ -78,13 +78,13 @@ streamerServer.on("connection", function (ws, req) {
     } else if (msg.type == "disconnectPlayer") {
       player.ws.close(1011 /* internal error */, msg.reason);
     } else {
-      console.error(`unsupported UE message type: ${msg.type}`);
+      console.error(`unsupported UE4 message type: ${msg.type}`);
       streamer.close(1008, "Unsupported message type");
     }
   });
 
   ws.on("close", function (code, reason) {
-    console.error(`UE4 disconnected: ${code} - ${reason}`);
+    console.log(`UE4 disconnected:`, code, reason);
     disconnectAllPlayers();
   });
 
