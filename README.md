@@ -3,7 +3,7 @@
 
 # Pixel Streamer
 
-Lightweight PixelStreaming frontend SDK (with signalling channel) for UnrealEngine's PixelStreaming plugin. Culling many expensive libraries and useless codes from original version.
+Lightweight PixelStreaming frontend SDK (with signalling channel) for UnrealEngine's PixelStreaming plugin. Culling all dependencies and useless codes from original version.
 
 Original Version:
 https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Source/Programs/PixelStreaming/WebServers/SignallingWebServer
@@ -21,7 +21,7 @@ npm install ws
 node signalling.js playerPort=80 UE4port=8888
 ```
 
- 
+
 ## UE4
 ```
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
@@ -61,3 +61,8 @@ ps.addEventListener('message', ({detail}) => {
 - Chrome
 - NodeJS 10+
 - Unreal Engine 4+
+
+
+## License
+
+[Apache-2.0](./LICENSE)

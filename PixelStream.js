@@ -229,7 +229,7 @@ window.PixelStream = class extends EventTarget {
     this.dc.onclose = (e) => {
       console.log(`data channel (${label}) closed`);
       this.video.style.display = 'none'
-      this.dispatchEvent('close')
+      this.dispatchEvent(new CustomEvent('close'))
     };
 
     this.dc.onmessage = (e) => {
