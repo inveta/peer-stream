@@ -1,6 +1,5 @@
-
-// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array. 
-// special keycodes different from KeyboardEvent.keyCode 
+// Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
+// special keycodes different from KeyboardEvent.keyCode
 const SpecialKeyCodes = {
   Backspace: 8,
   ShiftLeft: 16,
@@ -10,7 +9,6 @@ const SpecialKeyCodes = {
   ControlRight: 254,
   AltRight: 255,
 };
-
 
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
 const MouseButton = {
@@ -31,10 +29,8 @@ const ToClientMessageType = {
   VideoEncoderAvgQP: 5,
 };
 
-
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
 const MessageType = {
-
   /*
    * Control Messages. Range = 0..49.
    */
@@ -44,7 +40,6 @@ const MessageType = {
   AverageBitrateRequest: 3,
   StartStreaming: 4,
   StopStreaming: 5,
-
 
   /*
    * Input Messages. Range = 50..89.
@@ -71,24 +66,19 @@ const MessageType = {
   TouchStart: 80,
   TouchEnd: 81,
   TouchMove: 82,
-
 };
-
-
-
-
 
 window.PixelStream = class extends EventTarget {
   constructor(url) {
-    super()
+    super();
 
     // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
     this.preventDefault = true;
     this.VideoEncoderQP = "N/A";
 
-    this.ws = undefined;  // WebSocket
+    this.ws = undefined; // WebSocket
     this.pc = new RTCPeerConnection({
-      sdpSemantics: "unified-plan"
+      sdpSemantics: "unified-plan",
     });
     this.dc = null; // RTCDataChannel
 
@@ -99,76 +89,62 @@ window.PixelStream = class extends EventTarget {
 
     this.aggregatedStats = {};
 
-
     this.setupVideo();
 
+    document.addEventListener(
+      "pointerlockchange",
+      () => {
+        if (document.pointerLockElement === this.video) {
+          this.registerMouseLockEvents();
+        } else {
+          this.registerMouseHoverEvents();
+        }
+      },
+      false
+    );
 
-
-
-    document.addEventListener("pointerlockchange", () => {
-      if (document.pointerLockElement === this.video) {
-        this.registerMouseLockEvents()
-      } else {
-        this.registerMouseHoverEvents()
-      }
-    }, false);
-
-
-    this.connect(url)
-
+    this.connect(url);
   }
 
-
-
   async onWebSocketMessage(data) {
-    let msg = JSON.parse(data)
+    let msg = JSON.parse(data);
     if (msg.type === "config") {
-
-      console.info("Starting connection to UE4, please wait");
-      this.createOffer();
-
-
+      console.info("connecting to UE4");
+      await this.createOffer();
     } else if (msg.type === "answer") {
       console.log(`Received answer`, msg);
       let answerDesc = new RTCSessionDescription(msg);
-      this.pc.setRemoteDescription(answerDesc);
-
+      await this.pc.setRemoteDescription(answerDesc);
     } else if (msg.type === "iceCandidate") {
-
       let candidate = new RTCIceCandidate(msg.candidate);
       await this.pc.addIceCandidate(candidate);
-      console.log("ICE candidate successfully added", msg.candidate);
+      console.log("received candidate", msg.candidate);
     } else {
       console.error(`WS: invalid message type`, msg.type);
     }
   }
 
-
   onDataChannelMessage(data) {
     let view = new Uint8Array(data);
     if (view[0] === ToClientMessageType.QualityControlOwnership) {
       let ownership = view[1] !== 0;
-
+      console.info("received Quality Control Ownership", ownership);
     } else if (view[0] === ToClientMessageType.Response) {
       // user custom message
       let response = new TextDecoder("utf-16").decode(data.slice(1));
-      this.dispatchEvent(new CustomEvent('message', { detail: response }))
+      this.dispatchEvent(new CustomEvent("message", { detail: response }));
     } else if (view[0] === ToClientMessageType.Command) {
       let commandAsString = new TextDecoder("utf-16").decode(data.slice(1));
-      console.log(commandAsString);
       let command = JSON.parse(commandAsString);
+      console.log(command);
       if (command.command === "onScreenKeyboard") {
-        console.info('You should setup a on-screen keyboard')
+        console.info("You should setup a on-screen keyboard");
       }
     } else if (view[0] === ToClientMessageType.FreezeFrame) {
-      let size = new DataView(view.slice(1, 5).buffer).getInt32(
-        0,
-        true
-      );
+      let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
       let jpeg = view.slice(1 + 4);
-
     } else if (view[0] === ToClientMessageType.UnfreezeFrame) {
-      // 
+      //
     } else if (view[0] === ToClientMessageType.VideoEncoderAvgQP) {
       this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
       console.log(`received VideoEncoderAvgQP`, this.VideoEncoderQP);
@@ -177,28 +153,24 @@ window.PixelStream = class extends EventTarget {
     }
   }
 
-
-
   setupVideo() {
-
     this.video = document.createElement("video");
-    this.video.tabIndex = 0 // easy to focus..
+    this.video.tabIndex = 0; // easy to focus..
     this.video.playsInline = true;
 
     // Recently many browsers can only autoplay the videos with sound off
     this.video.muted = true;
     this.video.autoplay = true;
 
-    // this.video.onsuspend 
-    // this.video.onplaying  
-
+    // this.video.onsuspend
+    // this.video.onplaying
 
     // double click: pointer lock mode
-    this.video.ondblclick = e => {
+    this.video.ondblclick = (e) => {
       this.video.requestPointerLock();
     };
 
-    // this.video.onresize 
+    // this.video.onresize
 
     this.video.style = `
       background-color: #222;
@@ -209,111 +181,80 @@ window.PixelStream = class extends EventTarget {
       left: 50%;
       display: none;
       transform: translateX(-50%) translateY(-50%);
-      object-fit: fill; `
-
-
-
-
+      object-fit: fill; `;
   }
 
-  setupDataChannel(label = 'hello world') {
-
+  setupDataChannel(label = "hello world") {
     this.dc = this.pc.createDataChannel(label, { ordered: true });
     console.log(`Created DataChannel`, label);
 
     this.dc.onopen = (e) => {
-      console.log(`data channel (${label}) connect, waiting for video`);
-      this.video.style.display = 'block'
+      console.log(`data channel connected:`, label);
+      this.video.style.display = "block";
+      this.dispatchEvent(new CustomEvent("open"));
     };
 
     this.dc.onclose = (e) => {
-      console.log(`data channel (${label}) closed`);
-      this.video.style.display = 'none'
-      this.dispatchEvent(new CustomEvent('close'))
+      console.log(`data channel closed:`, label);
+      this.video.style.display = "none";
+      this.dispatchEvent(new CustomEvent("close"));
     };
 
     this.dc.onmessage = (e) => {
       this.onDataChannelMessage(e.data);
     };
-
-
   }
 
-
   setupPeerConnection() {
-
     this.pc.ontrack = (e) => {
-      console.log("handleOnTrack", e.streams);
+      // called twice for audio & video
+      console.log("handleOnTrack", e);
       this.video.srcObject = e.streams[0];
-      this.dispatchEvent(new CustomEvent('connected'))
     };
     this.pc.onicecandidate = (e) => {
       if (e.candidate && e.candidate.candidate) {
-        console.log(
-          `sending candidate:`, e.candidate
+        console.log(`sending candidate:`, e.candidate);
+        this.ws.send(
+          JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
         );
-        this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
       }
     };
-
   }
 
   // fetch then reduce the stats array
-  async fetchReduceStats() {
+  async getStats() {
     const self = this;
 
-    if (!self.pc) return
     const stats = await self.pc.getStats(null);
 
     let newStat = {};
 
-    stats.forEach((stat) => {
+    stats.forEach((stat, i) => {
       if (
-        stat.type == "inbound-rtp" &&
+        stat.type === "inbound-rtp" &&
         !stat.isRemote &&
-        (stat.mediaType == "video" || stat.id.toLowerCase().includes("video"))
+        stat.mediaType === "video"
       ) {
         Object.assign(newStat, stat);
 
-
-        if (self.aggregatedStats.timestamp) {
-          if (self.aggregatedStats.bytesReceived) {
-            // bitrate = bits received since last time / number of ms since last time
-            //This is automatically in kbits (where k=1000) since time is in ms and stat we want is in seconds (so a '* 1000' then a '/ 1000' would negate each other)
-            newStat.bitrate =
-              (8 *
-                (newStat.bytesReceived - self.aggregatedStats.bytesReceived)) /
-              (newStat.timestamp - self.aggregatedStats.timestamp);
-            newStat.bitrate = Math.floor(newStat.bitrate);
-            newStat.lowBitrate = Math.min(
-              self.aggregatedStats.lowBitrate || Infinity,
-              newStat.bitrate
-            );
-            newStat.highBitrate = Math.max(
-              self.aggregatedStats.highBitrate || -Infinity,
-              newStat.bitrate
-            );
-          }
-
-          if (self.aggregatedStats.framesDecoded) {
-            // framerate = frames decoded since last time / number of seconds since last time
-
-            newStat.lowFramerate = Math.min(
-              self.aggregatedStats.lowFramerate || Infinity,
-              newStat.framesPerSecond
-            );
-            newStat.highFramerate = Math.max(
-              self.aggregatedStats.highFramerate || -Infinity,
-              newStat.framesPerSecond
-            );
-          }
-
-
-        }
+        // bitrate = bits received since last time / number of ms since last time
+        //This is automatically in kbits (where k=1000) since time is in ms and stat we want is in seconds (so a '* 1000' then a '/ 1000' would negate each other)
+        newStat.bitrate =
+          (8 * (newStat.bytesReceived - self.aggregatedStats.bytesReceived)) /
+          (newStat.timestamp - self.aggregatedStats.timestamp);
+        newStat.bitrate = Math.floor(newStat.bitrate);
+        newStat.lowBitrate = Math.min(
+          self.aggregatedStats.lowBitrate || Infinity,
+          newStat.bitrate
+        );
+        newStat.highBitrate = Math.max(
+          self.aggregatedStats.highBitrate || -Infinity,
+          newStat.bitrate
+        );
       }
 
       //Read video track stats
-      if (
+      else if (
         stat.type == "track" &&
         (stat.trackIdentifier == "video_label" || stat.kind == "video")
       ) {
@@ -321,13 +262,13 @@ window.PixelStream = class extends EventTarget {
 
         newStat.framesDroppedPercentage =
           (stat.framesDropped / stat.framesReceived) * 100;
-      }
-
-      if (
+      } else if (
         stat.type == "candidate-pair" &&
         stat.hasOwnProperty("currentRoundTripTime")
       ) {
         Object.assign(newStat, stat);
+      } else if (stat.type === "data-channel") {
+        newStat.dataChannel = stat;
       }
     });
 
@@ -335,12 +276,11 @@ window.PixelStream = class extends EventTarget {
     return newStat;
   }
 
-  //Called externaly to create an offer for the server
   async createOffer() {
     this.pc.close();
 
     this.pc = new RTCPeerConnection({
-      sdpSemantics: "unified-plan"
+      sdpSemantics: "unified-plan",
     });
 
     this.setupPeerConnection();
@@ -355,25 +295,25 @@ window.PixelStream = class extends EventTarget {
       /(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm,
       "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n"
     );
-    let offerStr = JSON.stringify(offer);
-    this.ws.send(offerStr);
+    this.ws.send(JSON.stringify(offer));
     console.log(`offer sent:`, offer);
   }
 
-
-
-  connect(url = location.href.replace("http://", "ws://").replace("https://", "wss://")) {
+  connect(
+    url = location.href
+      .replace("http://", "ws://")
+      .replace("https://", "wss://")
+  ) {
     this.ws = new WebSocket(url);
 
-    // this.ws.onopen  
-    this.ws.onerror = e => {
-      console.warn(e)
-    }
-
-    this.ws.onmessage = (event) => {
-      this.onWebSocketMessage(event.data)
+    // this.ws.onopen
+    this.ws.onerror = (e) => {
+      console.warn(e);
     };
 
+    this.ws.onmessage = (event) => {
+      this.onWebSocketMessage(event.data);
+    };
 
     this.ws.onclose = (e) => {
       this.pc.close();
@@ -381,17 +321,10 @@ window.PixelStream = class extends EventTarget {
 
       // 3s后重连
       setTimeout(() => {
-        this.connect(url)
-      }, 2000);
-    }
-
+        this.connect(url);
+      }, 3000);
+    };
   }
-
-
-
-
-
-
 
   registerKeyboardEvents() {
     const self = this;
@@ -399,14 +332,23 @@ window.PixelStream = class extends EventTarget {
     self.video.onkeydown = function (e) {
       if (self.preventDefault) e.preventDefault();
       self.dc.send(
-        new Uint8Array([MessageType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]).buffer
+        new Uint8Array([
+          MessageType.KeyDown,
+          SpecialKeyCodes[e.code] || e.keyCode,
+          e.repeat,
+        ]).buffer
       );
       //  e.stopPropagation
     };
 
     self.video.onkeyup = function (e) {
       if (self.preventDefault) e.preventDefault();
-      self.dc.send(new Uint8Array([MessageType.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]).buffer);
+      self.dc.send(
+        new Uint8Array([
+          MessageType.KeyUp,
+          SpecialKeyCodes[e.code] || e.keyCode,
+        ]).buffer
+      );
     };
 
     self.video.onkeypress = function (e) {
@@ -417,8 +359,6 @@ window.PixelStream = class extends EventTarget {
       self.dc.send(data.buffer);
     };
   }
-
-
 
   registerTouchEvents() {
     const self = this;
@@ -443,8 +383,8 @@ window.PixelStream = class extends EventTarget {
 
     self.video.ontouchstart = function (e) {
       // Assign a unique identifier to each touch.
-      for (let t = 0; t < e.changedTouches.length; t++) {
-        rememberTouch(e.changedTouches[t]);
+      for (let touch of e.changedTouches) {
+        rememberTouch(touch);
       }
       self.emitTouchData(MessageType.TouchStart, e.changedTouches, fingerIds);
       if (self.preventDefault) e.preventDefault();
@@ -453,8 +393,8 @@ window.PixelStream = class extends EventTarget {
     self.video.ontouchend = function (e) {
       self.emitTouchData(MessageType.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
-      for (let t = 0; t < e.changedTouches.length; t++) {
-        forgetTouch(e.changedTouches[t]);
+      for (let touch of e.changedTouches) {
+        forgetTouch(touch);
       }
       if (self.preventDefault) e.preventDefault();
     };
@@ -465,20 +405,13 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
-
-
-
-
-
-
-
   // 触屏模拟鼠标
   registerFakeMouseEvents() {
     const self = this;
 
     let finger = undefined;
 
-    const boundingRect = self.video.getBoundingClientRect()
+    const boundingRect = self.video.getBoundingClientRect();
 
     self.video.ontouchstart = function (e) {
       if (finger === undefined) {
@@ -498,8 +431,7 @@ window.PixelStream = class extends EventTarget {
     };
 
     self.video.ontouchend = function (e) {
-      for (let t = 0; t < e.changedTouches.length; t++) {
-        let touch = e.changedTouches[t];
+      for (let touch of e.changedTouches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
           let y = touch.clientY - boundingRect.top;
@@ -514,8 +446,7 @@ window.PixelStream = class extends EventTarget {
     };
 
     self.video.ontouchmove = function (e) {
-      for (let t = 0; t < e.touches.length; t++) {
-        let touch = e.touches[t];
+      for (let touch of e.touches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
           let y = touch.clientY - boundingRect.top;
@@ -529,16 +460,11 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
-
-
-
-
-
   registerMouseHoverEvents() {
+    this.registerMouseEnterAndLeaveEvents();
     const self = this;
 
-    self.preventDefault = false
-
+    self.preventDefault = false;
 
     self.video.onmousemove = (e) => {
       self.emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
@@ -565,27 +491,20 @@ window.PixelStream = class extends EventTarget {
       if (self.preventDefault) e.preventDefault();
     };
 
-
     self.video.onmousewheel = (e) => {
       self.emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
       if (self.preventDefault) e.preventDefault();
     };
   }
 
-
-
-
-
-
-
-
   registerMouseLockEvents() {
+    this.registerMouseEnterAndLeaveEvents();
     const self = this;
 
-    self.preventDefault = true
-    console.info('mouse locked in, ESC to exit')
+    self.preventDefault = true;
+    console.info("mouse locked in, ESC to exit");
 
-    const { clientWidth, clientHeight } = self.video
+    const { clientWidth, clientHeight } = self.video;
     let x = clientWidth / 2;
     let y = clientHeight / 2;
 
@@ -594,20 +513,18 @@ window.PixelStream = class extends EventTarget {
       y += e.movementY;
       if (x > clientWidth) {
         x -= clientWidth;
+      } else if (x < 0) {
+        x += clientWidth;
       }
       if (y > clientHeight) {
         y -= clientHeight;
-      }
-      if (x < 0) {
-        x = clientWidth + x;
-      }
-      if (y < 0) {
-        y = clientHeight - y;
+      } else if (y < 0) {
+        y += clientHeight;
       }
     }
 
     self.video.onmousemove = (e) => {
-      updatePosition(e)
+      updatePosition(e);
       self.emitMouseMove(x, y, e.movementX, e.movementY);
     };
 
@@ -622,12 +539,7 @@ window.PixelStream = class extends EventTarget {
     self.video.onmousewheel = function (e) {
       self.emitMouseWheel(e.wheelDelta, x, y);
     };
-
   }
-
-
-
-
 
   registerMouseEnterAndLeaveEvents() {
     const self = this;
@@ -641,22 +553,14 @@ window.PixelStream = class extends EventTarget {
     self.video.onmouseleave = function (e) {
       let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, MessageType.MouseLeave);
-      self.dc.send(Data.buffer);
+      if (self.dc.readyState === "open") self.dc.send(Data.buffer);
     };
   }
 
-
-
-
-
-
-
-
-
   emitMouseMove(x, y, deltaX, deltaY) {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
-    deltaX = deltaX * 65536 / this.video.clientWidth
-    deltaY = deltaY * 65536 / this.video.clientHeight
+    deltaX = (deltaX * 65536) / this.video.clientWidth;
+    deltaY = (deltaY * 65536) / this.video.clientHeight;
     let Data = new DataView(new ArrayBuffer(9));
     Data.setUint8(0, MessageType.MouseMove);
     Data.setUint16(1, coord.x, true);
@@ -667,7 +571,6 @@ window.PixelStream = class extends EventTarget {
   }
 
   emitMouseDown(button, x, y) {
-
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, MessageType.MouseDown);
@@ -678,7 +581,6 @@ window.PixelStream = class extends EventTarget {
   }
 
   emitMouseUp(button, x, y) {
-
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, MessageType.MouseUp);
@@ -689,7 +591,6 @@ window.PixelStream = class extends EventTarget {
   }
 
   emitMouseWheel(delta, x, y) {
-
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(7));
     Data.setUint8(0, MessageType.MouseWheel);
@@ -699,17 +600,12 @@ window.PixelStream = class extends EventTarget {
     this.dc.send(Data.buffer);
   }
 
-
-
-
-
   emitTouchData(type, touches, fingerIds) {
     let data = new DataView(new ArrayBuffer(2 + 6 * touches.length));
     data.setUint8(0, type);
     data.setUint8(1, touches.length);
     let byte = 2;
-    for (let t = 0; t < touches.length; t++) {
-      let touch = touches[t];
+    for (let touch of touches) {
       let x = touch.clientX - this.video.offsetLeft;
       let y = touch.clientY - this.video.offsetTop;
 
@@ -726,10 +622,6 @@ window.PixelStream = class extends EventTarget {
     this.dc.send(data.buffer);
   }
 
-
-
-
-
   emitDescriptor(descriptor, messageType = MessageType.UIInteraction) {
     // Convert the dscriptor object into a JSON string.
     let descriptorAsString = JSON.stringify(descriptor);
@@ -744,21 +636,16 @@ window.PixelStream = class extends EventTarget {
     byteIdx++;
     data.setUint16(byteIdx, descriptorAsString.length, true);
     byteIdx += 2;
-    for (i = 0; i < descriptorAsString.length; i++) {
-      data.setUint16(byteIdx, descriptorAsString.charCodeAt(i), true);
+    for (let char of descriptorAsString) {
+      // charCodeAt() is UTF-16, codePointAt() is Unicode.
+      data.setUint16(byteIdx, char.charCodeAt(0), true);
       byteIdx += 2;
     }
     this.dc.send(data.buffer);
   }
 
-
-
-
-
-
-
   normalizeAndQuantizeUnsigned(x, y) {
-    let normalizedX = x / this.video.clientWidth
+    let normalizedX = x / this.video.clientWidth;
     let normalizedY = y / this.video.clientHeight;
     if (
       normalizedX < 0.0 ||
@@ -778,8 +665,5 @@ window.PixelStream = class extends EventTarget {
         y: normalizedY * 65536,
       };
     }
-  };;
-
-
-
+  }
 };
