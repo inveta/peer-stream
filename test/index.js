@@ -55,17 +55,16 @@ function onAggregatedStats(reducedStat, VideoEncoderQP) {
 			<div>Latency (ms): ${numberFormat.format(
         reducedStat.currentRoundTripTime * 1000
       )}</div>
-      <div>DataChannel sent: ${reducedStat.dataChannel.bytesSent} bytes</div>
-      <div>DataChannel received: ${
-        reducedStat.dataChannel.bytesReceived
-      } bytes</div>
+      <div>DataChannel —> ${reducedStat.dataChannel.bytesSent} bytes</div>
+      <div>DataChannel <— ${reducedStat.dataChannel.bytesReceived} bytes</div>
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;
 }
 
 document.body.onload = () => {
-  window.ps = new PixelStream("ws://localhost");
+  // window.ps = new PixelStream("ws://localhost");
+  window.ps = new PixelStream("ws://10.0.42.16");
 
   //  registerTouchEvents( );
   ps.registerFakeMouseEvents();
@@ -73,7 +72,7 @@ document.body.onload = () => {
   ps.registerMouseHoverEvents();
 
   ps.addEventListener("message", (e) => {
-    console.log(e.detail);
+    console.log("Data Channel:", e.detail);
   });
 
   ps.addEventListener("open", (e) => {

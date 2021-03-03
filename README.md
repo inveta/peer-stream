@@ -30,7 +30,7 @@ node signalling.js playerPort=80 UE4port=8888
 -AllowPixelStreamingCommands 
 -AudioMixer 
 -PixelStreamingIP=localhost 
--PixelStreamingPort=8888
+-PixelStreamingPort=8888 
 ```
 
 
@@ -45,7 +45,7 @@ ps.registerMouseHoverEvents();
 ps.registerKeyboardEvents();
 ps.registerTouchEvents();
 
-ps.addEventListener('connected', e => {
+ps.addEventListener('open', e => {
     document.body.appendChild(ps.video);
 });
 ps.addEventListener('message', ({detail}) => {

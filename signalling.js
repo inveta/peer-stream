@@ -97,7 +97,6 @@ UE4server.on("connection", function (ws, req) {
     disconnectAllPlayers();
   });
 
-
   ws.send(JSON.stringify(clientConfig));
 });
 

@@ -20,7 +20,7 @@ const MouseButton = {
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
-const ToClientMessageType = {
+const toPlayerType = {
   QualityControlOwnership: 0,
   Response: 1,
   Command: 2,
@@ -30,7 +30,7 @@ const ToClientMessageType = {
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
-const MessageType = {
+const toUE4type = {
   /*
    * Control Messages. Range = 0..49.
    */
@@ -126,30 +126,29 @@ window.PixelStream = class extends EventTarget {
 
   onDataChannelMessage(data) {
     let view = new Uint8Array(data);
-    if (view[0] === ToClientMessageType.QualityControlOwnership) {
-      let ownership = view[1] !== 0;
-      console.info("received Quality Control Ownership", ownership);
-    } else if (view[0] === ToClientMessageType.Response) {
+    if (view[0] === toPlayerType.VideoEncoderAvgQP) {
+      this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
+      console.log(`received VideoEncoderAvgQP`, this.VideoEncoderQP);
+    } else if (view[0] === toPlayerType.Response) {
       // user custom message
       let response = new TextDecoder("utf-16").decode(data.slice(1));
       this.dispatchEvent(new CustomEvent("message", { detail: response }));
-    } else if (view[0] === ToClientMessageType.Command) {
+    } else if (view[0] === toPlayerType.Command) {
       let commandAsString = new TextDecoder("utf-16").decode(data.slice(1));
       let command = JSON.parse(commandAsString);
       console.log(command);
       if (command.command === "onScreenKeyboard") {
         console.info("You should setup a on-screen keyboard");
       }
-    } else if (view[0] === ToClientMessageType.FreezeFrame) {
+    } else if (view[0] === toPlayerType.FreezeFrame) {
       let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
       let jpeg = view.slice(1 + 4);
-    } else if (view[0] === ToClientMessageType.UnfreezeFrame) {
-      //
-    } else if (view[0] === ToClientMessageType.VideoEncoderAvgQP) {
-      this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
-      console.log(`received VideoEncoderAvgQP`, this.VideoEncoderQP);
+    } else if (view[0] === toPlayerType.UnfreezeFrame) {
+    } else if (view[0] === toPlayerType.QualityControlOwnership) {
+      let ownership = view[1] !== 0;
+      console.info("received Quality Control Ownership", ownership);
     } else {
-      console.error(`unrecognized data received, packet ID`, view[0]);
+      console.error(`invalid data type:`, view[0]);
     }
   }
 
@@ -333,7 +332,7 @@ window.PixelStream = class extends EventTarget {
       if (self.preventDefault) e.preventDefault();
       self.dc.send(
         new Uint8Array([
-          MessageType.KeyDown,
+          toUE4type.KeyDown,
           SpecialKeyCodes[e.code] || e.keyCode,
           e.repeat,
         ]).buffer
@@ -345,7 +344,7 @@ window.PixelStream = class extends EventTarget {
       if (self.preventDefault) e.preventDefault();
       self.dc.send(
         new Uint8Array([
-          MessageType.KeyUp,
+          toUE4type.KeyUp,
           SpecialKeyCodes[e.code] || e.keyCode,
         ]).buffer
       );
@@ -354,7 +353,7 @@ window.PixelStream = class extends EventTarget {
     self.video.onkeypress = function (e) {
       if (self.preventDefault) e.preventDefault();
       let data = new DataView(new ArrayBuffer(3));
-      data.setUint8(0, MessageType.KeyPress);
+      data.setUint8(0, toUE4type.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
       self.dc.send(data.buffer);
     };
@@ -386,12 +385,12 @@ window.PixelStream = class extends EventTarget {
       for (let touch of e.changedTouches) {
         rememberTouch(touch);
       }
-      self.emitTouchData(MessageType.TouchStart, e.changedTouches, fingerIds);
+      self.emitTouchData(toUE4type.TouchStart, e.changedTouches, fingerIds);
       if (self.preventDefault) e.preventDefault();
     };
 
     self.video.ontouchend = function (e) {
-      self.emitTouchData(MessageType.TouchEnd, e.changedTouches, fingerIds);
+      self.emitTouchData(toUE4type.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
       for (let touch of e.changedTouches) {
         forgetTouch(touch);
@@ -400,7 +399,7 @@ window.PixelStream = class extends EventTarget {
     };
 
     self.video.ontouchmove = function (e) {
-      self.emitTouchData(MessageType.TouchMove, e.touches, fingerIds);
+      self.emitTouchData(toUE4type.TouchMove, e.touches, fingerIds);
       if (self.preventDefault) e.preventDefault();
     };
   }
@@ -546,13 +545,13 @@ window.PixelStream = class extends EventTarget {
 
     self.video.onmouseenter = function (e) {
       let Data = new DataView(new ArrayBuffer(1));
-      Data.setUint8(0, MessageType.MouseEnter);
+      Data.setUint8(0, toUE4type.MouseEnter);
       self.dc.send(Data.buffer);
     };
 
     self.video.onmouseleave = function (e) {
       let Data = new DataView(new ArrayBuffer(1));
-      Data.setUint8(0, MessageType.MouseLeave);
+      Data.setUint8(0, toUE4type.MouseLeave);
       if (self.dc.readyState === "open") self.dc.send(Data.buffer);
     };
   }
@@ -562,7 +561,7 @@ window.PixelStream = class extends EventTarget {
     deltaX = (deltaX * 65536) / this.video.clientWidth;
     deltaY = (deltaY * 65536) / this.video.clientHeight;
     let Data = new DataView(new ArrayBuffer(9));
-    Data.setUint8(0, MessageType.MouseMove);
+    Data.setUint8(0, toUE4type.MouseMove);
     Data.setUint16(1, coord.x, true);
     Data.setUint16(3, coord.y, true);
     Data.setInt16(5, deltaX, true);
@@ -573,7 +572,7 @@ window.PixelStream = class extends EventTarget {
   emitMouseDown(button, x, y) {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(6));
-    Data.setUint8(0, MessageType.MouseDown);
+    Data.setUint8(0, toUE4type.MouseDown);
     Data.setUint8(1, button);
     Data.setUint16(2, coord.x, true);
     Data.setUint16(4, coord.y, true);
@@ -583,7 +582,7 @@ window.PixelStream = class extends EventTarget {
   emitMouseUp(button, x, y) {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(6));
-    Data.setUint8(0, MessageType.MouseUp);
+    Data.setUint8(0, toUE4type.MouseUp);
     Data.setUint8(1, button);
     Data.setUint16(2, coord.x, true);
     Data.setUint16(4, coord.y, true);
@@ -593,7 +592,7 @@ window.PixelStream = class extends EventTarget {
   emitMouseWheel(delta, x, y) {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
     let Data = new DataView(new ArrayBuffer(7));
-    Data.setUint8(0, MessageType.MouseWheel);
+    Data.setUint8(0, toUE4type.MouseWheel);
     Data.setInt16(1, delta, true);
     Data.setUint16(3, coord.x, true);
     Data.setUint16(5, coord.y, true);
@@ -622,7 +621,7 @@ window.PixelStream = class extends EventTarget {
     this.dc.send(data.buffer);
   }
 
-  emitDescriptor(descriptor, messageType = MessageType.UIInteraction) {
+  emitDescriptor(descriptor, messageType = toUE4type.UIInteraction) {
     // Convert the dscriptor object into a JSON string.
     let descriptorAsString = JSON.stringify(descriptor);
 
