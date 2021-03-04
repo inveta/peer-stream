@@ -43,8 +43,15 @@ console.log(`WebSocket waiting for players on`, playerPort);
 let playerSockets = new Map(); // playerId <-> player's Socket
 let nextPlayerId = 100;
 
+let logTimer;
+
 UE4server.on("connection", function (ws, req) {
   UE4socket = ws;
+
+  clearInterval(logTimer);
+  logTimer = setInterval(() => {
+    console.log("current players:", playerSockets.size);
+  }, 2 * 60 * 1000);
 
   console.log(
     `UE4 connected:`,
@@ -89,6 +96,7 @@ UE4server.on("connection", function (ws, req) {
   ws.on("close", function (code, reason) {
     console.log(`UE4 disconnected:`, code, reason);
     disconnectAllPlayers();
+    clearInterval(logTimer);
   });
 
   ws.on("error", function (error) {

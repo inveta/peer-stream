@@ -185,7 +185,6 @@ window.PixelStream = class extends EventTarget {
 
   setupDataChannel(label = "hello world") {
     this.dc = this.pc.createDataChannel(label, { ordered: true });
-    console.log(`Created DataChannel`, label);
 
     this.dc.onopen = (e) => {
       console.log(`data channel connected:`, label);
@@ -207,7 +206,7 @@ window.PixelStream = class extends EventTarget {
   setupPeerConnection() {
     this.pc.ontrack = (e) => {
       // called twice for audio & video
-      console.log("handleOnTrack", e);
+      console.log("received track:", e);
       this.video.srcObject = e.streams[0];
     };
     this.pc.onicecandidate = (e) => {
@@ -222,9 +221,7 @@ window.PixelStream = class extends EventTarget {
 
   // fetch then reduce the stats array
   async getStats() {
-    const self = this;
-
-    const stats = await self.pc.getStats(null);
+    const stats = await this.pc.getStats(null);
 
     let newStat = {};
 
@@ -239,15 +236,15 @@ window.PixelStream = class extends EventTarget {
         // bitrate = bits received since last time / number of ms since last time
         //This is automatically in kbits (where k=1000) since time is in ms and stat we want is in seconds (so a '* 1000' then a '/ 1000' would negate each other)
         newStat.bitrate =
-          (8 * (newStat.bytesReceived - self.aggregatedStats.bytesReceived)) /
-          (newStat.timestamp - self.aggregatedStats.timestamp);
+          (8 * (newStat.bytesReceived - this.aggregatedStats.bytesReceived)) /
+          (newStat.timestamp - this.aggregatedStats.timestamp);
         newStat.bitrate = Math.floor(newStat.bitrate);
         newStat.lowBitrate = Math.min(
-          self.aggregatedStats.lowBitrate || Infinity,
+          this.aggregatedStats.lowBitrate || Infinity,
           newStat.bitrate
         );
         newStat.highBitrate = Math.max(
-          self.aggregatedStats.highBitrate || -Infinity,
+          this.aggregatedStats.highBitrate || -Infinity,
           newStat.bitrate
         );
       }
@@ -271,7 +268,7 @@ window.PixelStream = class extends EventTarget {
       }
     });
 
-    self.aggregatedStats = newStat;
+    this.aggregatedStats = newStat;
     return newStat;
   }
 
@@ -287,7 +284,7 @@ window.PixelStream = class extends EventTarget {
     const offer = await this.pc.createOffer(this.sdpConstraints);
 
     this.pc.setLocalDescription(offer);
-    // (andriy): increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps
+    // increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps
     // (100 mbps means we don't restrict encoder at all)
     // after we `setLocalDescription` because other browsers are not c happy to see google-specific config
     offer.sdp = offer.sdp.replace(
@@ -298,11 +295,7 @@ window.PixelStream = class extends EventTarget {
     console.log(`offer sent:`, offer);
   }
 
-  connect(
-    url = location.href
-      .replace("http://", "ws://")
-      .replace("https://", "wss://")
-  ) {
+  connect(url = location.href.replace(/^http/, "ws")) {
     this.ws = new WebSocket(url);
 
     // this.ws.onopen
@@ -310,8 +303,8 @@ window.PixelStream = class extends EventTarget {
       console.warn(e);
     };
 
-    this.ws.onmessage = (event) => {
-      this.onWebSocketMessage(event.data);
+    this.ws.onmessage = (e) => {
+      this.onWebSocketMessage(e.data);
     };
 
     this.ws.onclose = (e) => {
@@ -326,11 +319,9 @@ window.PixelStream = class extends EventTarget {
   }
 
   registerKeyboardEvents() {
-    const self = this;
-
-    self.video.onkeydown = function (e) {
-      if (self.preventDefault) e.preventDefault();
-      self.dc.send(
+    this.video.onkeydown = (e) => {
+      if (this.preventDefault) e.preventDefault();
+      this.dc.send(
         new Uint8Array([
           toUE4type.KeyDown,
           SpecialKeyCodes[e.code] || e.keyCode,
@@ -340,79 +331,67 @@ window.PixelStream = class extends EventTarget {
       //  e.stopPropagation
     };
 
-    self.video.onkeyup = function (e) {
-      if (self.preventDefault) e.preventDefault();
-      self.dc.send(
-        new Uint8Array([
-          toUE4type.KeyUp,
-          SpecialKeyCodes[e.code] || e.keyCode,
-        ]).buffer
+    this.video.onkeyup = (e) => {
+      if (this.preventDefault) e.preventDefault();
+      this.dc.send(
+        new Uint8Array([toUE4type.KeyUp, SpecialKeyCodes[e.code] || e.keyCode])
+          .buffer
       );
     };
 
-    self.video.onkeypress = function (e) {
-      if (self.preventDefault) e.preventDefault();
+    this.video.onkeypress = (e) => {
+      if (this.preventDefault) e.preventDefault();
       let data = new DataView(new ArrayBuffer(3));
       data.setUint8(0, toUE4type.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
-      self.dc.send(data.buffer);
+      this.dc.send(data.buffer);
     };
   }
 
   registerTouchEvents() {
-    const self = this;
-
     // We need to assign a unique identifier to each finger.
     // We do this by mapping each Touch object to the identifier.
     let fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
     let fingerIds = {};
 
-    function rememberTouch(touch) {
-      let finger = fingers.pop();
-      if (finger === undefined) {
-        console.info("exhausted touch indentifiers");
-      }
-      fingerIds[touch.identifier] = finger;
-    }
-
-    function forgetTouch(touch) {
-      fingers.push(fingerIds[touch.identifier]);
-      delete fingerIds[touch.identifier];
-    }
-
-    self.video.ontouchstart = function (e) {
+    this.video.ontouchstart = (e) => {
       // Assign a unique identifier to each touch.
       for (let touch of e.changedTouches) {
-        rememberTouch(touch);
+        // remember touch
+        let finger = fingers.pop();
+        if (finger === undefined) {
+          console.info("exhausted touch indentifiers");
+        }
+        fingerIds[touch.identifier] = finger;
       }
-      self.emitTouchData(toUE4type.TouchStart, e.changedTouches, fingerIds);
-      if (self.preventDefault) e.preventDefault();
+      this.emitTouchData(toUE4type.TouchStart, e.changedTouches, fingerIds);
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.ontouchend = function (e) {
-      self.emitTouchData(toUE4type.TouchEnd, e.changedTouches, fingerIds);
+    this.video.ontouchend = (e) => {
+      this.emitTouchData(toUE4type.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
       for (let touch of e.changedTouches) {
-        forgetTouch(touch);
+        // forget touch
+        fingers.push(fingerIds[touch.identifier]);
+        delete fingerIds[touch.identifier];
       }
-      if (self.preventDefault) e.preventDefault();
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.ontouchmove = function (e) {
-      self.emitTouchData(toUE4type.TouchMove, e.touches, fingerIds);
-      if (self.preventDefault) e.preventDefault();
+    this.video.ontouchmove = (e) => {
+      this.emitTouchData(toUE4type.TouchMove, e.touches, fingerIds);
+      if (this.preventDefault) e.preventDefault();
     };
   }
 
   // 触屏模拟鼠标
   registerFakeMouseEvents() {
-    const self = this;
-
     let finger = undefined;
 
-    const boundingRect = self.video.getBoundingClientRect();
+    const boundingRect = this.video.getBoundingClientRect();
 
-    self.video.ontouchstart = function (e) {
+    this.video.ontouchstart = (e) => {
       if (finger === undefined) {
         let firstTouch = e.changedTouches[0];
         finger = {
@@ -423,61 +402,60 @@ window.PixelStream = class extends EventTarget {
         // Hack: Mouse events require an enter and leave so we just
         // enter and leave manually with each touch as this event
         // is not fired with a touch device.
-        self.video.onmouseenter(e);
-        self.emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
+        this.video.onmouseenter(e);
+        this.emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
       }
-      if (self.preventDefault) e.preventDefault();
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.ontouchend = function (e) {
+    this.video.ontouchend = (e) => {
       for (let touch of e.changedTouches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
           let y = touch.clientY - boundingRect.top;
-          self.emitMouseUp(MouseButton.MainButton, x, y);
+          this.emitMouseUp(MouseButton.MainButton, x, y);
           // Hack: Manual mouse leave event.
-          self.video.onmouseleave(e);
+          this.video.onmouseleave(e);
           finger = undefined;
           break;
         }
       }
-      if (self.preventDefault) e.preventDefault();
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.ontouchmove = function (e) {
+    this.video.ontouchmove = (e) => {
       for (let touch of e.touches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
           let y = touch.clientY - boundingRect.top;
-          self.emitMouseMove(x, y, x - finger.x, y - finger.y);
+          this.emitMouseMove(x, y, x - finger.x, y - finger.y);
           finger.x = x;
           finger.y = y;
           break;
         }
       }
-      if (self.preventDefault) e.preventDefault();
+      if (this.preventDefault) e.preventDefault();
     };
   }
 
   registerMouseHoverEvents() {
     this.registerMouseEnterAndLeaveEvents();
-    const self = this;
 
-    self.preventDefault = false;
+    this.preventDefault = false;
 
-    self.video.onmousemove = (e) => {
-      self.emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
-      if (self.preventDefault) e.preventDefault();
+    this.video.onmousemove = (e) => {
+      this.emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.onmousedown = (e) => {
-      self.emitMouseDown(e.button, e.offsetX, e.offsetY);
-      if (self.preventDefault) e.preventDefault();
+    this.video.onmousedown = (e) => {
+      this.emitMouseDown(e.button, e.offsetX, e.offsetY);
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.onmouseup = (e) => {
-      self.emitMouseUp(e.button, e.offsetX, e.offsetY);
-      if (self.preventDefault) e.preventDefault();
+    this.video.onmouseup = (e) => {
+      this.emitMouseUp(e.button, e.offsetX, e.offsetY);
+      if (this.preventDefault) e.preventDefault();
     };
 
     // When the context menu is shown then it is safest to release the button
@@ -485,29 +463,28 @@ window.PixelStream = class extends EventTarget {
     // get at least one mouse up corresponding to a mouse down event. Otherwise
     // the mouse can get stuck.
     // https://github.com/facebook/react/issues/5531
-    self.video.oncontextmenu = (e) => {
-      self.emitMouseUp(e.button, e.offsetX, e.offsetY);
-      if (self.preventDefault) e.preventDefault();
+    this.video.oncontextmenu = (e) => {
+      this.emitMouseUp(e.button, e.offsetX, e.offsetY);
+      if (this.preventDefault) e.preventDefault();
     };
 
-    self.video.onmousewheel = (e) => {
-      self.emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
-      if (self.preventDefault) e.preventDefault();
+    this.video.onmousewheel = (e) => {
+      this.emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
+      if (this.preventDefault) e.preventDefault();
     };
   }
 
   registerMouseLockEvents() {
     this.registerMouseEnterAndLeaveEvents();
-    const self = this;
 
-    self.preventDefault = true;
+    this.preventDefault = true;
     console.info("mouse locked in, ESC to exit");
 
-    const { clientWidth, clientHeight } = self.video;
+    const { clientWidth, clientHeight } = this.video;
     let x = clientWidth / 2;
     let y = clientHeight / 2;
 
-    function updatePosition(e) {
+    this.video.onmousemove = (e) => {
       x += e.movementX;
       y += e.movementY;
       if (x > clientWidth) {
@@ -520,39 +497,33 @@ window.PixelStream = class extends EventTarget {
       } else if (y < 0) {
         y += clientHeight;
       }
-    }
-
-    self.video.onmousemove = (e) => {
-      updatePosition(e);
-      self.emitMouseMove(x, y, e.movementX, e.movementY);
+      this.emitMouseMove(x, y, e.movementX, e.movementY);
     };
 
-    self.video.onmousedown = function (e) {
-      self.emitMouseDown(e.button, x, y);
+    this.video.onmousedown = (e) => {
+      this.emitMouseDown(e.button, x, y);
     };
 
-    self.video.onmouseup = function (e) {
-      self.emitMouseUp(e.button, x, y);
+    this.video.onmouseup = (e) => {
+      this.emitMouseUp(e.button, x, y);
     };
 
-    self.video.onmousewheel = function (e) {
-      self.emitMouseWheel(e.wheelDelta, x, y);
+    this.video.onmousewheel = (e) => {
+      this.emitMouseWheel(e.wheelDelta, x, y);
     };
   }
 
   registerMouseEnterAndLeaveEvents() {
-    const self = this;
-
-    self.video.onmouseenter = function (e) {
+    this.video.onmouseenter = (e) => {
       let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, toUE4type.MouseEnter);
-      self.dc.send(Data.buffer);
+      this.dc.send(Data.buffer);
     };
 
-    self.video.onmouseleave = function (e) {
+    this.video.onmouseleave = (e) => {
       let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, toUE4type.MouseLeave);
-      if (self.dc.readyState === "open") self.dc.send(Data.buffer);
+      if (this.dc.readyState === "open") this.dc.send(Data.buffer);
     };
   }
 
@@ -666,3 +637,5 @@ window.PixelStream = class extends EventTarget {
     }
   }
 };
+
+// export default PixelStream;

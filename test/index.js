@@ -1,6 +1,34 @@
+document.body.onload = () => {
+  window.ps = new PixelStream("ws://localhost");
+  // window.ps = new PixelStream("ws://10.0.42.16");
+
+  //  registerTouchEvents();
+  ps.registerFakeMouseEvents();
+  ps.registerKeyboardEvents();
+  ps.registerMouseHoverEvents();
+
+  ps.addEventListener("message", (e) => {
+    console.log("Data Channel:", e.detail);
+  });
+
+  ps.addEventListener("open", (e) => {
+    document.body.appendChild(ps.video);
+    ps.statTimer = setInterval(async () => {
+      // 打印监控数据
+      const stat = await ps.getStats();
+      if (stat) onAggregatedStats(stat, ps.VideoEncoderQP);
+    }, 1000);
+  });
+
+  ps.addEventListener("close", (e) => {
+    clearInterval(ps.statTimer);
+  });
+};
+
+// 以下内容可移除
+
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
-const overlay = document.getElementById("overlay");
 const qualityStatus = document.getElementById("qualityStatus");
 
 console.info = (...text) => {
@@ -8,19 +36,15 @@ console.info = (...text) => {
   // show log top left, disappear after timeout
 
   const log = document.createElement("div");
-  log.innerHTML = text;
+  log.innerHTML = text.join(" ");
   logsWrapper.appendChild(log);
   setTimeout(() => {
     logsWrapper.removeChild(log);
   }, 2000);
 };
 
-function onExpandOverlay_Click(/* e */) {
-  overlay.classList.toggle("overlay-shown");
-}
-
-function onAggregatedStats(reducedStat, VideoEncoderQP) {
-  let numberFormat = new Intl.NumberFormat(window.navigator.language, {
+function onAggregatedStats(stat, VideoEncoderQP) {
+  let formatter = new Intl.NumberFormat(window.navigator.language, {
     maximumFractionDigits: 0,
   });
 
@@ -41,51 +65,17 @@ function onAggregatedStats(reducedStat, VideoEncoderQP) {
   qualityStatus.style.color = color;
 
   statsText += `
- 			<div>Resolution: ${
-        reducedStat.frameWidth + "x" + reducedStat.frameHeight
-      }</div>
-			<div>Video Received: ${numberFormat.format(
-        reducedStat.bytesReceived
-      )} bytes</div>
-			<div>Frames Decoded: ${numberFormat.format(reducedStat.framesDecoded)}</div>
-			<div>Packets Lost: ${numberFormat.format(reducedStat.packetsLost)}</div>
-			<div style="color: ${color}">Bitrate (kbps): ${reducedStat.bitrate}</div>
-			<div>FPS: ${numberFormat.format(reducedStat.framesPerSecond)}</div>
-			<div>Frames dropped: ${numberFormat.format(reducedStat.framesDropped)}</div>
-			<div>Latency (ms): ${numberFormat.format(
-        reducedStat.currentRoundTripTime * 1000
-      )}</div>
-      <div>DataChannel —> ${reducedStat.dataChannel.bytesSent} bytes</div>
-      <div>DataChannel <— ${reducedStat.dataChannel.bytesReceived} bytes</div>
+ 			<div>Resolution: ${stat.frameWidth + "x" + stat.frameHeight}</div>
+			<div>Video Received: ${formatter.format(stat.bytesReceived)} bytes</div>
+			<div>Frames Decoded: ${formatter.format(stat.framesDecoded)}</div>
+			<div>Packets Lost: ${formatter.format(stat.packetsLost)}</div>
+			<div style="color: ${color}">kbps: ${formatter.format(stat.bitrate)}</div>
+			<div>fps: ${formatter.format(stat.framesPerSecond)}</div>
+			<div>Frames dropped: ${formatter.format(stat.framesDropped)}</div>
+			<div>Latency: ${formatter.format(stat.currentRoundTripTime * 1000)} ms</div>
+      <div>DataChannel —> ${stat.dataChannel.bytesSent} bytes</div>
+      <div>DataChannel <— ${stat.dataChannel.bytesReceived} bytes</div>
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;
 }
-
-document.body.onload = () => {
-  // window.ps = new PixelStream("ws://localhost");
-  window.ps = new PixelStream("ws://10.0.42.16");
-
-  //  registerTouchEvents( );
-  ps.registerFakeMouseEvents();
-  ps.registerKeyboardEvents();
-  ps.registerMouseHoverEvents();
-
-  ps.addEventListener("message", (e) => {
-    console.log("Data Channel:", e.detail);
-  });
-
-  ps.addEventListener("open", (e) => {
-    document.body.appendChild(ps.video);
-    // ps.video.play()
-
-    ps.statTimer = setInterval(async () => {
-      const stat = await ps.getStats();
-      if (stat) onAggregatedStats(stat, ps.VideoEncoderQP);
-    }, 1000);
-  });
-
-  ps.addEventListener("close", (e) => {
-    clearInterval(ps.statTimer);
-  });
-};

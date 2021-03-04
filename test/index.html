@@ -2,8 +2,6 @@
 <html>
 
 <head>
-	<!-- https://webrtc.github.io/adapter/adapter-latest.js -->
-
 	<link rel="shortcut icon" type="image/png" href="../logo.png" />
 	<link type="text/css" rel="stylesheet" href="index.css" />
 	<script type="text/javascript" src="../PixelStream.js"></script>
@@ -13,12 +11,8 @@
 <body>
 	<div id="logs"></div>
 	<div id="overlay">
-		<div>
-			<div id="qualityStatus" style="color: gray;">●</div>
-			<div id="overlayButton" onclick="onExpandOverlay_Click()">+</div>
-		</div>
-
-
+		<div id="qualityStatus" style="color: gray;">●</div>
+		<div id="overlayButton" onclick="this.parentElement.classList.toggle('overlay-shown')">+</div>
 		<div id="stats">Not connected</div>
 	</div>
 </body>
