@@ -20,15 +20,17 @@ Object.assign(
   {
     playerPort: 80,
     UE4port: 8888,
-    peerConnectionOptions: {},
+    peerConnectionOptions: {
+      offerExtmapAllowMixed: false, // 为了兼容chrome89+
+      // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
+    },
   },
   args
 );
 
 const WebSocket = require("ws");
 
-// `clientConfig` is send to UE4 and Players as initialization signal
-// let clientConfig = {peerConnectionOptions: { 'iceServers': [{'urls': ['stun:34.250.222.95:19302']}] }};
+// to be sent to UE4 and Players as initialization signal
 let clientConfig = { type: "config", peerConnectionOptions };
 
 let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
@@ -43,15 +45,8 @@ console.log(`WebSocket waiting for players on`, playerPort);
 let playerSockets = new Map(); // playerId <-> player's Socket
 let nextPlayerId = 100;
 
-let logTimer;
-
 UE4server.on("connection", function (ws, req) {
   UE4socket = ws;
-
-  clearInterval(logTimer);
-  logTimer = setInterval(() => {
-    console.log("current players:", playerSockets.size);
-  }, 2 * 60 * 1000);
 
   console.log(
     `UE4 connected:`,
@@ -93,10 +88,16 @@ UE4server.on("connection", function (ws, req) {
     }
   });
 
+  function disconnectAllPlayers(code, reason) {
+    let clone = new Map(playerSockets);
+    for (let player of clone.values()) {
+      player.close(code, reason);
+    }
+  }
+
   ws.on("close", function (code, reason) {
     console.log(`UE4 disconnected:`, code, reason);
     disconnectAllPlayers();
-    clearInterval(logTimer);
   });
 
   ws.on("error", function (error) {
@@ -144,6 +145,14 @@ playerServer.on("connection", function (ws, req) {
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
       UE4socket.send(JSON.stringify(msg));
+    } else if (msg.type === "debug") {
+      let debug;
+      try {
+        debug = String(eval(msg.debug));
+      } catch (err) {
+        debug = err.message;
+      }
+      ws.send(JSON.stringify({ type: "debug", debug }));
     } else {
       console.error(`player`, playerId, "invalid message type:", msg.type);
       ws.close(1008, "Unsupported message type");
@@ -153,9 +162,7 @@ playerServer.on("connection", function (ws, req) {
 
   function onPlayerDisconnected() {
     playerSockets.delete(playerId);
-    UE4socket.send(
-      JSON.stringify({ type: "playerDisconnected", playerId: playerId })
-    );
+    UE4socket.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   }
 
   ws.on("close", function (code, reason) {
@@ -171,10 +178,3 @@ playerServer.on("connection", function (ws, req) {
 
   ws.send(JSON.stringify(clientConfig));
 });
-
-function disconnectAllPlayers(code, reason) {
-  let clone = new Map(playerSockets);
-  for (let player of clone.values()) {
-    player.close(code, reason);
-  }
-}

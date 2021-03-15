@@ -3,9 +3,9 @@
 
 # Pixel Streamer
 
-Lightweight PixelStreaming frontend SDK (with signalling channel) for UnrealEngine's PixelStreaming plugin. Culling all dependencies and useless codes from original version.
+Lightweight PixelStreaming frontend SDK (with signalling channel) for UnrealEngine's PixelStreaming plugin. Culling all dependencies and useless codes from original package.
 
-Original Version:
+Original Package:
 https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Source/Programs/PixelStreaming/WebServers/SignallingWebServer
 
 Pixel Streaming Protocol:

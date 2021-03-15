@@ -109,6 +109,7 @@ window.PixelStream = class extends EventTarget {
   async onWebSocketMessage(data) {
     let msg = JSON.parse(data);
     if (msg.type === "config") {
+      this.peerConnectionOptions = msg.peerConnectionOptions;
       console.info("connecting to UE4");
       await this.createOffer();
     } else if (msg.type === "answer") {
@@ -120,7 +121,7 @@ window.PixelStream = class extends EventTarget {
       await this.pc.addIceCandidate(candidate);
       console.log("received candidate", msg.candidate);
     } else {
-      console.error(`WS: invalid message type`, msg.type);
+      console.warn(`invalid WS message:`, msg);
     }
   }
 
@@ -277,6 +278,7 @@ window.PixelStream = class extends EventTarget {
 
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
+      ...this.peerConnectionOptions,
     });
 
     this.setupPeerConnection();

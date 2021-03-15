@@ -9,7 +9,6 @@ body {
 }
 
 #stats {
-  background-color: rgba(0, 0, 0, 0.8);
   text-align: left;
   font-size: 14px;
   font-weight: bold;
@@ -20,8 +19,6 @@ body {
 }
 
 #overlay {
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
   position: fixed;
   padding: 4px;
   top: 0;
@@ -43,14 +40,10 @@ body {
   transform: rotate(-135deg);
 }
 
-#overlayButton:hover {
-  cursor: pointer;
-}
-
 #overlayButton {
+  cursor: pointer;
   transition-duration: 250ms;
   float: right;
-  text-align: right;
   font-size: 40px;
 }
 
