@@ -1,3 +1,10 @@
+/*
+ *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
+ *  Author: 金恒昱
+ *  Version: 0.0.4
+ *
+ */
+
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
 // special keycodes different from KeyboardEvent.keyCode
 const SpecialKeyCodes = {
@@ -637,6 +644,11 @@ window.PixelStream = class extends EventTarget {
         y: normalizedY * 65536,
       };
     }
+  }
+
+  debug(javascript) {
+    // 调试信令服务器
+    this.ws.send(JSON.stringify({ type: "debug", debug: javascript }));
   }
 };
 

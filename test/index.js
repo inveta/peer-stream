@@ -27,6 +27,9 @@ document.body.onload = () => {
 
 // 以下内容可移除
 
+// 打印玩家数量
+// ps.debug('playerSockets.size')
+
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 const qualityStatus = document.getElementById("qualityStatus");

@@ -1,4 +1,11 @@
-// command line format: key-value pairs connected by "=", separated by " ", like:
+/*
+ *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
+ *  Author: 金恒昱
+ *  Version: 0.0.4
+ *
+ */
+
+// command line format: key-value pairs connected by "=", separated by " "
 // node signalling.js playerPort=80 UE4port=8888 useWSS
 
 // process.argc[0] == 'path/to/node.exe'
