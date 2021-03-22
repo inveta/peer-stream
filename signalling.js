@@ -1,7 +1,7 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
  *  Author: 金恒昱
- *  Version: 0.0.4
+ *  Version: 0.0.5
  *
  */
 
@@ -13,11 +13,9 @@
 const args = process.argv.slice(2).reduce((prev, curr) => {
   let [key, ...value] = curr.split("=");
   value = value.join("") || "true";
-
   try {
     value = JSON.parse(value);
   } catch {}
-
   prev[key] = value;
   return prev;
 }, {});
@@ -52,7 +50,7 @@ console.log(`WebSocket waiting for players on`, playerPort);
 let playerSockets = new Map(); // playerId <-> player's Socket
 let nextPlayerId = 100;
 
-UE4server.on("connection", function (ws, req) {
+UE4server.on("connection", (ws, req) => {
   UE4socket = ws;
 
   console.log(
@@ -61,7 +59,7 @@ UE4server.on("connection", function (ws, req) {
     req.socket.remotePort
   );
 
-  ws.on("message", function (msg) {
+  ws.on("message", (msg) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
@@ -102,22 +100,22 @@ UE4server.on("connection", function (ws, req) {
     }
   }
 
-  ws.on("close", function (code, reason) {
-    console.log(`UE4 disconnected:`, code, reason);
-    disconnectAllPlayers();
+  ws.on("close", (code, reason) => {
+    console.log(`UE4 disconnected:`, reason);
+    disconnectAllPlayers(code, reason);
   });
 
-  ws.on("error", function (error) {
+  ws.on("error", (error) => {
     console.error(`UE4 connection error:`, error);
     ws.close(1006 /* abnormal closure */, error);
-    disconnectAllPlayers();
+    disconnectAllPlayers(1006, error);
   });
 
   ws.send(JSON.stringify(clientConfig));
 });
 
 // every player
-playerServer.on("connection", function (ws, req) {
+playerServer.on("connection", (ws, req) => {
   // Reject connection if UE4 is not connected
   if (!UE4socket || UE4socket.readyState != 1 /* OPEN */) {
     ws.close(1013 /* Try again later */, "UE4 is not connected");
@@ -136,7 +134,7 @@ playerServer.on("connection", function (ws, req) {
   );
   playerSockets.set(playerId, ws);
 
-  ws.on("message", function (msg) {
+  ws.on("message", (msg) => {
     // offer or iceCandidate
 
     try {
@@ -172,12 +170,12 @@ playerServer.on("connection", function (ws, req) {
     UE4socket.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   }
 
-  ws.on("close", function (code, reason) {
+  ws.on("close", (code, reason) => {
     console.log(`player`, playerId, "connection closed", code, reason);
     onPlayerDisconnected();
   });
 
-  ws.on("error", function (error) {
+  ws.on("error", (error) => {
     console.error(`player`, playerId, `connection error:`, error);
     ws.close(1006 /* abnormal closure */, error);
     onPlayerDisconnected();

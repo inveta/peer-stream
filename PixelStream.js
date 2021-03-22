@@ -1,7 +1,7 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
  *  Author: 金恒昱
- *  Version: 0.0.4
+ *  Version: 0.0.5
  *
  */
 
@@ -183,7 +183,7 @@ window.PixelStream = class extends EventTarget {
       background-color: #222;
       width: unset;
       height: unset;
-      position: fixed;
+      position: absolute;
       top: 50%;
       left: 50%;
       display: none;

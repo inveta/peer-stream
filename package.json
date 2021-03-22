@@ -1,6 +1,6 @@
 {
   "name": "pixel-streamer",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "lightweight PixelStreaming SDK for UnrealEngine",
   "scripts": {},
   "repository": "https://github.com/JinHengyu/PixelStreamer",

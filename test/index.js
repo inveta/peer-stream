@@ -2,10 +2,10 @@ document.body.onload = () => {
   window.ps = new PixelStream("ws://localhost");
   // window.ps = new PixelStream("ws://10.0.42.16");
 
-  //  registerTouchEvents();
-  ps.registerFakeMouseEvents();
   ps.registerKeyboardEvents();
   ps.registerMouseHoverEvents();
+  ps.registerFakeMouseEvents();
+  //  registerTouchEvents();
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
