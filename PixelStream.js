@@ -318,12 +318,14 @@ window.PixelStream = class extends EventTarget {
 
     this.ws.onclose = (e) => {
       this.pc.close();
-      console.info(`WS & WebRTC closed:`, e.reason || e.code);
+      this.dc.close();
+      console.info(`signalling socket closed`, e.reason || "");
 
       // 3s后重连
-      setTimeout(() => {
-        this.connect(url);
-      }, 3000);
+      if (e.code !== 3000)
+        this.timeout = setTimeout(() => {
+          this.connect(url);
+        }, 3000);
     };
   }
 
