@@ -15,8 +15,8 @@ document.body.onload = () => {
     document.body.appendChild(ps.video);
     ps.statTimer = setInterval(async () => {
       // 打印监控数据
-      const stat = await ps.getStats();
-      if (stat) onAggregatedStats(stat, ps.VideoEncoderQP);
+      const stats = await ps.pc.getStats(null);
+      if (stats) onAggregatedStats(stats, ps.VideoEncoderQP);
     }, 1000);
   });
 
@@ -46,8 +46,25 @@ console.info = (...text) => {
   }, 2000);
 };
 
-function onAggregatedStats(stat, VideoEncoderQP) {
-  let formatter = new Intl.NumberFormat(window.navigator.language, {
+function onAggregatedStats(stats, VideoEncoderQP) {
+  let dataChannel;
+  let video;
+  let audio;
+  let candidatePair;
+  stats.forEach((stat) => {
+    if (stat.type === "data-channel") {
+      dataChannel = stat;
+    } else if (stat.type === "inbound-rtp" && stat.mediaType === "video") {
+      video = stat;
+    } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
+      audio = stat;
+    } else if (stat.type === "candidate-pair") {
+      candidatePair = stat;
+    }
+  });
+
+  let formatter = new Intl.NumberFormat(navigator.language, {
+    // 小数位
     maximumFractionDigits: 0,
   });
 
@@ -68,16 +85,21 @@ function onAggregatedStats(stat, VideoEncoderQP) {
   qualityStatus.style.color = color;
 
   statsText += `
- 			<div>Resolution: ${stat.frameWidth + "x" + stat.frameHeight}</div>
-			<div>Video Received: ${formatter.format(stat.bytesReceived)} bytes</div>
-			<div>Frames Decoded: ${formatter.format(stat.framesDecoded)}</div>
-			<div>Packets Lost: ${formatter.format(stat.packetsLost)}</div>
-			<div style="color: ${color}">kbps: ${formatter.format(stat.bitrate)}</div>
-			<div>fps: ${formatter.format(stat.framesPerSecond)}</div>
-			<div>Frames dropped: ${formatter.format(stat.framesDropped)}</div>
-			<div>Latency: ${formatter.format(stat.currentRoundTripTime * 1000)} ms</div>
-      <div>DataChannel —> ${stat.dataChannel.bytesSent} bytes</div>
-      <div>DataChannel <— ${stat.dataChannel.bytesReceived} bytes</div>
+ 			<div>Resolution: ${video.frameWidth + "x" + video.frameHeight}</div>
+			<div>Video <— ${formatter.format(video.bytesReceived / 1024)} KB</div>
+			<div>Audio <— ${formatter.format(audio.bytesReceived / 1024)} KB</div>
+			<div>Frames Decoded: ${formatter.format(video.framesDecoded)}</div>
+			<div>Packets Lost: ${formatter.format(video.packetsLost)}</div>
+			<div style="color: ${color}">max bitrate: ${formatter.format(
+    candidatePair.availableIncomingBitrate
+  )}  </div>
+			<div>FPS: ${video.framesPerSecond}</div>
+			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
+			<div>Latency: ${formatter.format(
+        candidatePair.currentRoundTripTime * 1000
+      )} ms</div>
+      <div>DataChannel —> ${formatter.format(dataChannel.bytesSent)} B</div>
+      <div>DataChannel <— ${formatter.format(dataChannel.bytesReceived)} B</div>
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;

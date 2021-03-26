@@ -1,7 +1,7 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
  *  Author: 金恒昱
- *  Version: 0.0.5
+ *  Version: 0.0.6
  *
  */
 
@@ -94,8 +94,6 @@ window.PixelStream = class extends EventTarget {
       offerToReceiveVideo: 1,
     };
 
-    this.aggregatedStats = {};
-
     this.setupVideo();
 
     document.addEventListener(
@@ -136,7 +134,7 @@ window.PixelStream = class extends EventTarget {
     let view = new Uint8Array(data);
     if (view[0] === toPlayerType.VideoEncoderAvgQP) {
       this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
-      console.log(`received VideoEncoderAvgQP`, this.VideoEncoderQP);
+      console.log(`received Video Encoder Average QP`, this.VideoEncoderQP);
     } else if (view[0] === toPlayerType.Response) {
       // user custom message
       let response = new TextDecoder("utf-16").decode(data.slice(1));
@@ -175,6 +173,7 @@ window.PixelStream = class extends EventTarget {
     // double click: pointer lock mode
     this.video.ondblclick = (e) => {
       this.video.requestPointerLock();
+      this.video.muted = false;
     };
 
     // this.video.onresize
@@ -227,59 +226,6 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
-  // fetch then reduce the stats array
-  async getStats() {
-    const stats = await this.pc.getStats(null);
-
-    let newStat = {};
-
-    stats.forEach((stat, i) => {
-      if (
-        stat.type === "inbound-rtp" &&
-        !stat.isRemote &&
-        stat.mediaType === "video"
-      ) {
-        Object.assign(newStat, stat);
-
-        // bitrate = bits received since last time / number of ms since last time
-        //This is automatically in kbits (where k=1000) since time is in ms and stat we want is in seconds (so a '* 1000' then a '/ 1000' would negate each other)
-        newStat.bitrate =
-          (8 * (newStat.bytesReceived - this.aggregatedStats.bytesReceived)) /
-          (newStat.timestamp - this.aggregatedStats.timestamp);
-        newStat.bitrate = Math.floor(newStat.bitrate);
-        newStat.lowBitrate = Math.min(
-          this.aggregatedStats.lowBitrate || Infinity,
-          newStat.bitrate
-        );
-        newStat.highBitrate = Math.max(
-          this.aggregatedStats.highBitrate || -Infinity,
-          newStat.bitrate
-        );
-      }
-
-      //Read video track stats
-      else if (
-        stat.type == "track" &&
-        (stat.trackIdentifier == "video_label" || stat.kind == "video")
-      ) {
-        Object.assign(newStat, stat);
-
-        newStat.framesDroppedPercentage =
-          (stat.framesDropped / stat.framesReceived) * 100;
-      } else if (
-        stat.type == "candidate-pair" &&
-        stat.hasOwnProperty("currentRoundTripTime")
-      ) {
-        Object.assign(newStat, stat);
-      } else if (stat.type === "data-channel") {
-        newStat.dataChannel = stat;
-      }
-    });
-
-    this.aggregatedStats = newStat;
-    return newStat;
-  }
-
   async createOffer() {
     this.pc.close();
 
@@ -318,7 +264,7 @@ window.PixelStream = class extends EventTarget {
 
     this.ws.onclose = (e) => {
       this.pc.close();
-      this.dc.close();
+      // this.dc.close();
       console.info(`signalling socket closed`, e.reason || "");
 
       // 3s后重连

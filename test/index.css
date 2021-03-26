@@ -10,8 +10,7 @@ body {
 
 #stats {
   text-align: left;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 16px;
   padding: 6px;
   color: lime;
   width: 300px;
@@ -21,11 +20,10 @@ body {
 #overlay {
   position: fixed;
   padding: 4px;
-  top: 0;
+  top: -2px;
   right: 2%;
   z-index: 100;
   border: 2px solid #efefef;
-  border-top-width: 0px;
   background-color: #3f5765;
   font-weight: lighter;
   color: #efefef;

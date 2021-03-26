@@ -1,7 +1,7 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
  *  Author: 金恒昱
- *  Version: 0.0.5
+ *  Version: 0.0.6
  *
  */
 
