@@ -2,10 +2,6 @@ document.body.onload = () => {
   window.ps = new PixelStream("ws://localhost");
   // window.ps = new PixelStream("ws://10.0.42.16");
 
-  ps.registerKeyboardEvents();
-  ps.registerMouseHoverEvents();
-  ps.registerFakeMouseEvents();
-  //  registerTouchEvents();
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
@@ -96,8 +92,8 @@ function onAggregatedStats(stats, VideoEncoderQP) {
 			<div>FPS: ${video.framesPerSecond}</div>
 			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
 			<div>Latency: ${formatter.format(
-        candidatePair.currentRoundTripTime * 1000
-      )} ms</div>
+    candidatePair.currentRoundTripTime * 1000
+  )} ms</div>
       <div>DataChannel —> ${formatter.format(dataChannel.bytesSent)} B</div>
       <div>DataChannel <— ${formatter.format(dataChannel.bytesReceived)} B</div>
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;

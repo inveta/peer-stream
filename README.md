@@ -42,11 +42,7 @@ node signalling.js playerPort=80 UE4port=8888
 ```
 import 'PixelStream.js';
 
-const ps = new PixelStream('ws://localhost');
-
-ps.registerMouseHoverEvents();
-ps.registerKeyboardEvents();
-ps.registerTouchEvents();
+const ps = new PixelStream('wss://localhost');
 
 ps.addEventListener('open', e => {
     document.body.appendChild(ps.video);

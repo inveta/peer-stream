@@ -1,7 +1,6 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
- *  Author: 金恒昱
- *  Version: 0.0.6
+ *  2021年4月13日 金恒昱
  *
  */
 
@@ -14,7 +13,7 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   value = value.join("") || "true";
   try {
     value = JSON.parse(value);
-  } catch {}
+  } catch { }
   prev[key] = value;
   return prev;
 }, {});
@@ -38,12 +37,12 @@ const WebSocket = require("ws");
 let clientConfig = { type: "config", peerConnectionOptions };
 
 let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
-console.log(`WebSocket for UE4:`, UE4port);
+console.log("WebSocket for UE4:", UE4port);
 
 let UE4socket; //  UE4's Socket
 
 let playerServer = new WebSocket.Server({ port: playerPort, backlog: 1 });
-console.log(`WebSocket for players:`, playerPort);
+console.log("WebSocket for players:", playerPort);
 
 let playerSockets = {}; // playerId <-> player's Socket
 
@@ -54,7 +53,7 @@ UE4server.on("connection", (ws, req) => {
   UE4socket = ws;
 
   console.log(
-    `UE4 connected:`,
+    "UE4 connected:",
     req.socket.remoteAddress,
     req.socket.remotePort
   );
@@ -63,12 +62,12 @@ UE4server.on("connection", (ws, req) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`cannot JSON.parse UE4 message:`, msg);
+      console.error("cannot JSON.parse UE4 message:", msg);
       // ws.close(1008, "Cannot parse");
       return;
     }
 
-    console.log(`UE4:`, msg.type, msg.playerId || "");
+    console.log("UE4:", msg.type, msg.playerId || "");
 
     if (msg.type == "ping") {
       ws.send(JSON.stringify({ type: "pong", time: msg.time }));
@@ -79,7 +78,7 @@ UE4server.on("connection", (ws, req) => {
     delete msg.playerId; // no need to send it to the player
     let player = playerSockets[playerId];
     if (!player) {
-      console.error(`cannot find player`, playerId);
+      console.error("cannot find player", playerId);
       return;
     }
 
@@ -88,7 +87,7 @@ UE4server.on("connection", (ws, req) => {
     } else if (msg.type == "disconnectPlayer") {
       player.close(1011, msg.reason);
     } else {
-      console.error(`invalid UE4 message type:`, msg.type);
+      console.error("invalid UE4 message type:", msg.type);
     }
   });
 
@@ -100,12 +99,12 @@ UE4server.on("connection", (ws, req) => {
   }
 
   ws.on("close", (code, reason) => {
-    console.log(`UE4 disconnected`, reason);
+    console.log("UE4 disconnected", reason);
     disconnectAllPlayers(reason);
   });
 
   ws.on("error", (error) => {
-    console.error(`UE4 connection error:`, error);
+    console.error("UE4 connection error:", error);
     ws.close(1011, error.message);
     disconnectAllPlayers(error.message);
   });
@@ -124,7 +123,7 @@ playerServer.on("connection", (ws, req) => {
   let playerId = ++nextPlayerId;
 
   console.log(
-    `player`,
+    "player",
     playerId,
     "connected:",
     req.socket.remoteAddress,
@@ -138,12 +137,12 @@ playerServer.on("connection", (ws, req) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error(`player`, playerId, `cannot JSON.parse message`, msg);
+      console.error("player", playerId, "cannot JSON.parse message", msg);
       ws.send(JSON.stringify({ type: "error", error: "JSON.parse Error" }));
       return;
     }
 
-    console.log(`player`, playerId, msg.type);
+    console.log("player", playerId, msg.type);
 
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
@@ -157,7 +156,7 @@ playerServer.on("connection", (ws, req) => {
       }
       ws.send(JSON.stringify({ type: "debug", debug }));
     } else {
-      console.error(`player`, playerId, "invalid message type:", msg.type);
+      console.error("player", playerId, "invalid message type:", msg.type);
       ws.send(
         JSON.stringify({
           type: "error",
@@ -174,12 +173,12 @@ playerServer.on("connection", (ws, req) => {
   }
 
   ws.on("close", (code, reason) => {
-    console.log(`player`, playerId, "connection closed", reason);
+    console.log("player", playerId, "connection closed", reason);
     onPlayerDisconnected();
   });
 
   ws.on("error", (error) => {
-    console.error(`player`, playerId, `connection error:`, error);
+    console.error("player", playerId, "connection error:", error);
     ws.close(1011, error.message);
     onPlayerDisconnected();
   });

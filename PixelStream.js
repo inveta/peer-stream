@@ -1,7 +1,6 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
- *  Author: 金恒昱
- *  Version: 0.0.6
+ *  2021年4月13日 金恒昱
  *
  */
 
@@ -95,12 +94,15 @@ window.PixelStream = class extends EventTarget {
     };
 
     this.setupVideo();
+    this.registerKeyboardEvents();
+    this.registerMouseHoverEvents();
+    this.registerFakeMouseEvents();
 
     document.addEventListener(
       "pointerlockchange",
       () => {
         if (document.pointerLockElement === this.video) {
-          this.registerMouseLockEvents();
+          this.registerPointerlockEvents();
         } else {
           this.registerMouseHoverEvents();
         }
@@ -118,7 +120,7 @@ window.PixelStream = class extends EventTarget {
       console.info("connecting to UE4");
       await this.createOffer();
     } else if (msg.type === "answer") {
-      console.log(`Received answer`, msg);
+      console.log("Received answer", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
     } else if (msg.type === "iceCandidate") {
@@ -126,7 +128,7 @@ window.PixelStream = class extends EventTarget {
       await this.pc.addIceCandidate(candidate);
       console.log("received candidate", msg.candidate);
     } else {
-      console.warn(`invalid WS message:`, msg);
+      console.warn("invalid WS message:", msg);
     }
   }
 
@@ -134,7 +136,7 @@ window.PixelStream = class extends EventTarget {
     let view = new Uint8Array(data);
     if (view[0] === toPlayerType.VideoEncoderAvgQP) {
       this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
-      console.log(`received Video Encoder Average QP`, this.VideoEncoderQP);
+      console.log("received Video Encoder Average QP", this.VideoEncoderQP);
     } else if (view[0] === toPlayerType.Response) {
       // user custom message
       let response = new TextDecoder("utf-16").decode(data.slice(1));
@@ -154,7 +156,7 @@ window.PixelStream = class extends EventTarget {
       let ownership = view[1] !== 0;
       console.info("received Quality Control Ownership", ownership);
     } else {
-      console.error(`invalid data type:`, view[0]);
+      console.error("invalid data type:", view[0]);
     }
   }
 
@@ -170,11 +172,10 @@ window.PixelStream = class extends EventTarget {
     // this.video.onsuspend
     // this.video.onplaying
 
-    // double click: pointer lock mode
-    this.video.ondblclick = (e) => {
-      this.video.requestPointerLock();
-      this.video.muted = false;
-    };
+    //  this.video.ondblclick = (e) => {
+    //   this.video.requestPointerLock();
+    //   this.video.muted = false;
+    // };
 
     // this.video.onresize
 
@@ -194,13 +195,13 @@ window.PixelStream = class extends EventTarget {
     this.dc = this.pc.createDataChannel(label, { ordered: true });
 
     this.dc.onopen = (e) => {
-      console.log(`data channel connected:`, label);
+      console.log("data channel connected:", label);
       this.video.style.display = "block";
       this.dispatchEvent(new CustomEvent("open"));
     };
 
     this.dc.onclose = (e) => {
-      console.log(`data channel closed:`, label);
+      console.log("data channel closed:", label);
       this.video.style.display = "none";
       this.dispatchEvent(new CustomEvent("close"));
     };
@@ -218,7 +219,7 @@ window.PixelStream = class extends EventTarget {
     };
     this.pc.onicecandidate = (e) => {
       if (e.candidate && e.candidate.candidate) {
-        console.log(`sending candidate:`, e.candidate);
+        console.log("sending candidate:", e.candidate);
         this.ws.send(
           JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
         );
@@ -241,13 +242,13 @@ window.PixelStream = class extends EventTarget {
     this.pc.setLocalDescription(offer);
     // increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps
     // (100 mbps means we don't restrict encoder at all)
-    // after we `setLocalDescription` because other browsers are not c happy to see google-specific config
+    // after we "setLocalDescription" because other browsers are not c happy to see google-specific config
     offer.sdp = offer.sdp.replace(
       /(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm,
       "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n"
     );
     this.ws.send(JSON.stringify(offer));
-    console.log(`offer sent:`, offer);
+    console.log("offer sent:", offer);
   }
 
   connect(url = location.href.replace(/^http/, "ws")) {
@@ -265,7 +266,7 @@ window.PixelStream = class extends EventTarget {
     this.ws.onclose = (e) => {
       this.pc.close();
       // this.dc.close();
-      console.info(`signalling socket closed`, e.reason || "");
+      console.info("signalling socket closed.", e.reason || "");
 
       // 3s后重连
       if (e.code !== 3000)
@@ -431,7 +432,7 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
-  registerMouseLockEvents() {
+  registerPointerlockEvents() {
     this.registerMouseEnterAndLeaveEvents();
 
     this.preventDefault = true;
