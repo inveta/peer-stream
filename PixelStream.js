@@ -1,6 +1,6 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
- *  2021年4月13日 金恒昱
+ *  2021年5月8日 金恒昱
  *
  */
 
@@ -84,7 +84,7 @@ window.PixelStream = class extends EventTarget {
 
     this.ws = undefined; // WebSocket
     this.pc = new RTCPeerConnection({
-      sdpSemantics: "unified-plan",
+      // sdpSemantics: "unified-plan",
     });
     this.dc = null; // RTCDataChannel
 
@@ -116,7 +116,6 @@ window.PixelStream = class extends EventTarget {
   async onWebSocketMessage(data) {
     let msg = JSON.parse(data);
     if (msg.type === "config") {
-      this.peerConnectionOptions = msg.peerConnectionOptions;
       console.info("connecting to UE4");
       await this.createOffer();
     } else if (msg.type === "answer") {
@@ -231,13 +230,18 @@ window.PixelStream = class extends EventTarget {
     this.pc.close();
 
     this.pc = new RTCPeerConnection({
+      //If this is true in Chrome 89+ SDP is sent that is incompatible with UE WebRTC and breaks.
+      offerExtmapAllowMixed: false,
       sdpSemantics: "unified-plan",
-      ...this.peerConnectionOptions,
     });
 
     this.setupPeerConnection();
     this.setupDataChannel();
     const offer = await this.pc.createOffer(this.sdpConstraints);
+    offer.sdp = offer.sdp.replace(
+      "useinbandfec=1",
+      "useinbandfec=1;stereo=1;maxaveragebitrate=128000"
+    );
 
     this.pc.setLocalDescription(offer);
     // increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps

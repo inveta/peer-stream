@@ -1,6 +1,6 @@
 /*
  *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
- *  2021年4月13日 金恒昱
+ *  2021年5月8日 金恒昱
  *
  */
 
@@ -13,20 +13,15 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   value = value.join("") || "true";
   try {
     value = JSON.parse(value);
-  } catch { }
+  } catch {}
   prev[key] = value;
   return prev;
 }, {});
-
 Object.assign(
   global || this,
   {
-    playerPort: 80,
+    playerPort: 88,
     UE4port: 8888,
-    peerConnectionOptions: {
-      offerExtmapAllowMixed: false, // 为了兼容chrome89+
-      // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
-    },
   },
   args
 );
@@ -34,7 +29,12 @@ Object.assign(
 const WebSocket = require("ws");
 
 // to be sent to UE4 and Players as initialization signal
-let clientConfig = { type: "config", peerConnectionOptions };
+let clientConfig = {
+  type: "config",
+  peerConnectionOptions: {
+    // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
+  },
+};
 
 let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
 console.log("WebSocket for UE4:", UE4port);

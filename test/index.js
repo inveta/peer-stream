@@ -1,7 +1,6 @@
 document.body.onload = () => {
-  window.ps = new PixelStream("ws://localhost");
-  // window.ps = new PixelStream("ws://10.0.42.16");
-
+  window.ps = new PixelStream("ws://localhost:88");
+  // window.ps = new PixelStream("ws://10.0.42.16:88");
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
@@ -54,8 +53,11 @@ function onAggregatedStats(stats, VideoEncoderQP) {
       video = stat;
     } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
       audio = stat;
-    } else if (stat.type === "candidate-pair") {
+    } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
       candidatePair = stat;
+      candidatePair.availableBitrate =
+        candidatePair.availableIncomingBitrate ||
+        candidatePair.availableOutgoingBitrate;
     }
   });
 
@@ -79,21 +81,20 @@ function onAggregatedStats(stats, VideoEncoderQP) {
   }
 
   qualityStatus.style.color = color;
-
   statsText += `
- 			<div>Resolution: ${video.frameWidth + "x" + video.frameHeight}</div>
+ 			<div>Resolution: ${video.frameWidth + " x " + video.frameHeight}</div>
 			<div>Video <— ${formatter.format(video.bytesReceived / 1024)} KB</div>
 			<div>Audio <— ${formatter.format(audio.bytesReceived / 1024)} KB</div>
 			<div>Frames Decoded: ${formatter.format(video.framesDecoded)}</div>
 			<div>Packets Lost: ${formatter.format(video.packetsLost)}</div>
 			<div style="color: ${color}">max bitrate: ${formatter.format(
-    candidatePair.availableIncomingBitrate
-  )}  </div>
+    candidatePair.availableBitrate / 1000
+  )} K </div>
 			<div>FPS: ${video.framesPerSecond}</div>
 			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
 			<div>Latency: ${formatter.format(
-    candidatePair.currentRoundTripTime * 1000
-  )} ms</div>
+        candidatePair.currentRoundTripTime * 1000
+      )} ms</div>
       <div>DataChannel —> ${formatter.format(dataChannel.bytesSent)} B</div>
       <div>DataChannel <— ${formatter.format(dataChannel.bytesReceived)} B</div>
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
