@@ -1,6 +1,6 @@
 /*
- *  https://github.com/JinHengyu/PixelStreamer/blob/main/PixelStream.js
- *  2021年5月8日 金恒昱
+ *  https://github.com/xosg/PixelStreamer/blob/main/PixelStream.js
+ *  2021年5月10日 金恒昱
  *
  */
 
@@ -110,15 +110,13 @@ window.PixelStream = class extends EventTarget {
       false
     );
 
-    this.connect(url);
+    this.setupWebSocket(url);
   }
 
   async onWebSocketMessage(data) {
     let msg = JSON.parse(data);
-    if (msg.type === "config") {
-      console.info("connecting to UE4");
-      await this.createOffer();
-    } else if (msg.type === "answer") {
+
+    if (msg.type === "answer") {
       console.log("Received answer", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
@@ -226,6 +224,35 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
+  setupWebSocket(url = location.href.replace(/^http/, "ws")) {
+    this.ws = new WebSocket(url);
+
+    this.ws.onerror = (e) => {
+      console.warn(e);
+    };
+
+    this.ws.onopen = async (e) => {
+      console.info("connecting to UE4");
+      await this.createOffer();
+    };
+
+    this.ws.onmessage = (e) => {
+      this.onWebSocketMessage(e.data);
+    };
+
+    this.ws.onclose = (e) => {
+      this.pc.close();
+      // this.dc.close();
+      console.info("signalling socket closed.", e.reason || "");
+
+      // 3s后重连
+      if (e.code !== 3000)
+        this.timeout = setTimeout(() => {
+          this.setupWebSocket(url);
+        }, 3000);
+    };
+  }
+
   async createOffer() {
     this.pc.close();
 
@@ -253,31 +280,6 @@ window.PixelStream = class extends EventTarget {
     );
     this.ws.send(JSON.stringify(offer));
     console.log("offer sent:", offer);
-  }
-
-  connect(url = location.href.replace(/^http/, "ws")) {
-    this.ws = new WebSocket(url);
-
-    // this.ws.onopen
-    this.ws.onerror = (e) => {
-      console.warn(e);
-    };
-
-    this.ws.onmessage = (e) => {
-      this.onWebSocketMessage(e.data);
-    };
-
-    this.ws.onclose = (e) => {
-      this.pc.close();
-      // this.dc.close();
-      console.info("signalling socket closed.", e.reason || "");
-
-      // 3s后重连
-      if (e.code !== 3000)
-        this.timeout = setTimeout(() => {
-          this.connect(url);
-        }, 3000);
-    };
   }
 
   registerKeyboardEvents() {

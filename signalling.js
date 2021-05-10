@@ -1,11 +1,10 @@
 /*
- *  https://github.com/JinHengyu/PixelStreamer/blob/main/signalling.js
- *  2021年5月8日 金恒昱
+ *  https://github.com/xosg/PixelStreamer/blob/main/signalling.js
+ *  2021年5月10日 金恒昱
  *
  */
 
 // command line format: key-value pairs connected by "=", separated by " "
-
 // process.argc[0] == 'path/to/node.exe'
 // process.argc[1] === __filename
 const args = process.argv.slice(2).reduce((prev, curr) => {
@@ -27,14 +26,6 @@ Object.assign(
 );
 
 const WebSocket = require("ws");
-
-// to be sent to UE4 and Players as initialization signal
-let clientConfig = {
-  type: "config",
-  peerConnectionOptions: {
-    // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
-  },
-};
 
 let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
 console.log("WebSocket for UE4:", UE4port);
@@ -92,7 +83,6 @@ UE4server.on("connection", (ws, req) => {
   });
 
   function disconnectAllPlayers(reason) {
-    // let clone = new Map(playerSockets);
     Object.values(playerSockets).forEach((s) => s.close(1011, reason));
 
     playerSockets = {};
@@ -109,7 +99,15 @@ UE4server.on("connection", (ws, req) => {
     disconnectAllPlayers(error.message);
   });
 
-  ws.send(JSON.stringify(clientConfig));
+  // sent to UE4 as initialization signal
+  ws.send(
+    JSON.stringify({
+      type: "config",
+      peerConnectionOptions: {
+        // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
+      },
+    })
+  );
 });
 
 // every player
@@ -183,5 +181,5 @@ playerServer.on("connection", (ws, req) => {
     onPlayerDisconnected();
   });
 
-  ws.send(JSON.stringify(clientConfig));
+  // ws.send(JSON.stringify(clientConfig));
 });

@@ -1,6 +1,6 @@
 document.body.onload = () => {
-  window.ps = new PixelStream("ws://localhost:88");
-  // window.ps = new PixelStream("ws://10.0.42.16:88");
+  window.ps = new PixelStream("ws://192.168.31.191:88");
+  // window.ps = new PixelStream("ws://localhost:88");
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
@@ -42,10 +42,10 @@ console.info = (...text) => {
 };
 
 function onAggregatedStats(stats, VideoEncoderQP) {
-  let dataChannel;
-  let video;
-  let audio;
-  let candidatePair;
+  let dataChannel = {};
+  let video = {};
+  let audio = {};
+  let candidatePair = {};
   stats.forEach((stat) => {
     if (stat.type === "data-channel") {
       dataChannel = stat;
