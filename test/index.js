@@ -1,6 +1,6 @@
 document.body.onload = () => {
-  window.ps = new PixelStream("ws://192.168.31.191:88");
-  // window.ps = new PixelStream("ws://localhost:88");
+  // window.ps = new PixelStream("ws://192.168.31.191:88");
+  window.ps = new PixelStream("ws://localhost:88/insigma");
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);

@@ -1,6 +1,6 @@
 /*
- *  https://github.com/xosg/PixelStreamer/blob/main/PixelStream.js
- *  2021年5月10日 金恒昱
+ *  https://xosg.github.io/PixelStreamer/PixelStream.js
+ *  2021年5月11日 金恒昱
  *
  */
 
@@ -80,18 +80,11 @@ window.PixelStream = class extends EventTarget {
 
     // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
     this.preventDefault = true;
-    this.VideoEncoderQP = "N/A";
+    this.VideoEncoderQP = NaN;
 
     this.ws = undefined; // WebSocket
-    this.pc = new RTCPeerConnection({
-      // sdpSemantics: "unified-plan",
-    });
+    this.pc = new RTCPeerConnection({});
     this.dc = null; // RTCDataChannel
-
-    this.sdpConstraints = {
-      offerToReceiveAudio: 1,
-      offerToReceiveVideo: 1,
-    };
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -168,13 +161,8 @@ window.PixelStream = class extends EventTarget {
 
     // this.video.onsuspend
     // this.video.onplaying
-
-    //  this.video.ondblclick = (e) => {
-    //   this.video.requestPointerLock();
-    //   this.video.muted = false;
-    // };
-
     // this.video.onresize
+    // this.video.requestPointerLock();
 
     this.video.style = `
       background-color: #222;
@@ -233,7 +221,7 @@ window.PixelStream = class extends EventTarget {
 
     this.ws.onopen = async (e) => {
       console.info("connecting to UE4");
-      await this.createOffer();
+      await this.setupOffer();
     };
 
     this.ws.onmessage = (e) => {
@@ -253,7 +241,7 @@ window.PixelStream = class extends EventTarget {
     };
   }
 
-  async createOffer() {
+  async setupOffer() {
     this.pc.close();
 
     this.pc = new RTCPeerConnection({
@@ -264,7 +252,11 @@ window.PixelStream = class extends EventTarget {
 
     this.setupPeerConnection();
     this.setupDataChannel();
-    const offer = await this.pc.createOffer(this.sdpConstraints);
+    const offer = await this.pc.createOffer({
+      // 我们的场景不需要音频
+      offerToReceiveAudio: 0,
+      offerToReceiveVideo: 1,
+    });
     offer.sdp = offer.sdp.replace(
       "useinbandfec=1",
       "useinbandfec=1;stereo=1;maxaveragebitrate=128000"
@@ -278,6 +270,9 @@ window.PixelStream = class extends EventTarget {
       /(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm,
       "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n"
     );
+
+    if (this.ws.readyState !== WebSocket.OPEN) return;
+
     this.ws.send(JSON.stringify(offer));
     console.log("offer sent:", offer);
   }

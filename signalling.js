@@ -1,6 +1,6 @@
 /*
- *  https://github.com/xosg/PixelStreamer/blob/main/signalling.js
- *  2021年5月10日 金恒昱
+ *  https://xosg.github.io/PixelStreamer/signalling.js
+ *  2021年5月11日 金恒昱
  *
  */
 
@@ -30,18 +30,19 @@ const WebSocket = require("ws");
 let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
 console.log("WebSocket for UE4:", UE4port);
 
-let UE4socket; //  UE4's Socket
+let UE4; //  UE4's Socket
 
 let playerServer = new WebSocket.Server({ port: playerPort, backlog: 1 });
 console.log("WebSocket for players:", playerPort);
 
-let playerSockets = {}; // playerId <-> player's Socket
+let players = {}; // playerId <-> player's Socket
 
 // 必须是uint32
 let nextPlayerId = 100;
 
 UE4server.on("connection", (ws, req) => {
-  UE4socket = ws;
+  ws.req = req;
+  UE4 = ws;
 
   console.log(
     "UE4 connected:",
@@ -60,14 +61,14 @@ UE4server.on("connection", (ws, req) => {
 
     console.log("UE4:", msg.type, msg.playerId || "");
 
-    if (msg.type == "ping") {
+    if (msg.type === "ping") {
       ws.send(JSON.stringify({ type: "pong", time: msg.time }));
       return;
     }
 
     let playerId = msg.playerId;
     delete msg.playerId; // no need to send it to the player
-    let player = playerSockets[playerId];
+    let player = players[playerId];
     if (!player) {
       console.error("cannot find player", playerId);
       return;
@@ -83,9 +84,9 @@ UE4server.on("connection", (ws, req) => {
   });
 
   function disconnectAllPlayers(reason) {
-    Object.values(playerSockets).forEach((s) => s.close(1011, reason));
+    Object.values(players).forEach((s) => s.close(1011, reason));
 
-    playerSockets = {};
+    players = {};
   }
 
   ws.on("close", (code, reason) => {
@@ -110,10 +111,18 @@ UE4server.on("connection", (ws, req) => {
   );
 });
 
+//  require("crypto").createHash("sha256").update(req.url.slice(1)).digest("hex");
+
 // every player
 playerServer.on("connection", (ws, req) => {
+  if (req.url.slice(1) !== "insigma") {
+    ws.close(1011, "Authentication Failed !!");
+    return;
+  }
+
+  ws.req = req;
   // Reject connection if UE4 is not connected
-  if (!UE4socket || UE4socket.readyState !== 1 /* OPEN */) {
+  if (!UE4 || UE4.readyState !== 1 /* OPEN */) {
     ws.close(1011, "UE4 is not connected");
     return;
   }
@@ -127,7 +136,7 @@ playerServer.on("connection", (ws, req) => {
     req.socket.remoteAddress,
     req.socket.remotePort
   );
-  playerSockets[playerId] = ws;
+  players[playerId] = ws;
 
   ws.on("message", (msg) => {
     // offer or iceCandidate
@@ -144,7 +153,7 @@ playerServer.on("connection", (ws, req) => {
 
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
-      UE4socket.send(JSON.stringify(msg));
+      UE4.send(JSON.stringify(msg));
     } else if (msg.type === "debug") {
       let debug;
       try {
@@ -166,8 +175,8 @@ playerServer.on("connection", (ws, req) => {
   });
 
   function onPlayerDisconnected() {
-    delete playerSockets[playerId];
-    UE4socket.send(JSON.stringify({ type: "playerDisconnected", playerId }));
+    delete players[playerId];
+    UE4.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   }
 
   ws.on("close", (code, reason) => {
@@ -180,6 +189,4 @@ playerServer.on("connection", (ws, req) => {
     ws.close(1011, error.message);
     onPlayerDisconnected();
   });
-
-  // ws.send(JSON.stringify(clientConfig));
 });
