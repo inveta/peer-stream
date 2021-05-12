@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signalling.js
- *  2021年5月11日 金恒昱
+ *  2021年5月12日 金恒昱
  *
  */
 
@@ -55,14 +55,13 @@ UE4server.on("connection", (ws, req) => {
       msg = JSON.parse(msg);
     } catch (err) {
       console.error("cannot JSON.parse UE4 message:", msg);
-      // ws.close(1008, "Cannot parse");
       return;
     }
 
     console.log("UE4:", msg.type, msg.playerId || "");
 
     if (msg.type === "ping") {
-      ws.send(JSON.stringify({ type: "pong", time: msg.time }));
+      UE4.send(JSON.stringify({ type: "pong", time: msg.time }));
       return;
     }
 
@@ -83,25 +82,18 @@ UE4server.on("connection", (ws, req) => {
     }
   });
 
-  function disconnectAllPlayers(reason) {
-    Object.values(players).forEach((s) => s.close(1011, reason));
-
-    players = {};
-  }
-
   ws.on("close", (code, reason) => {
     console.log("UE4 disconnected", reason);
-    disconnectAllPlayers(reason);
+    UE4 = null;
   });
 
   ws.on("error", (error) => {
     console.error("UE4 connection error:", error);
-    ws.close(1011, error.message);
-    disconnectAllPlayers(error.message);
+    UE4.close(1011, error.message);
   });
 
   // sent to UE4 as initialization signal
-  ws.send(
+  UE4.send(
     JSON.stringify({
       type: "config",
       peerConnectionOptions: {
@@ -109,21 +101,21 @@ UE4server.on("connection", (ws, req) => {
       },
     })
   );
+
+  for (const id in players) {
+    // restart
+    players[id].close(1011, "UE4 started");
+  }
+  players = {};
 });
 
 //  require("crypto").createHash("sha256").update(req.url.slice(1)).digest("hex");
 
 // every player
-playerServer.on("connection", (ws, req) => {
+playerServer.on("connection", async (ws, req) => {
   if (req.url.slice(1) !== "insigma") {
-    ws.close(1011, "Authentication Failed !!");
-    return;
-  }
-
-  ws.req = req;
-  // Reject connection if UE4 is not connected
-  if (!UE4 || UE4.readyState !== 1 /* OPEN */) {
-    ws.close(1011, "UE4 is not connected");
+    ws.send("Authentication Failed !!");
+    //  req.socket.destroy();
     return;
   }
 
@@ -136,16 +128,23 @@ playerServer.on("connection", (ws, req) => {
     req.socket.remoteAddress,
     req.socket.remotePort
   );
+
+  ws.req = req;
   players[playerId] = ws;
 
   ws.on("message", (msg) => {
+    if (UE4?.readyState !== WebSocket.OPEN) {
+      ws.send("UE4 closed");
+      return;
+    }
+
     // offer or iceCandidate
 
     try {
       msg = JSON.parse(msg);
     } catch (err) {
       console.error("player", playerId, "cannot JSON.parse message", msg);
-      ws.send(JSON.stringify({ type: "error", error: "JSON.parse Error" }));
+      ws.send("JSON.parse Error");
       return;
     }
 
@@ -161,22 +160,17 @@ playerServer.on("connection", (ws, req) => {
       } catch (err) {
         debug = err.message;
       }
-      ws.send(JSON.stringify({ type: "debug", debug }));
+      ws.send("【debug】" + debug);
     } else {
       console.error("player", playerId, "invalid message type:", msg.type);
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          error: "invalid message type: " + msg.type,
-        })
-      );
+      ws.send("invalid message type: " + msg.type);
       return;
     }
   });
 
   function onPlayerDisconnected() {
     delete players[playerId];
-    UE4.send(JSON.stringify({ type: "playerDisconnected", playerId }));
+    UE4?.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   }
 
   ws.on("close", (code, reason) => {

@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021年5月11日 金恒昱
+ *  2021年5月12日 金恒昱
  *
  */
 
@@ -106,8 +106,13 @@ window.PixelStream = class extends EventTarget {
     this.setupWebSocket(url);
   }
 
-  async onWebSocketMessage(data) {
-    let msg = JSON.parse(data);
+  async onWebSocketMessage(msg) {
+    try {
+      msg = JSON.parse(msg);
+    } catch {
+      console.error("signalling server:", msg);
+      return;
+    }
 
     if (msg.type === "answer") {
       console.log("Received answer", msg);
@@ -115,17 +120,18 @@ window.PixelStream = class extends EventTarget {
       await this.pc.setRemoteDescription(answerDesc);
     } else if (msg.type === "iceCandidate") {
       let candidate = new RTCIceCandidate(msg.candidate);
+      // this.remoteCandidate = candidate;
       await this.pc.addIceCandidate(candidate);
       console.log("received candidate", msg.candidate);
     } else {
-      console.warn("invalid WS message:", msg);
+      console.warn(this.ws.url, msg);
     }
   }
 
   onDataChannelMessage(data) {
     let view = new Uint8Array(data);
     if (view[0] === toPlayerType.VideoEncoderAvgQP) {
-      this.VideoEncoderQP = new TextDecoder("utf-16").decode(data.slice(1));
+      this.VideoEncoderQP = +new TextDecoder("utf-16").decode(data.slice(1));
       console.log("received Video Encoder Average QP", this.VideoEncoderQP);
     } else if (view[0] === toPlayerType.Response) {
       // user custom message
@@ -166,17 +172,12 @@ window.PixelStream = class extends EventTarget {
 
     this.video.style = `
       background-color: #222;
-      width: unset;
-      height: unset;
-      position: absolute;
-      top: 50%;
-      left: 50%;
+      margin: auto;
       display: none;
-      transform: translateX(-50%) translateY(-50%);
       object-fit: fill; `;
   }
 
-  setupDataChannel(label = "hello world") {
+  setupDataChannel(label = "insigma") {
     this.dc = this.pc.createDataChannel(label, { ordered: true });
 
     this.dc.onopen = (e) => {
@@ -203,7 +204,7 @@ window.PixelStream = class extends EventTarget {
       this.video.srcObject = e.streams[0];
     };
     this.pc.onicecandidate = (e) => {
-      if (e.candidate && e.candidate.candidate) {
+      if (e.candidate?.candidate) {
         console.log("sending candidate:", e.candidate);
         this.ws.send(
           JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
@@ -220,7 +221,7 @@ window.PixelStream = class extends EventTarget {
     };
 
     this.ws.onopen = async (e) => {
-      console.info("connecting to UE4");
+      console.info("connected to", this.ws.url);
       await this.setupOffer();
     };
 
@@ -257,6 +258,7 @@ window.PixelStream = class extends EventTarget {
       offerToReceiveAudio: 0,
       offerToReceiveVideo: 1,
     });
+
     offer.sdp = offer.sdp.replace(
       "useinbandfec=1",
       "useinbandfec=1;stereo=1;maxaveragebitrate=128000"

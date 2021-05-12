@@ -1,6 +1,6 @@
 document.body.onload = () => {
-  // window.ps = new PixelStream("ws://192.168.31.191:88");
-  window.ps = new PixelStream("ws://localhost:88/insigma");
+  window.ps = new PixelStream(`ws://${location.hostname}:88/insigma`);
+  // window.ps = new PixelStream("ws://localhost:88/insigma");
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
@@ -20,10 +20,10 @@ document.body.onload = () => {
   });
 };
 
-// 以下内容可移除
-
 // 打印玩家数量
-// ps.debug('Object.keys(playerSockets).length')
+// ps.debug('Object.keys(players).length')
+// 查看选定的candidate
+// (await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))
 
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
@@ -45,7 +45,8 @@ function onAggregatedStats(stats, VideoEncoderQP) {
   let dataChannel = {};
   let video = {};
   let audio = {};
-  let candidatePair = {};
+  let candidate = {};
+  let remote = {};
   stats.forEach((stat) => {
     if (stat.type === "data-channel") {
       dataChannel = stat;
@@ -54,10 +55,12 @@ function onAggregatedStats(stats, VideoEncoderQP) {
     } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
       audio = stat;
     } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
-      candidatePair = stat;
-      candidatePair.availableBitrate =
-        candidatePair.availableIncomingBitrate ||
-        candidatePair.availableOutgoingBitrate;
+      candidate = stat;
+      candidate.availableBitrate =
+        candidate.availableIncomingBitrate ||
+        candidate.availableOutgoingBitrate;
+    } else if (stat.type === "remote-candidate") {
+      remote = stat;
     }
   });
 
@@ -82,18 +85,19 @@ function onAggregatedStats(stats, VideoEncoderQP) {
 
   qualityStatus.style.color = color;
   statsText += `
+ 			<div> ${remote.protocol + "://" + remote.ip + ":" + remote.port}</div>
  			<div>Resolution: ${video.frameWidth + " x " + video.frameHeight}</div>
 			<div>Video <— ${formatter.format(video.bytesReceived / 1024)} KB</div>
 			<div>Audio <— ${formatter.format(audio.bytesReceived / 1024)} KB</div>
 			<div>Frames Decoded: ${formatter.format(video.framesDecoded)}</div>
 			<div>Packets Lost: ${formatter.format(video.packetsLost)}</div>
 			<div style="color: ${color}">max bitrate: ${formatter.format(
-    candidatePair.availableBitrate / 1000
+    candidate.availableBitrate / 1000
   )} K </div>
 			<div>FPS: ${video.framesPerSecond}</div>
 			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
 			<div>Latency: ${formatter.format(
-        candidatePair.currentRoundTripTime * 1000
+        candidate.currentRoundTripTime * 1000
       )} ms</div>
       <div>DataChannel —> ${formatter.format(dataChannel.bytesSent)} B</div>
       <div>DataChannel <— ${formatter.format(dataChannel.bytesReceived)} B</div>
