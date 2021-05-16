@@ -11,26 +11,23 @@ body {
 #stats {
   text-align: left;
   font-size: 16px;
-  padding: 6px;
   color: lime;
-  width: 300px;
   display: none;
 }
 
 #overlay {
   position: fixed;
-  padding: 4px;
-  top: -2px;
-  right: 2%;
+  padding: 6px 13px;
+  top: 0;
+  right: 0;
   z-index: 100;
   border: 2px solid #efefef;
   background-color: #3f5765;
-  font-weight: lighter;
   color: #efefef;
 }
 
 .overlay-shown>#stats {
-  padding: 50px 4px 4px 4px;
+  padding-top: 50px;
   display: block;
 }
 

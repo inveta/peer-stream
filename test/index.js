@@ -41,12 +41,14 @@ console.info = (...text) => {
   }, 2000);
 };
 
+let lastTransport = {};
 function onAggregatedStats(stats, VideoEncoderQP) {
   let dataChannel = {};
   let video = {};
   let audio = {};
   let candidate = {};
   let remote = {};
+  let thisTransport = {};
   stats.forEach((stat) => {
     if (stat.type === "data-channel") {
       dataChannel = stat;
@@ -61,6 +63,8 @@ function onAggregatedStats(stats, VideoEncoderQP) {
         candidate.availableOutgoingBitrate;
     } else if (stat.type === "remote-candidate") {
       remote = stat;
+    } else if (stat.type === "transport") {
+      thisTransport = stat;
     }
   });
 
@@ -69,31 +73,30 @@ function onAggregatedStats(stats, VideoEncoderQP) {
     maximumFractionDigits: 0,
   });
 
-  const orangeQP = 26;
-  const redQP = 35;
-
   let statsText = "";
 
   let color = "lime";
-  if (VideoEncoderQP > redQP) {
+  if (VideoEncoderQP > 35) {
     color = "red";
     statsText += `<div style="color: ${color}">Bad network connection</div>`;
-  } else if (VideoEncoderQP > orangeQP) {
+  } else if (VideoEncoderQP > 26) {
     color = "orange";
     statsText += `<div style="color: ${color}">Spotty network connection</div>`;
   }
 
+  const bitrate =
+    ((thisTransport.bytesReceived - lastTransport.bytesReceived) /
+      (thisTransport.timestamp - lastTransport.timestamp)) *
+    ((1000 * 8) / 1024);
   qualityStatus.style.color = color;
   statsText += `
- 			<div> ${remote.protocol + "://" + remote.ip + ":" + remote.port}</div>
+ 			<div>${remote.protocol + "://" + remote.ip + ":" + remote.port}</div>
  			<div>Resolution: ${video.frameWidth + " x " + video.frameHeight}</div>
 			<div>Video <— ${formatter.format(video.bytesReceived / 1024)} KB</div>
 			<div>Audio <— ${formatter.format(audio.bytesReceived / 1024)} KB</div>
 			<div>Frames Decoded: ${formatter.format(video.framesDecoded)}</div>
 			<div>Packets Lost: ${formatter.format(video.packetsLost)}</div>
-			<div style="color: ${color}">max bitrate: ${formatter.format(
-    candidate.availableBitrate / 1000
-  )} K </div>
+			<div style="color: ${color}">bitrate: ${formatter.format(bitrate)} kbps </div>
 			<div>FPS: ${video.framesPerSecond}</div>
 			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
 			<div>Latency: ${formatter.format(
@@ -104,4 +107,6 @@ function onAggregatedStats(stats, VideoEncoderQP) {
 			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;
+
+  lastTransport = thisTransport;
 }

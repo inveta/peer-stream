@@ -83,8 +83,11 @@ UE4server.on("connection", (ws, req) => {
   });
 
   ws.on("close", (code, reason) => {
-    console.log("UE4 disconnected", reason);
+    console.log("UE4 closed", reason);
     UE4 = null;
+    for (const id in players) {
+      players[id].send("UE4 stopped");
+    }
   });
 
   ws.on("error", (error) => {
@@ -134,7 +137,7 @@ playerServer.on("connection", async (ws, req) => {
 
   ws.on("message", (msg) => {
     if (UE4?.readyState !== WebSocket.OPEN) {
-      ws.send("UE4 closed");
+      ws.send("UE4 stopped");
       return;
     }
 
@@ -174,7 +177,7 @@ playerServer.on("connection", async (ws, req) => {
   }
 
   ws.on("close", (code, reason) => {
-    console.log("player", playerId, "connection closed", reason);
+    console.log("player", playerId, "closed", reason);
     onPlayerDisconnected();
   });
 
