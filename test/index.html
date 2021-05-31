@@ -12,10 +12,12 @@
 <body>
 	<div id="logs"></div>
 	<div id="overlay">
-		<div id="qualityStatus" style="color: gray;">●</div>
+		<div id="qualityStatus">●</div>
 		<div id="overlayButton" onclick="this.parentElement.classList.toggle('overlay-shown')">+</div>
 		<div id="stats">Not connected</div>
 	</div>
+
+	<video is="pixel-stream" signal="ws://localhost:88/insigma"></video>
 </body>
 
 </html>

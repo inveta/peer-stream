@@ -1,10 +1,10 @@
 {
-  "name": "pixel-streamer",
+  "name": "pixel-stream",
   "description": "lightweight PixelStreaming SDK for UnrealEngine",
   "scripts": {},
   "repository": "https://github.com/xosg/PixelStreamer",
   "license": "Apache-2.0",
   "dependencies": {
-    "ws": "^7.4.5"
+    "ws": "7.4.6"
   }
 }

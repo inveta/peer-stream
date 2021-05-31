@@ -1,13 +1,12 @@
 document.body.onload = () => {
-  window.ps = new PixelStream(`ws://${location.hostname}:88/insigma`);
-  // window.ps = new PixelStream("ws://localhost:88/insigma");
+  //  document.querySelector("[is=pixel-stream]");
+  //  document.createElement("video", { is: "pixel-stream" });
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);
   });
 
   ps.addEventListener("open", (e) => {
-    document.body.appendChild(ps.video);
     ps.statTimer = setInterval(async () => {
       // 打印监控数据
       const stats = await ps.pc.getStats(null);
@@ -43,32 +42,7 @@ console.info = (...text) => {
 
 let lastTransport = {};
 function onAggregatedStats(stats, VideoEncoderQP) {
-  let dataChannel = {};
-  let video = {};
-  let audio = {};
-  let candidate = {};
-  let remote = {};
-  let thisTransport = {};
-  stats.forEach((stat) => {
-    if (stat.type === "data-channel") {
-      dataChannel = stat;
-    } else if (stat.type === "inbound-rtp" && stat.mediaType === "video") {
-      video = stat;
-    } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
-      audio = stat;
-    } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
-      candidate = stat;
-      candidate.availableBitrate =
-        candidate.availableIncomingBitrate ||
-        candidate.availableOutgoingBitrate;
-    } else if (stat.type === "remote-candidate") {
-      remote = stat;
-    } else if (stat.type === "transport") {
-      thisTransport = stat;
-    }
-  });
-
-  let formatter = new Intl.NumberFormat(navigator.language, {
+  let f = new Intl.NumberFormat(navigator.language, {
     // 小数位
     maximumFractionDigits: 0,
   });
@@ -83,30 +57,49 @@ function onAggregatedStats(stats, VideoEncoderQP) {
     color = "orange";
     statsText += `<div style="color: ${color}">Spotty network connection</div>`;
   }
-
-  const bitrate =
-    ((thisTransport.bytesReceived - lastTransport.bytesReceived) /
-      (thisTransport.timestamp - lastTransport.timestamp)) *
-    ((1000 * 8) / 1024);
   qualityStatus.style.color = color;
-  statsText += `
- 			<div>${remote.protocol + "://" + remote.ip + ":" + remote.port}</div>
- 			<div>Resolution: ${video.frameWidth + " x " + video.frameHeight}</div>
-			<div>Video <— ${formatter.format(video.bytesReceived / 1024)} KB</div>
-			<div>Audio <— ${formatter.format(audio.bytesReceived / 1024)} KB</div>
-			<div>Frames Decoded: ${formatter.format(video.framesDecoded)}</div>
-			<div>Packets Lost: ${formatter.format(video.packetsLost)}</div>
-			<div style="color: ${color}">bitrate: ${formatter.format(bitrate)} kbps </div>
-			<div>FPS: ${video.framesPerSecond}</div>
-			<div>Frames dropped: ${formatter.format(video.framesDropped)}</div>
-			<div>Latency: ${formatter.format(
-        candidate.currentRoundTripTime * 1000
-      )} ms</div>
-      <div>DataChannel —> ${formatter.format(dataChannel.bytesSent)} B</div>
-      <div>DataChannel <— ${formatter.format(dataChannel.bytesReceived)} B</div>
-			<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
+
+  stats.forEach((stat) => {
+    if (stat.type === "data-channel") {
+      statsText += `<div>DataChannel —> ${f.format(stat.bytesSent)} B</div>`;
+      statsText += `<div>DataChannel <— ${f.format(
+        stat.bytesReceived
+      )} B</div>`;
+    } else if (stat.type === "inbound-rtp" && stat.mediaType === "video") {
+      statsText += `
+        <div>Resolution: ${stat.frameWidth + " x " + stat.frameHeight}</div>
+        <div>Frames Decoded: ${f.format(stat.framesDecoded)}</div>
+        <div>Packets Lost: ${f.format(stat.packetsLost)}</div>
+        <div>FPS: ${stat.framesPerSecond}</div>
+        <div>Frames dropped: ${f.format(stat.framesDropped)}</div>
+        <div>Video <— ${f.format(stat.bytesReceived / 1024)} KB</div>`;
+    } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
+      statsText += `<div>Audio <— ${f.format(
+        stat.bytesReceived / 1024
+      )} KB</div>`;
+    } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
+      statsText += `<div>Latency: ${f.format(
+        stat.currentRoundTripTime * 1000
+      )} ms</div>`;
+    } else if (stat.type === "remote-candidate") {
+      statsText += `<div>${
+        stat.protocol + "://" + stat.ip + ":" + stat.port
+      }</div>`;
+    } else if (stat.type === "transport") {
+      const bitrate =
+        ((stat.bytesReceived - lastTransport.bytesReceived) /
+          (stat.timestamp - lastTransport.timestamp)) *
+        ((1000 * 8) / 1024);
+
+      statsText += `<div style="color: ${color}">bitrate: ${f.format(
+        bitrate
+      )} kbps </div>`;
+
+      lastTransport = stat;
+    }
+  });
+
+  statsText += `<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;
-
-  lastTransport = thisTransport;
 }

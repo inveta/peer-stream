@@ -1,7 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021年5月12日 金恒昱
- *
+ *  2021/5/31 @xosg
  */
 
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
@@ -74,12 +73,11 @@ const toUE4type = {
   TouchMove: 82,
 };
 
-window.PixelStream = class extends EventTarget {
-  constructor(url) {
-    super();
+class PixelStream extends HTMLVideoElement {
+  constructor(...params) {
+    super(...params);
 
-    // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
-    this.preventDefault = true;
+    window.ps = this;
     this.VideoEncoderQP = NaN;
 
     this.ws = undefined; // WebSocket
@@ -94,7 +92,7 @@ window.PixelStream = class extends EventTarget {
     document.addEventListener(
       "pointerlockchange",
       () => {
-        if (document.pointerLockElement === this.video) {
+        if (document.pointerLockElement === this) {
           this.registerPointerlockEvents();
         } else {
           this.registerMouseHoverEvents();
@@ -102,8 +100,55 @@ window.PixelStream = class extends EventTarget {
       },
       false
     );
+  }
 
-    this.setupWebSocket(url);
+  connectedCallback() {
+    // This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. may be called once your element is no longer connected
+    if (!this.isConnected) return;
+
+    const signal =
+      this.getAttribute("signal") ||
+      `ws://${location.hostname || "localhost"}:88/insigma`;
+
+    this.ws?.close(1000, "forever");
+    this.ws = new WebSocket(signal);
+
+    this.ws.onerror = (e) => {
+      console.warn(e);
+    };
+
+    this.ws.onopen = async (e) => {
+      console.info("connected to", this.ws.url);
+      await this.setupOffer();
+    };
+
+    this.ws.onmessage = (e) => {
+      this.onWebSocketMessage(e.data);
+    };
+
+    this.ws.onclose = (e) => {
+      this.pc.close();
+      // this.dc.close();
+      console.info("WebSocket & WebRTC closed.", e.reason || "");
+
+      // 3s后重连
+      if (e.reason === "forever") return;
+      setTimeout(() => {
+        this.connectedCallback();
+      }, 3000);
+    };
+  }
+
+  disconnectedCallback() {
+    // 永久关闭，不再重连
+    this.ws.close(1000, "forever");
+  }
+
+  adoptedCallback() {}
+
+  attributeChangedCallback(name, oldValue, newValue) {}
+  static get observedAttributes() {
+    return [];
   }
 
   async onWebSocketMessage(msg) {
@@ -115,7 +160,7 @@ window.PixelStream = class extends EventTarget {
     }
 
     if (msg.type === "answer") {
-      console.log("Received answer", msg);
+      console.log("received answer", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
     } else if (msg.type === "iceCandidate") {
@@ -157,24 +202,27 @@ window.PixelStream = class extends EventTarget {
   }
 
   setupVideo() {
-    this.video = document.createElement("video");
-    this.video.tabIndex = 0; // easy to focus..
-    this.video.playsInline = true;
+    this.tabIndex = 0; // easy to focus..
+    this.addEventListener("playing", (e) => {
+      this.focus();
+    });
+    this.playsInline = true;
 
     // Recently many browsers can only autoplay the videos with sound off
-    this.video.muted = true;
-    this.video.autoplay = true;
+    this.muted = true;
+    this.autoplay = true;
 
-    // this.video.onsuspend
-    // this.video.onplaying
-    // this.video.onresize
-    // this.video.requestPointerLock();
+    this.poster = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1'><text x='20' y='40' fill='red' font-size='30'>Loading</text></svg>`;
 
-    this.video.style = `
-      background-color: #222;
-      margin: auto;
-      display: none;
-      object-fit: fill; `;
+    // this.onsuspend
+    // this.onresize
+    // this.requestPointerLock();
+
+    this.style = `
+        background-color: #222;
+        margin: auto;
+        display: none;
+        object-fit: fill; `;
   }
 
   setupDataChannel(label = "insigma") {
@@ -182,13 +230,13 @@ window.PixelStream = class extends EventTarget {
 
     this.dc.onopen = (e) => {
       console.log("data channel connected:", label);
-      this.video.style.display = "block";
+      this.style.display = "block";
       this.dispatchEvent(new CustomEvent("open"));
     };
 
     this.dc.onclose = (e) => {
       console.log("data channel closed:", label);
-      this.video.style.display = "none";
+      this.style.display = "none";
       this.dispatchEvent(new CustomEvent("close"));
     };
 
@@ -201,7 +249,7 @@ window.PixelStream = class extends EventTarget {
     this.pc.ontrack = (e) => {
       // called twice for audio & video
       console.log("received track:", e);
-      this.video.srcObject = e.streams[0];
+      this.srcObject = e.streams[0];
     };
     this.pc.onicecandidate = (e) => {
       if (e.candidate?.candidate) {
@@ -210,35 +258,6 @@ window.PixelStream = class extends EventTarget {
           JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
         );
       }
-    };
-  }
-
-  setupWebSocket(url = location.href.replace(/^http/, "ws")) {
-    this.ws = new WebSocket(url);
-
-    this.ws.onerror = (e) => {
-      console.warn(e);
-    };
-
-    this.ws.onopen = async (e) => {
-      console.info("connected to", this.ws.url);
-      await this.setupOffer();
-    };
-
-    this.ws.onmessage = (e) => {
-      this.onWebSocketMessage(e.data);
-    };
-
-    this.ws.onclose = (e) => {
-      this.pc.close();
-      // this.dc.close();
-      console.info("signalling socket closed.", e.reason || "");
-
-      // 3s后重连
-      if (e.code !== 3000)
-        this.timeout = setTimeout(() => {
-          this.setupWebSocket(url);
-        }, 3000);
     };
   }
 
@@ -255,7 +274,7 @@ window.PixelStream = class extends EventTarget {
     this.setupDataChannel();
     const offer = await this.pc.createOffer({
       // 我们的场景不需要音频
-      offerToReceiveAudio: 0,
+      offerToReceiveAudio: this.muted ? 0 : 1,
       offerToReceiveVideo: 1,
     });
 
@@ -273,15 +292,14 @@ window.PixelStream = class extends EventTarget {
       "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n"
     );
 
-    if (this.ws.readyState !== WebSocket.OPEN) return;
+    // if (this.ws.readyState !== WebSocket.OPEN) return;
 
     this.ws.send(JSON.stringify(offer));
-    console.log("offer sent:", offer);
+    console.log("sending offer:", offer);
   }
 
   registerKeyboardEvents() {
-    this.video.onkeydown = (e) => {
-      if (this.preventDefault) e.preventDefault();
+    this.onkeydown = (e) => {
       this.dc.send(
         new Uint8Array([
           toUE4type.KeyDown,
@@ -289,23 +307,25 @@ window.PixelStream = class extends EventTarget {
           e.repeat,
         ]).buffer
       );
+      // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
+      e.preventDefault();
       //  e.stopPropagation
     };
 
-    this.video.onkeyup = (e) => {
-      if (this.preventDefault) e.preventDefault();
+    this.onkeyup = (e) => {
       this.dc.send(
         new Uint8Array([toUE4type.KeyUp, SpecialKeyCodes[e.code] || e.keyCode])
           .buffer
       );
+      e.preventDefault();
     };
 
-    this.video.onkeypress = (e) => {
-      if (this.preventDefault) e.preventDefault();
+    this.onkeypress = (e) => {
       let data = new DataView(new ArrayBuffer(3));
       data.setUint8(0, toUE4type.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
       this.dc.send(data.buffer);
+      e.preventDefault();
     };
   }
 
@@ -315,7 +335,7 @@ window.PixelStream = class extends EventTarget {
     let fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
     let fingerIds = {};
 
-    this.video.ontouchstart = (e) => {
+    this.ontouchstart = (e) => {
       // Assign a unique identifier to each touch.
       for (let touch of e.changedTouches) {
         // remember touch
@@ -326,10 +346,10 @@ window.PixelStream = class extends EventTarget {
         fingerIds[touch.identifier] = finger;
       }
       this.emitTouchData(toUE4type.TouchStart, e.changedTouches, fingerIds);
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.ontouchend = (e) => {
+    this.ontouchend = (e) => {
       this.emitTouchData(toUE4type.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
       for (let touch of e.changedTouches) {
@@ -337,12 +357,12 @@ window.PixelStream = class extends EventTarget {
         fingers.push(fingerIds[touch.identifier]);
         delete fingerIds[touch.identifier];
       }
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.ontouchmove = (e) => {
+    this.ontouchmove = (e) => {
       this.emitTouchData(toUE4type.TouchMove, e.touches, fingerIds);
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
   }
 
@@ -350,9 +370,9 @@ window.PixelStream = class extends EventTarget {
   registerFakeMouseEvents() {
     let finger = undefined;
 
-    const boundingRect = this.video.getBoundingClientRect();
+    const boundingRect = this.getBoundingClientRect();
 
-    this.video.ontouchstart = (e) => {
+    this.ontouchstart = (e) => {
       if (finger === undefined) {
         let firstTouch = e.changedTouches[0];
         finger = {
@@ -363,28 +383,28 @@ window.PixelStream = class extends EventTarget {
         // Hack: Mouse events require an enter and leave so we just
         // enter and leave manually with each touch as this event
         // is not fired with a touch device.
-        this.video.onmouseenter(e);
+        this.onmouseenter(e);
         this.emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
       }
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.ontouchend = (e) => {
+    this.ontouchend = (e) => {
       for (let touch of e.changedTouches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
           let y = touch.clientY - boundingRect.top;
           this.emitMouseUp(MouseButton.MainButton, x, y);
           // Hack: Manual mouse leave event.
-          this.video.onmouseleave(e);
+          this.onmouseleave(e);
           finger = undefined;
           break;
         }
       }
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.ontouchmove = (e) => {
+    this.ontouchmove = (e) => {
       for (let touch of e.touches) {
         if (touch.identifier === finger.id) {
           let x = touch.clientX - boundingRect.left;
@@ -395,28 +415,26 @@ window.PixelStream = class extends EventTarget {
           break;
         }
       }
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
   }
 
   registerMouseHoverEvents() {
     this.registerMouseEnterAndLeaveEvents();
 
-    this.preventDefault = false;
-
-    this.video.onmousemove = (e) => {
+    this.onmousemove = (e) => {
       this.emitMouseMove(e.offsetX, e.offsetY, e.movementX, e.movementY);
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.onmousedown = (e) => {
+    this.onmousedown = (e) => {
       this.emitMouseDown(e.button, e.offsetX, e.offsetY);
-      if (this.preventDefault) e.preventDefault();
+      // e.preventDefault();
     };
 
-    this.video.onmouseup = (e) => {
+    this.onmouseup = (e) => {
       this.emitMouseUp(e.button, e.offsetX, e.offsetY);
-      if (this.preventDefault) e.preventDefault();
+      // e.preventDefault();
     };
 
     // When the context menu is shown then it is safest to release the button
@@ -424,28 +442,27 @@ window.PixelStream = class extends EventTarget {
     // get at least one mouse up corresponding to a mouse down event. Otherwise
     // the mouse can get stuck.
     // https://github.com/facebook/react/issues/5531
-    this.video.oncontextmenu = (e) => {
+    this.oncontextmenu = (e) => {
       this.emitMouseUp(e.button, e.offsetX, e.offsetY);
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
 
-    this.video.onmousewheel = (e) => {
+    this.onmousewheel = (e) => {
       this.emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
-      if (this.preventDefault) e.preventDefault();
+      e.preventDefault();
     };
   }
 
   registerPointerlockEvents() {
     this.registerMouseEnterAndLeaveEvents();
 
-    this.preventDefault = true;
     console.info("mouse locked in, ESC to exit");
 
-    const { clientWidth, clientHeight } = this.video;
+    const { clientWidth, clientHeight } = this;
     let x = clientWidth / 2;
     let y = clientHeight / 2;
 
-    this.video.onmousemove = (e) => {
+    this.onmousemove = (e) => {
       x += e.movementX;
       y += e.movementY;
       if (x > clientWidth) {
@@ -461,27 +478,27 @@ window.PixelStream = class extends EventTarget {
       this.emitMouseMove(x, y, e.movementX, e.movementY);
     };
 
-    this.video.onmousedown = (e) => {
+    this.onmousedown = (e) => {
       this.emitMouseDown(e.button, x, y);
     };
 
-    this.video.onmouseup = (e) => {
+    this.onmouseup = (e) => {
       this.emitMouseUp(e.button, x, y);
     };
 
-    this.video.onmousewheel = (e) => {
+    this.onmousewheel = (e) => {
       this.emitMouseWheel(e.wheelDelta, x, y);
     };
   }
 
   registerMouseEnterAndLeaveEvents() {
-    this.video.onmouseenter = (e) => {
+    this.onmouseenter = (e) => {
       let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, toUE4type.MouseEnter);
       this.dc.send(Data.buffer);
     };
 
-    this.video.onmouseleave = (e) => {
+    this.onmouseleave = (e) => {
       let Data = new DataView(new ArrayBuffer(1));
       Data.setUint8(0, toUE4type.MouseLeave);
       if (this.dc.readyState === "open") this.dc.send(Data.buffer);
@@ -490,8 +507,8 @@ window.PixelStream = class extends EventTarget {
 
   emitMouseMove(x, y, deltaX, deltaY) {
     let coord = this.normalizeAndQuantizeUnsigned(x, y);
-    deltaX = (deltaX * 65536) / this.video.clientWidth;
-    deltaY = (deltaY * 65536) / this.video.clientHeight;
+    deltaX = (deltaX * 65536) / this.clientWidth;
+    deltaY = (deltaY * 65536) / this.clientHeight;
     let Data = new DataView(new ArrayBuffer(9));
     Data.setUint8(0, toUE4type.MouseMove);
     Data.setUint16(1, coord.x, true);
@@ -537,8 +554,8 @@ window.PixelStream = class extends EventTarget {
     data.setUint8(1, touches.length);
     let byte = 2;
     for (let touch of touches) {
-      let x = touch.clientX - this.video.offsetLeft;
-      let y = touch.clientY - this.video.offsetTop;
+      let x = touch.clientX - this.offsetLeft;
+      let y = touch.clientY - this.offsetTop;
 
       let coord = this.normalizeAndQuantizeUnsigned(x, y);
       data.setUint16(byte, coord.x, true);
@@ -554,7 +571,6 @@ window.PixelStream = class extends EventTarget {
   }
 
   emitDescriptor(descriptor, messageType = toUE4type.UIInteraction) {
-    // Convert the dscriptor object into a JSON string.
     let descriptorAsString = JSON.stringify(descriptor);
 
     // Add the UTF-16 JSON string to the array byte buffer, going two bytes at
@@ -576,8 +592,8 @@ window.PixelStream = class extends EventTarget {
   }
 
   normalizeAndQuantizeUnsigned(x, y) {
-    let normalizedX = x / this.video.clientWidth;
-    let normalizedY = y / this.video.clientHeight;
+    let normalizedX = x / this.clientWidth;
+    let normalizedY = y / this.clientHeight;
     if (
       normalizedX < 0.0 ||
       normalizedX > 1.0 ||
@@ -598,10 +614,10 @@ window.PixelStream = class extends EventTarget {
     }
   }
 
-  debug(javascript) {
+  debug(nodeJS) {
     // 调试信令服务器
-    this.ws.send(JSON.stringify({ type: "debug", debug: javascript }));
+    this.ws.send(JSON.stringify({ type: "debug", debug: nodeJS }));
   }
-};
+}
 
-// export default PixelStream;
+customElements.define("pixel-stream", PixelStream, { extends: "video" });

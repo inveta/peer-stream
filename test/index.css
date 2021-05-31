@@ -43,6 +43,7 @@ body {
 }
 
 #qualityStatus {
+  color: gray;
   float: left;
   font-size: 37px;
   padding-right: 4px;

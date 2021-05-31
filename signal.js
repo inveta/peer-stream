@@ -1,7 +1,6 @@
 /*
- *  https://xosg.github.io/PixelStreamer/signalling.js
- *  2021年5月12日 金恒昱
- *
+ *  https://xosg.github.io/PixelStreamer/signal.js
+ *  2021/5/31 @xosg
  */
 
 // command line format: key-value pairs connected by "=", separated by " "
@@ -137,7 +136,7 @@ playerServer.on("connection", async (ws, req) => {
 
   ws.on("message", (msg) => {
     if (UE4?.readyState !== WebSocket.OPEN) {
-      ws.send("UE4 stopped");
+      ws.send("UE4 not ready");
       return;
     }
 
