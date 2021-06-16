@@ -1,6 +1,5 @@
 document.body.onload = () => {
   //  document.querySelector("[is=pixel-stream]");
-  //  document.createElement("video", { is: "pixel-stream" });
 
   ps.addEventListener("message", (e) => {
     console.log("Data Channel:", e.detail);

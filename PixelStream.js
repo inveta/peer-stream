@@ -110,7 +110,7 @@ class PixelStream extends HTMLVideoElement {
       this.getAttribute("signal") ||
       `ws://${location.hostname || "localhost"}:88/insigma`;
 
-    this.ws?.close(1000, "forever");
+    if (this.ws) this.ws.close(1000, "forever");
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
@@ -252,7 +252,7 @@ class PixelStream extends HTMLVideoElement {
       this.srcObject = e.streams[0];
     };
     this.pc.onicecandidate = (e) => {
-      if (e.candidate?.candidate) {
+      if (e.candidate && e.candidate.candidate) {
         console.log("sending candidate:", e.candidate);
         this.ws.send(
           JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
@@ -268,6 +268,17 @@ class PixelStream extends HTMLVideoElement {
       //If this is true in Chrome 89+ SDP is sent that is incompatible with UE WebRTC and breaks.
       offerExtmapAllowMixed: false,
       sdpSemantics: "unified-plan",
+      // iceServers: [
+      //   {
+      //     urls: [
+      //       "stun:stun.l.google.com:19302",
+      //       "stun:stun1.l.google.com:19302",
+      //       "stun:stun2.l.google.com:19302",
+      //       "stun:stun3.l.google.com:19302",
+      //       "stun:stun4.l.google.com:19302",
+      //     ],
+      //   },
+      // ],
     });
 
     this.setupPeerConnection();
