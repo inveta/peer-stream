@@ -6,7 +6,7 @@ Lightweight WebRTC frontend SDK (including signalling channel) for UnrealEngine'
 
 - PixelStream.js: https://xosg.github.io/PixelStreamer/PixelStream.js
 - signal.js: https://xosg.github.io/PixelStreamer/signal.js
-- Official SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Source/Programs/PixelStreaming/WebServers/SignallingWebServer
+- Official SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
 - Pixel Streaming Protocol: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
 - Adapter for IOS: https://webrtc.github.io/adapter/adapter-latest.js
 
@@ -20,6 +20,8 @@ node signal.js playerPort=88 UE4port=8888
 ## UE4
 
 ```
+// Plugins > Built-In > Graphics > Pixel Streaming > Enabled
+
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
 -AudioMixer
@@ -57,6 +59,15 @@ video.registerKeyboardEvents()
 video.registerFakeMouseEvents()
 video.registerMouseHoverEvents()
 video.registerPointerlockEvents()
+```
+
+## Console Debug
+
+```
+ps.debug('playerId')  // show my id
+ps.debug('Object.keys(players).length')   // show players count
+ps.debug('for(let id in players){if(id!=playerId)players[id].close(1011,"forever");}')    // kick other players
+(await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))  // show selected candidate
 ```
 
 ## Requirement

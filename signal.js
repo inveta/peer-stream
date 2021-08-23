@@ -1,7 +1,9 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/5/31 @xosg
+ *  2021/8/23 @xosg
  */
+
+/* eslint-disable */
 
 // command line format: key-value pairs connected by "=", separated by " "
 // process.argc[0] == 'path/to/node.exe'

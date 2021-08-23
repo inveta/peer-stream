@@ -1,11 +1,7 @@
 body {
-  margin: 0px;
   background-color: black;
-  position: fixed;
   width: 100%;
   height: 100%;
-  left: 0;
-  top: 0;
 }
 
 #stats {
@@ -26,12 +22,12 @@ body {
   color: #efefef;
 }
 
-.overlay-shown>#stats {
+.overlay-shown > #stats {
   padding-top: 50px;
   display: block;
 }
 
-.overlay-shown>#overlayButton {
+.overlay-shown > #overlayButton {
   transform: rotate(-135deg);
 }
 

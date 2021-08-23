@@ -1,7 +1,9 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/5/31 @xosg
+ *  2021/8/23 @xosg
  */
+
+/* eslint-disable */
 
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
 // special keycodes different from KeyboardEvent.keyCode
@@ -219,6 +221,7 @@ class PixelStream extends HTMLVideoElement {
     // this.requestPointerLock();
 
     this.style = `
+        position: fixed;
         background-color: #222;
         margin: auto;
         display: none;

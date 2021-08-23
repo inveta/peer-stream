@@ -5,6 +5,6 @@
   "repository": "https://github.com/xosg/PixelStreamer",
   "license": "Apache-2.0",
   "dependencies": {
-    "ws": "7.4.6"
+    "ws": "^8.2.0"
   }
 }

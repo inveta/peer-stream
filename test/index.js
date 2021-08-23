@@ -18,11 +18,6 @@ document.body.onload = () => {
   });
 };
 
-// 打印玩家数量
-// ps.debug('Object.keys(players).length')
-// 查看选定的candidate
-// (await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))
-
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 const qualityStatus = document.getElementById("qualityStatus");
