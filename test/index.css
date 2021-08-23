@@ -4,6 +4,10 @@ body {
   height: 100%;
 }
 
+video{
+  position: fixed;
+}
+
 #stats {
   text-align: left;
   font-size: 16px;

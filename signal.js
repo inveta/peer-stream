@@ -66,7 +66,7 @@ UE4server.on("connection", (ws, req) => {
       return;
     }
 
-    let playerId = msg.playerId;
+    let playerId = String(msg.playerId);
     delete msg.playerId; // no need to send it to the player
     let player = players[playerId];
     if (!player) {
@@ -123,7 +123,7 @@ playerServer.on("connection", async (ws, req) => {
     return;
   }
 
-  let playerId = ++nextPlayerId;
+  let playerId = String(++nextPlayerId);
 
   console.log(
     "player",

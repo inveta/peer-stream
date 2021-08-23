@@ -34,6 +34,8 @@ const toPlayerType = {
   FreezeFrame: 3,
   UnfreezeFrame: 4,
   VideoEncoderAvgQP: 5,
+  LatencyTest: 6,
+  InitialSettings: 7,
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
@@ -47,7 +49,8 @@ const toUE4type = {
   AverageBitrateRequest: 3,
   StartStreaming: 4,
   StopStreaming: 5,
-
+  LatencyTest: 6,
+  RequestInitialSettings: 7,
   /*
    * Input Messages. Range = 50..89.
    */
@@ -165,6 +168,9 @@ class PixelStream extends HTMLVideoElement {
       console.log("received answer", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
+      for (let receiver of this.pc.getReceivers()) {
+        receiver.playoutDelayHint = 0;
+      }
     } else if (msg.type === "iceCandidate") {
       let candidate = new RTCIceCandidate(msg.candidate);
       // this.remoteCandidate = candidate;
@@ -185,9 +191,8 @@ class PixelStream extends HTMLVideoElement {
       let response = new TextDecoder("utf-16").decode(data.slice(1));
       this.dispatchEvent(new CustomEvent("message", { detail: response }));
     } else if (view[0] === toPlayerType.Command) {
-      let commandAsString = new TextDecoder("utf-16").decode(data.slice(1));
-      let command = JSON.parse(commandAsString);
-      console.log(command);
+      let command = JSON.parse(new TextDecoder("utf-16").decode(data.slice(1)));
+      console.log("received command", command);
       if (command.command === "onScreenKeyboard") {
         console.info("You should setup a on-screen keyboard");
       }
@@ -198,6 +203,9 @@ class PixelStream extends HTMLVideoElement {
     } else if (view[0] === toPlayerType.QualityControlOwnership) {
       let ownership = view[1] !== 0;
       console.info("received Quality Control Ownership", ownership);
+    } else if (view[0] === toPlayerType.InitialSettings) {
+      let setting = JSON.parse(new TextDecoder("utf-16").decode(data.slice(1)));
+      console.log("received initial setting", setting);
     } else {
       console.error("invalid data type:", view[0]);
     }
@@ -221,25 +229,27 @@ class PixelStream extends HTMLVideoElement {
     // this.requestPointerLock();
 
     this.style = `
-        position: fixed;
         background-color: #222;
-        margin: auto;
-        display: none;
+        pointer-events: none;
         object-fit: fill; `;
   }
 
   setupDataChannel(label = "insigma") {
     this.dc = this.pc.createDataChannel(label, { ordered: true });
+    // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
+    this.dc.binaryType = "arraybuffer";
 
     this.dc.onopen = (e) => {
       console.log("data channel connected:", label);
-      this.style.display = "block";
+      this.style.pointerEvents = "auto";
+      this.dc.send(new Uint8Array([toUE4type.RequestInitialSettings]).buffer);
+      this.dc.send(new Uint8Array([toUE4type.RequestQualityControl]).buffer);
       this.dispatchEvent(new CustomEvent("open"));
     };
 
     this.dc.onclose = (e) => {
       console.log("data channel closed:", label);
-      this.style.display = "none";
+      this.style.pointerEvents = "none";
       this.dispatchEvent(new CustomEvent("close"));
     };
 
@@ -268,8 +278,6 @@ class PixelStream extends HTMLVideoElement {
     this.pc.close();
 
     this.pc = new RTCPeerConnection({
-      //If this is true in Chrome 89+ SDP is sent that is incompatible with UE WebRTC and breaks.
-      offerExtmapAllowMixed: false,
       sdpSemantics: "unified-plan",
       // iceServers: [
       //   {
@@ -284,27 +292,26 @@ class PixelStream extends HTMLVideoElement {
       // ],
     });
 
+    this.pc.addTransceiver("audio", { direction: "recvonly" });
+    this.pc.addTransceiver("video", { direction: "recvonly" });
+
     this.setupPeerConnection();
     this.setupDataChannel();
+
     const offer = await this.pc.createOffer({
       // 我们的场景不需要音频
       offerToReceiveAudio: this.muted ? 0 : 1,
       offerToReceiveVideo: 1,
+      voiceActivityDetection: false,
     });
 
+    // this indicate we support stereo (Chrome needs this)
     offer.sdp = offer.sdp.replace(
       "useinbandfec=1",
-      "useinbandfec=1;stereo=1;maxaveragebitrate=128000"
+      "useinbandfec=1;stereo=1;sprop-maxcapturerate=48000"
     );
 
     this.pc.setLocalDescription(offer);
-    // increase start bitrate from 300 kbps to 20 mbps and max bitrate from 2.5 mbps to 100 mbps
-    // (100 mbps means we don't restrict encoder at all)
-    // after we "setLocalDescription" because other browsers are not c happy to see google-specific config
-    offer.sdp = offer.sdp.replace(
-      /(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm,
-      "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n"
-    );
 
     // if (this.ws.readyState !== WebSocket.OPEN) return;
 
