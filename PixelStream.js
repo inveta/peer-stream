@@ -83,11 +83,10 @@ class PixelStream extends HTMLVideoElement {
     super(...params);
 
     window.ps = this;
-    this.VideoEncoderQP = NaN;
 
     this.ws = undefined; // WebSocket
     this.pc = new RTCPeerConnection({});
-    this.dc = null; // RTCDataChannel
+    this.dc = this.pc.createDataChannel("insigma", { ordered: true });
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -183,31 +182,54 @@ class PixelStream extends HTMLVideoElement {
 
   onDataChannelMessage(data) {
     let view = new Uint8Array(data);
-    if (view[0] === toPlayerType.VideoEncoderAvgQP) {
-      this.VideoEncoderQP = +new TextDecoder("utf-16").decode(data.slice(1));
-      console.log("received Video Encoder Average QP", this.VideoEncoderQP);
-    } else if (view[0] === toPlayerType.Response) {
-      // user custom message
-      let response = new TextDecoder("utf-16").decode(data.slice(1));
-      this.dispatchEvent(new CustomEvent("message", { detail: response }));
-    } else if (view[0] === toPlayerType.Command) {
-      let command = JSON.parse(new TextDecoder("utf-16").decode(data.slice(1)));
-      console.log("received command", command);
-      if (command.command === "onScreenKeyboard") {
-        console.info("You should setup a on-screen keyboard");
+    const utf16 = new TextDecoder("utf-16");
+    switch (view[0]) {
+      case toPlayerType.VideoEncoderAvgQP: {
+        this.VideoEncoderQP = +utf16.decode(data.slice(1));
+        console.log("Got Video Encoder Average QP", this.VideoEncoderQP);
+        break;
       }
-    } else if (view[0] === toPlayerType.FreezeFrame) {
-      let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
-      let jpeg = view.slice(1 + 4);
-    } else if (view[0] === toPlayerType.UnfreezeFrame) {
-    } else if (view[0] === toPlayerType.QualityControlOwnership) {
-      let ownership = view[1] !== 0;
-      console.info("received Quality Control Ownership", ownership);
-    } else if (view[0] === toPlayerType.InitialSettings) {
-      let setting = JSON.parse(new TextDecoder("utf-16").decode(data.slice(1)));
-      console.log("received initial setting", setting);
-    } else {
-      console.error("invalid data type:", view[0]);
+      case toPlayerType.Response: {
+        // user custom message
+        let response = utf16.decode(data.slice(1));
+        this.dispatchEvent(new CustomEvent("message", { detail: response }));
+        break;
+      }
+      case toPlayerType.Command: {
+        let command = JSON.parse(utf16.decode(data.slice(1)));
+        console.log("Got command", command);
+        if (command.command === "onScreenKeyboard") {
+          console.info("You should setup a on-screen keyboard");
+        }
+        break;
+      }
+      case toPlayerType.FreezeFrame: {
+        let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
+        let jpeg = view.slice(1 + 4);
+        break;
+      }
+      case toPlayerType.UnfreezeFrame: {
+        break;
+      }
+      case toPlayerType.LatencyTest: {
+        let latencyTimings = JSON.parse(utf16.decode(data.slice(1)));
+        console.info("Got latency timings from UE:", latencyTimings);
+
+        break;
+      }
+      case toPlayerType.QualityControlOwnership: {
+        let ownership = view[1] !== 0;
+        console.info("Got Quality Control Ownership", ownership);
+        break;
+      }
+      case toPlayerType.InitialSettings: {
+        let setting = JSON.parse(utf16.decode(data.slice(1)));
+        console.info("Got initial setting:", setting);
+        break;
+      }
+      default: {
+        console.error("Got invalid data type:", view[0]);
+      }
     }
   }
 
@@ -217,6 +239,7 @@ class PixelStream extends HTMLVideoElement {
       this.focus();
     });
     this.playsInline = true;
+    this.disablepictureinpicture = true;
 
     // Recently many browsers can only autoplay the videos with sound off
     this.muted = true;
@@ -527,7 +550,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   emitMouseMove(x, y, deltaX, deltaY) {
-    let coord = this.normalizeAndQuantizeUnsigned(x, y);
+    let coord = this.normalize(x, y);
     deltaX = (deltaX * 65536) / this.clientWidth;
     deltaY = (deltaY * 65536) / this.clientHeight;
     let Data = new DataView(new ArrayBuffer(9));
@@ -540,7 +563,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   emitMouseDown(button, x, y) {
-    let coord = this.normalizeAndQuantizeUnsigned(x, y);
+    let coord = this.normalize(x, y);
     let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, toUE4type.MouseDown);
     Data.setUint8(1, button);
@@ -550,7 +573,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   emitMouseUp(button, x, y) {
-    let coord = this.normalizeAndQuantizeUnsigned(x, y);
+    let coord = this.normalize(x, y);
     let Data = new DataView(new ArrayBuffer(6));
     Data.setUint8(0, toUE4type.MouseUp);
     Data.setUint8(1, button);
@@ -560,7 +583,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   emitMouseWheel(delta, x, y) {
-    let coord = this.normalizeAndQuantizeUnsigned(x, y);
+    let coord = this.normalize(x, y);
     let Data = new DataView(new ArrayBuffer(7));
     Data.setUint8(0, toUE4type.MouseWheel);
     Data.setInt16(1, delta, true);
@@ -578,7 +601,7 @@ class PixelStream extends HTMLVideoElement {
       let x = touch.clientX - this.offsetLeft;
       let y = touch.clientY - this.offsetTop;
 
-      let coord = this.normalizeAndQuantizeUnsigned(x, y);
+      let coord = this.normalize(x, y);
       data.setUint16(byte, coord.x, true);
       byte += 2;
       data.setUint16(byte, coord.y, true);
@@ -592,19 +615,17 @@ class PixelStream extends HTMLVideoElement {
   }
 
   emitDescriptor(descriptor, messageType = toUE4type.UIInteraction) {
-    let descriptorAsString = JSON.stringify(descriptor);
+    descriptor = JSON.stringify(descriptor);
 
     // Add the UTF-16 JSON string to the array byte buffer, going two bytes at
     // a time.
-    let data = new DataView(
-      new ArrayBuffer(1 + 2 + 2 * descriptorAsString.length)
-    );
+    let data = new DataView(new ArrayBuffer(1 + 2 + 2 * descriptor.length));
     let byteIdx = 0;
     data.setUint8(byteIdx, messageType);
     byteIdx++;
-    data.setUint16(byteIdx, descriptorAsString.length, true);
+    data.setUint16(byteIdx, descriptor.length, true);
     byteIdx += 2;
-    for (let char of descriptorAsString) {
+    for (let char of descriptor) {
       // charCodeAt() is UTF-16, codePointAt() is Unicode.
       data.setUint16(byteIdx, char.charCodeAt(0), true);
       byteIdx += 2;
@@ -612,7 +633,7 @@ class PixelStream extends HTMLVideoElement {
     this.dc.send(data.buffer);
   }
 
-  normalizeAndQuantizeUnsigned(x, y) {
+  normalize(x, y) {
     let normalizedX = x / this.clientWidth;
     let normalizedY = y / this.clientHeight;
     if (

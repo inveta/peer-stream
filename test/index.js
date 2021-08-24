@@ -20,18 +20,19 @@ document.body.onload = () => {
 
 const statsDiv = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
-const qualityStatus = document.getElementById("qualityStatus");
 
 console.info = (...text) => {
   console.log(...text);
   // show log top left, disappear after timeout
 
-  const log = document.createElement("div");
-  log.innerHTML = text.join(" ");
+  const log = document.createElement("pre");
+  log.innerHTML = text
+    .map((x) => JSON.stringify(x, undefined, "\t").replace(/"|,|{|}/g, ""))
+    .join(" ");
   logsWrapper.appendChild(log);
   setTimeout(() => {
     logsWrapper.removeChild(log);
-  }, 2000);
+  }, 3000);
 };
 
 let lastTransport = {};
@@ -43,15 +44,15 @@ function onAggregatedStats(stats, VideoEncoderQP) {
 
   let statsText = "";
 
-  let color = "lime";
   if (VideoEncoderQP > 35) {
-    color = "red";
-    statsText += `<div style="color: ${color}">Bad network connection</div>`;
+    statsDiv.style.color = "red";
+    statsText += `<div>Bad network connection</div>`;
   } else if (VideoEncoderQP > 26) {
-    color = "orange";
-    statsText += `<div style="color: ${color}">Spotty network connection</div>`;
+    statsDiv.style.color = "orange";
+    statsText += `<div>Spotty network connection</div>`;
+  } else {
+    statsDiv.style.color = "lime";
   }
-  qualityStatus.style.color = color;
 
   stats.forEach((stat) => {
     if (stat.type === "data-channel") {
@@ -72,7 +73,7 @@ function onAggregatedStats(stats, VideoEncoderQP) {
         stat.bytesReceived / 1024
       )} KB</div>`;
     } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
-      statsText += `<div>Latency: ${f.format(
+      statsText += `<div>Latency(RTT): ${f.format(
         stat.currentRoundTripTime * 1000
       )} ms</div>`;
     } else if (stat.type === "remote-candidate") {
@@ -85,15 +86,13 @@ function onAggregatedStats(stats, VideoEncoderQP) {
           (stat.timestamp - lastTransport.timestamp)) *
         ((1000 * 8) / 1024);
 
-      statsText += `<div style="color: ${color}">bitrate: ${f.format(
-        bitrate
-      )} kbps </div>`;
+      statsText += `<div>bitrate: ${f.format(bitrate)} kbps </div>`;
 
       lastTransport = stat;
     }
   });
 
-  statsText += `<div style="color: ${color}">Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
+  statsText += `<div>Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
 
   statsDiv.innerHTML = statsText;
 }

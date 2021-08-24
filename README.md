@@ -66,15 +66,17 @@ video.registerPointerlockEvents()
 ```
 ps.debug('playerId')  // show my id
 ps.debug('Object.keys(players).length')   // show players count
-ps.debug('for(let id in players){if(id!=playerId)players[id].close(1011,"forever");}')    // kick other players
-(await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))  // show selected candidate
+ps.debug('for(let id in players){if(id!=playerId)players[id].close(1011,"forever");}')  // kick other players
+(await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))    // show selected candidate
+ps.addEventListener('mouseenter',_=>ps.focus()||ps.requestPointerLock())    // pointer lock
+ps.style.pointerEvents='none'   // read only <video>
 ```
 
 ## Requirement
 
 - Chrome 88+
 - NodeJS 14+
-- Unreal Engine 4+
+- Unreal Engine 4.27+
 
 ## License
 
