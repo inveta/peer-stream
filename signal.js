@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/8/23 @xosg
+ *  2021/8/25 @xosg
  */
 
 /* eslint-disable */
@@ -66,6 +66,7 @@ UE4server.on("connection", (ws, req) => {
       return;
     }
 
+    // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
     let playerId = String(msg.playerId);
     delete msg.playerId; // no need to send it to the player
     let player = players[playerId];

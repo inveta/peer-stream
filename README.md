@@ -74,7 +74,7 @@ ps.style.pointerEvents='none'   // read only <video>
 
 ## Requirement
 
-- Chrome 88+
+- Google Chrome 88+
 - NodeJS 14+
 - Unreal Engine 4.27+
 

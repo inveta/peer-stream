@@ -11,17 +11,17 @@ video {
 #stats {
   text-align: left;
   position: fixed;
-  padding: 10px;
   top: 0;
+  font-family: emoji;
   right: 0;
-  z-index: 100;
+  z-index: 5;
   border: 2px solid #efefef;
 }
 
 #logs {
   position: fixed;
-  z-index: 25;
+  z-index: 5;
   left: 20px;
-  top: 20px;
+  bottom: 20px;
   color: red;
 }

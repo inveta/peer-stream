@@ -1,11 +1,10 @@
 document.body.onload = () => {
   //  document.querySelector("[is=pixel-stream]");
 
-  ps.addEventListener("message", (e) => {
-    console.log("Data Channel:", e.detail);
-  });
+  ps.addEventListener("message", (e) => {});
 
   ps.addEventListener("open", (e) => {
+    clearInterval(ps.statTimer);
     ps.statTimer = setInterval(async () => {
       // 打印监控数据
       const stats = await ps.pc.getStats(null);
@@ -18,7 +17,7 @@ document.body.onload = () => {
   });
 };
 
-const statsDiv = document.getElementById("stats");
+const statsWrapper = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
 
 console.info = (...text) => {
@@ -45,54 +44,63 @@ function onAggregatedStats(stats, VideoEncoderQP) {
   let statsText = "";
 
   if (VideoEncoderQP > 35) {
-    statsDiv.style.color = "red";
-    statsText += `<div>Bad network connection</div>`;
+    statsWrapper.style.color = "red";
+    statsText += `\n Bad network connection 🤪`;
   } else if (VideoEncoderQP > 26) {
-    statsDiv.style.color = "orange";
-    statsText += `<div>Spotty network connection</div>`;
+    statsWrapper.style.color = "orange";
+    statsText += `\n Spotty network connection 😂`;
   } else {
-    statsDiv.style.color = "lime";
+    statsWrapper.style.color = "lime";
   }
 
   stats.forEach((stat) => {
-    if (stat.type === "data-channel") {
-      statsText += `<div>DataChannel —> ${f.format(stat.bytesSent)} B</div>`;
-      statsText += `<div>DataChannel <— ${f.format(
-        stat.bytesReceived
-      )} B</div>`;
-    } else if (stat.type === "inbound-rtp" && stat.mediaType === "video") {
-      statsText += `
-        <div>Resolution: ${stat.frameWidth + " x " + stat.frameHeight}</div>
-        <div>Frames Decoded: ${f.format(stat.framesDecoded)}</div>
-        <div>Packets Lost: ${f.format(stat.packetsLost)}</div>
-        <div>FPS: ${stat.framesPerSecond}</div>
-        <div>Frames dropped: ${f.format(stat.framesDropped)}</div>
-        <div>Video <— ${f.format(stat.bytesReceived / 1024)} KB</div>`;
-    } else if (stat.type === "inbound-rtp" && stat.mediaType === "audio") {
-      statsText += `<div>Audio <— ${f.format(
-        stat.bytesReceived / 1024
-      )} KB</div>`;
-    } else if (stat.type === "candidate-pair" && stat.state === "succeeded") {
-      statsText += `<div>Latency(RTT): ${f.format(
-        stat.currentRoundTripTime * 1000
-      )} ms</div>`;
-    } else if (stat.type === "remote-candidate") {
-      statsText += `<div>${
-        stat.protocol + "://" + stat.ip + ":" + stat.port
-      }</div>`;
-    } else if (stat.type === "transport") {
-      const bitrate =
-        ((stat.bytesReceived - lastTransport.bytesReceived) /
-          (stat.timestamp - lastTransport.timestamp)) *
-        ((1000 * 8) / 1024);
+    switch (stat.type) {
+      case "data-channel": {
+        statsText += `\n DataChannel —> ${f.format(stat.bytesSent)} B`;
+        statsText += `\n DataChannel <— ${f.format(stat.bytesReceived)} B`;
+        break;
+      }
+      case "inbound-rtp": {
+        if (stat.mediaType === "video")
+          statsText += `
+      Resolution: ${stat.frameWidth + " x " + stat.frameHeight}
+      Frames Decoded: ${f.format(stat.framesDecoded)}
+      Packets Lost: ${f.format(stat.packetsLost)}
+      FPS: ${stat.framesPerSecond}
+      Frames dropped: ${f.format(stat.framesDropped)}
+      Video <— ${f.format(stat.bytesReceived / 1024)} KB`;
+        else if (stat.mediaType === "audio")
+          statsText += `\n Audio <— ${f.format(stat.bytesReceived / 1024)} KB`;
+        break;
+      }
+      case "candidate-pair": {
+        if (stat.state === "succeeded")
+          statsText += `\n Latency(RTT): ${f.format(
+            stat.currentRoundTripTime * 1000
+          )} ms`;
+        break;
+      }
+      case "remote-candidate": {
+        statsText += `\n ${stat.protocol + "://" + stat.ip + ":" + stat.port}`;
+        break;
+      }
+      case "transport": {
+        const bitrate =
+          ((stat.bytesReceived - lastTransport.bytesReceived) /
+            (stat.timestamp - lastTransport.timestamp)) *
+          ((1000 * 8) / 1024);
 
-      statsText += `<div>bitrate: ${f.format(bitrate)} kbps </div>`;
+        statsText += `\n bitrate: ${f.format(bitrate)} kbps `;
 
-      lastTransport = stat;
+        lastTransport = stat;
+        break;
+      }
+      default: {
+      }
     }
   });
 
-  statsText += `<div>Video Quantization Parameter: ${VideoEncoderQP}</div>	`;
+  statsText += `\n Video Quantization Parameter: ${VideoEncoderQP}`;
 
-  statsDiv.innerHTML = statsText;
+  statsWrapper.innerHTML = statsText;
 }

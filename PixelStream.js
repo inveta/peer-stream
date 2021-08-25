@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/8/23 @xosg
+ *  2021/8/25 @xosg
  */
 
 /* eslint-disable */
@@ -109,12 +109,12 @@ class PixelStream extends HTMLVideoElement {
   connectedCallback() {
     // This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
+    if (this.ws) this.ws.close(1000, "forever");
 
     const signal =
       this.getAttribute("signal") ||
       `ws://${location.hostname || "localhost"}:88/insigma`;
 
-    if (this.ws) this.ws.close(1000, "forever");
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
@@ -131,9 +131,7 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      this.pc.close();
-      // this.dc.close();
-      console.info("WebSocket & WebRTC closed.", e.reason || "");
+      console.info("WebSocket closed.", e.reason || "");
 
       // 3s后重连
       if (e.reason === "forever") return;
@@ -144,15 +142,20 @@ class PixelStream extends HTMLVideoElement {
   }
 
   disconnectedCallback() {
-    // 永久关闭，不再重连
+    // WebRTC的生命周期与<video>的生命周期绑定
     this.ws.close(1000, "forever");
+    this.pc.close();
+    console.info("peer connection closing");
+    // this.dc.close();
   }
 
   adoptedCallback() {}
 
-  attributeChangedCallback(name, oldValue, newValue) {}
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "signal") this.connectedCallback();
+  }
   static get observedAttributes() {
-    return [];
+    return ["signal"];
   }
 
   async onWebSocketMessage(msg) {
@@ -164,7 +167,7 @@ class PixelStream extends HTMLVideoElement {
     }
 
     if (msg.type === "answer") {
-      console.log("received answer", msg);
+      console.log("Got answer", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
       for (let receiver of this.pc.getReceivers()) {
@@ -174,7 +177,7 @@ class PixelStream extends HTMLVideoElement {
       let candidate = new RTCIceCandidate(msg.candidate);
       // this.remoteCandidate = candidate;
       await this.pc.addIceCandidate(candidate);
-      console.log("received candidate", msg.candidate);
+      console.log("Got candidate", msg.candidate);
     } else {
       console.warn(this.ws.url, msg);
     }
@@ -191,13 +194,14 @@ class PixelStream extends HTMLVideoElement {
       }
       case toPlayerType.Response: {
         // user custom message
-        let response = utf16.decode(data.slice(1));
-        this.dispatchEvent(new CustomEvent("message", { detail: response }));
+        let detail = utf16.decode(data.slice(1));
+        this.dispatchEvent(new CustomEvent("message", { detail }));
+        console.info("Got APP response:", detail);
         break;
       }
       case toPlayerType.Command: {
         let command = JSON.parse(utf16.decode(data.slice(1)));
-        console.log("Got command", command);
+        console.log("Got command:", command);
         if (command.command === "onScreenKeyboard") {
           console.info("You should setup a on-screen keyboard");
         }
@@ -206,9 +210,11 @@ class PixelStream extends HTMLVideoElement {
       case toPlayerType.FreezeFrame: {
         let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
         let jpeg = view.slice(1 + 4);
+        console.info("Got freezed frame:", jpeg);
         break;
       }
       case toPlayerType.UnfreezeFrame: {
+        console.info("Got 【unfreeze frame】");
         break;
       }
       case toPlayerType.LatencyTest: {
@@ -219,7 +225,7 @@ class PixelStream extends HTMLVideoElement {
       }
       case toPlayerType.QualityControlOwnership: {
         let ownership = view[1] !== 0;
-        console.info("Got Quality Control Ownership", ownership);
+        console.info("Got Quality Control Ownership:", ownership);
         break;
       }
       case toPlayerType.InitialSettings: {
@@ -245,14 +251,14 @@ class PixelStream extends HTMLVideoElement {
     this.muted = true;
     this.autoplay = true;
 
-    this.poster = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1'><text x='20' y='40' fill='red' font-size='30'>Loading</text></svg>`;
+    this.poster = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1'><text x='20' y='40' fill='white' font-size='30'>Loading...</text></svg>`;
 
     // this.onsuspend
     // this.onresize
     // this.requestPointerLock();
 
     this.style = `
-        background-color: #222;
+        background: linear-gradient(135deg, rgba(255,0,0,1) 0%, rgba(0,255,0,1) 33%, rgba(0,0,255,1) 67%, rgba(255,0,0,1) 100%);
         pointer-events: none;
         object-fit: fill; `;
   }
@@ -284,7 +290,7 @@ class PixelStream extends HTMLVideoElement {
   setupPeerConnection() {
     this.pc.ontrack = (e) => {
       // called twice for audio & video
-      console.log("received track:", e);
+      console.log("Got track:", e);
       this.srcObject = e.streams[0];
     };
     this.pc.onicecandidate = (e) => {
@@ -302,17 +308,14 @@ class PixelStream extends HTMLVideoElement {
 
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
-      // iceServers: [
-      //   {
+      // iceServers: [{
       //     urls: [
       //       "stun:stun.l.google.com:19302",
       //       "stun:stun1.l.google.com:19302",
       //       "stun:stun2.l.google.com:19302",
       //       "stun:stun3.l.google.com:19302",
       //       "stun:stun4.l.google.com:19302",
-      //     ],
-      //   },
-      // ],
+      //     ],},],
     });
 
     this.pc.addTransceiver("audio", { direction: "recvonly" });
