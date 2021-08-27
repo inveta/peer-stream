@@ -1,21 +1,15 @@
-document.body.onload = () => {
-  //  document.querySelector("[is=pixel-stream]");
+//  document.querySelector("[is=pixel-stream]");
 
-  ps.addEventListener("message", (e) => {});
+ps.addEventListener("message", (e) => {});
 
-  ps.addEventListener("open", (e) => {
-    clearInterval(ps.statTimer);
-    ps.statTimer = setInterval(async () => {
-      // 打印监控数据
-      const stats = await ps.pc.getStats(null);
-      if (stats) onAggregatedStats(stats, ps.VideoEncoderQP);
-    }, 1000);
-  });
+ps.addEventListener("open", (e) => {
+  clearInterval(ps.statTimer);
+  ps.statTimer = setInterval(aggregateStats, 1000);
+});
 
-  ps.addEventListener("close", (e) => {
-    clearInterval(ps.statTimer);
-  });
-};
+ps.addEventListener("close", (e) => {
+  clearInterval(ps.statTimer);
+});
 
 const statsWrapper = document.getElementById("stats");
 const logsWrapper = document.getElementById("logs");
@@ -29,68 +23,75 @@ console.info = (...text) => {
     .map((x) => JSON.stringify(x, undefined, "\t").replace(/"|,|{|}/g, ""))
     .join(" ");
   logsWrapper.appendChild(log);
-  setTimeout(() => {
-    logsWrapper.removeChild(log);
-  }, 3000);
+  setTimeout(() => log.remove(), 3000);
+};
+
+Number.prototype.format = function () {
+  const suffix = ["", "K", "M", "G"];
+  let quotient = this;
+  while (quotient > 9999) {
+    quotient /= 1024;
+    suffix.shift();
+  }
+  return ~~quotient + " " + suffix[0];
 };
 
 let lastTransport = {};
-function onAggregatedStats(stats, VideoEncoderQP) {
-  let f = new Intl.NumberFormat(navigator.language, {
-    // 小数位
-    maximumFractionDigits: 0,
-  });
+async function aggregateStats() {
+  const stats = await ps.pc.getStats(null);
 
   let statsText = "";
 
-  if (VideoEncoderQP > 35) {
+  if (ps.VideoEncoderQP > 35) {
     statsWrapper.style.color = "red";
-    statsText += `\n Bad network connection 🤪`;
-  } else if (VideoEncoderQP > 26) {
+    statsText += `\n Bad network connection 😭`;
+  } else if (ps.VideoEncoderQP > 26) {
     statsWrapper.style.color = "orange";
     statsText += `\n Spotty network connection 😂`;
   } else {
     statsWrapper.style.color = "lime";
   }
+  statsText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
 
   stats.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        statsText += `\n DataChannel —> ${f.format(stat.bytesSent)} B`;
-        statsText += `\n DataChannel <— ${f.format(stat.bytesReceived)} B`;
+        statsText += `\n DataChannel —> ${stat.bytesSent.format()}B`;
+        statsText += `\n DataChannel <— ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {
         if (stat.mediaType === "video")
           statsText += `
       Resolution: ${stat.frameWidth + " x " + stat.frameHeight}
-      Frames Decoded: ${f.format(stat.framesDecoded)}
-      Packets Lost: ${f.format(stat.packetsLost)}
+      Frames Decoded: ${stat.framesDecoded.format()}
+      Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond}
-      Frames dropped: ${f.format(stat.framesDropped)}
-      Video <— ${f.format(stat.bytesReceived / 1024)} KB`;
+      Frames dropped: ${stat.framesDropped.format()}
+      Video <— ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
-          statsText += `\n Audio <— ${f.format(stat.bytesReceived / 1024)} KB`;
+          statsText += `\n Audio <— ${stat.bytesReceived.format()}B`;
         break;
       }
       case "candidate-pair": {
         if (stat.state === "succeeded")
-          statsText += `\n Latency(RTT): ${f.format(
+          statsText += `\n Latency(RTT): ${
             stat.currentRoundTripTime * 1000
-          )} ms`;
+          } ms`;
         break;
       }
       case "remote-candidate": {
-        statsText += `\n ${stat.protocol + "://" + stat.ip + ":" + stat.port}`;
+        statsText +=
+          `\n` + stat.protocol + " :// " + stat.ip + " : " + stat.port;
         break;
       }
       case "transport": {
         const bitrate =
           ((stat.bytesReceived - lastTransport.bytesReceived) /
             (stat.timestamp - lastTransport.timestamp)) *
-          ((1000 * 8) / 1024);
+          (1000 * 8);
 
-        statsText += `\n bitrate: ${f.format(bitrate)} kbps `;
+        statsText += `\n bitrate: ${bitrate.format()}bps `;
 
         lastTransport = stat;
         break;
@@ -99,8 +100,6 @@ function onAggregatedStats(stats, VideoEncoderQP) {
       }
     }
   });
-
-  statsText += `\n Video Quantization Parameter: ${VideoEncoderQP}`;
 
   statsWrapper.innerHTML = statsText;
 }

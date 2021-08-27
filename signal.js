@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/8/25 @xosg
+ *  2021/8/27 @xosg
  */
 
 /* eslint-disable */
@@ -18,10 +18,11 @@ const args = process.argv.slice(2).reduce((prev, curr) => {
   return prev;
 }, {});
 Object.assign(
-  global || this,
+  global,
   {
     playerPort: 88,
     UE4port: 8888,
+    token: "insigma",
   },
   args
 );
@@ -118,8 +119,8 @@ UE4server.on("connection", (ws, req) => {
 
 // every player
 playerServer.on("connection", async (ws, req) => {
-  if (req.url.slice(1) !== "insigma") {
-    ws.send("Authentication Failed !!");
+  if (req.url.slice(1) !== token) {
+    ws.send("Invalid Token: " + req.url);
     //  req.socket.destroy();
     return;
   }

@@ -24,11 +24,11 @@ node signal.js playerPort=88 UE4port=8888
 
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
--AudioMixer
--RenderOffScreen
--PixelStreamingPort=8888
--PixelStreamingIP=localhost
--AllowPixelStreamingCommands
+-AudioMixer 
+-RenderOffScreen 
+-PixelStreamingPort=8888 
+-PixelStreamingIP=localhost 
+-AllowPixelStreamingCommands 
 ```
 
 ## Frontend
@@ -74,8 +74,8 @@ ps.style.pointerEvents='none'   // read only <video>
 
 ## Requirement
 
-- Google Chrome 88+
 - NodeJS 14+
+- Google Chrome 88+
 - Unreal Engine 4.27+
 
 ## License

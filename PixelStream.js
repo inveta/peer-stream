@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/8/25 @xosg
+ *  2021/8/27 @xosg
  */
 
 /* eslint-disable */
@@ -86,7 +86,7 @@ class PixelStream extends HTMLVideoElement {
 
     this.ws = undefined; // WebSocket
     this.pc = new RTCPeerConnection({});
-    this.dc = this.pc.createDataChannel("insigma", { ordered: true });
+    this.dc = this.pc.createDataChannel("insigma");
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -118,7 +118,7 @@ class PixelStream extends HTMLVideoElement {
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
-      console.warn(e);
+      console.log("WebSocket:", e);
     };
 
     this.ws.onopen = async (e) => {
@@ -167,7 +167,7 @@ class PixelStream extends HTMLVideoElement {
     }
 
     if (msg.type === "answer") {
-      console.log("Got answer", msg);
+      console.log("Got answer:", msg);
       let answerDesc = new RTCSessionDescription(msg);
       await this.pc.setRemoteDescription(answerDesc);
       for (let receiver of this.pc.getReceivers()) {
@@ -177,7 +177,7 @@ class PixelStream extends HTMLVideoElement {
       let candidate = new RTCIceCandidate(msg.candidate);
       // this.remoteCandidate = candidate;
       await this.pc.addIceCandidate(candidate);
-      console.log("Got candidate", msg.candidate);
+      console.log("Got candidate:", msg.candidate);
     } else {
       console.warn(this.ws.url, msg);
     }
@@ -189,7 +189,7 @@ class PixelStream extends HTMLVideoElement {
     switch (view[0]) {
       case toPlayerType.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
-        console.log("Got Video Encoder Average QP", this.VideoEncoderQP);
+        console.log("Got Video Encoder Average QP:", this.VideoEncoderQP);
         break;
       }
       case toPlayerType.Response: {
