@@ -14,8 +14,15 @@ Lightweight WebRTC frontend SDK (including signalling channel) for UnrealEngine'
 
 ```
 npm install ws
-node signal.js playerPort=88 UE4port=8888
+node signal.js {key}={value}
 ```
+
+| key    | default | usage                    |
+| ------ | ------- | ------------------------ |
+| player | 88      | browser port             |
+| unreal | 8888    | unreal engine port       |
+| token  | insigma | password appended to URL |
+| limit  | 4       | max number of clients    |
 
 ## UE4
 
@@ -24,11 +31,11 @@ node signal.js playerPort=88 UE4port=8888
 
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
--AudioMixer 
--RenderOffScreen 
--PixelStreamingPort=8888 
--PixelStreamingIP=localhost 
--AllowPixelStreamingCommands 
+-AudioMixer
+-RenderOffScreen
+-PixelStreamingPort=8888
+-PixelStreamingIP=localhost
+-AllowPixelStreamingCommands
 ```
 
 ## Frontend
@@ -36,13 +43,13 @@ node signal.js playerPort=88 UE4port=8888
 ```
 // JavaScript
 import "PixelStream.js";
-document.createElement("video", { is: "pixel-stream" }).setAttribute("signal", "wss://127.0.0.1");
+document.createElement("video", { is: "pixel-stream" }).setAttribute("signal", "ws://127.0.0.1");
 
 or:
 
-<!-- html -->
+<!-- HTML -->
 <script src="PixelStream.js"></script>
-<video is="pixel-stream" signal="wss://127.0.0.1"></video>
+<video is="pixel-stream" signal="ws://127.0.0.1"></video>
 ```
 
 ## APIs
@@ -64,9 +71,9 @@ video.registerPointerlockEvents()
 ## Console Debug
 
 ```
+ps.debug('PLAYER.clients.size')   // show players count
+ps.debug('PLAYER.clients.forEach(p=>p.id!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
 ps.debug('playerId')  // show my id
-ps.debug('Object.keys(players).length')   // show players count
-ps.debug('for(let id in players){if(id!=playerId)players[id].close(1011,"forever");}')  // kick other players
 (await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))    // show selected candidate
 ps.addEventListener('mouseenter',_=>ps.focus()||ps.requestPointerLock())    // pointer lock
 ps.style.pointerEvents='none'   // read only <video>

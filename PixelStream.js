@@ -84,7 +84,7 @@ class PixelStream extends HTMLVideoElement {
 
     window.ps = this;
 
-    this.ws = undefined; // WebSocket
+    this.ws = { send() {}, close() {} }; // WebSocket
     this.pc = new RTCPeerConnection({});
     this.dc = this.pc.createDataChannel("insigma");
 
@@ -106,19 +106,19 @@ class PixelStream extends HTMLVideoElement {
     );
   }
 
+  // setupWebsocket
   connectedCallback() {
     // This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
-    if (this.ws) this.ws.close(1000, "forever");
 
     const signal =
       this.getAttribute("signal") ||
       `ws://${location.hostname || "localhost"}:88/insigma`;
-
+    this.ws.close(1000, "Infinity");
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
-      console.log("WebSocket:", e);
+      console.log("signaller error:", e);
     };
 
     this.ws.onopen = async (e) => {
@@ -131,19 +131,19 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      console.info("WebSocket closed.", e.reason || "");
+      console.info("signaller closed:", e.reason || e.code);
 
-      // 3s后重连
-      if (e.reason === "forever") return;
-      setTimeout(() => {
-        this.connectedCallback();
-      }, 3000);
+      const timeout = +e.reason || 3000;
+      if (timeout === Infinity) return;
+
+      clearTimeout(this.reconnect);
+      this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
     };
   }
 
   disconnectedCallback() {
     // WebRTC的生命周期与<video>的生命周期绑定
-    this.ws.close(1000, "forever");
+    this.ws.close(1000, "Infinity");
     this.pc.close();
     console.info("peer connection closing");
     // this.dc.close();
@@ -152,7 +152,10 @@ class PixelStream extends HTMLVideoElement {
   adoptedCallback() {}
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "signal") this.connectedCallback();
+    // 一开始会触发：oldValue从null变成newValue
+    if (name === "signal") {
+      this.ws.close(1000, "200");
+    }
   }
   static get observedAttributes() {
     return ["signal"];
@@ -162,7 +165,7 @@ class PixelStream extends HTMLVideoElement {
     try {
       msg = JSON.parse(msg);
     } catch {
-      console.error("signalling server:", msg);
+      console.warn("signaller:", msg);
       return;
     }
 
@@ -184,9 +187,9 @@ class PixelStream extends HTMLVideoElement {
   }
 
   onDataChannelMessage(data) {
-    let view = new Uint8Array(data);
+    data = new Uint8Array(data);
     const utf16 = new TextDecoder("utf-16");
-    switch (view[0]) {
+    switch (data[0]) {
       case toPlayerType.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
         console.log("Got Video Encoder Average QP:", this.VideoEncoderQP);
@@ -208,8 +211,8 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case toPlayerType.FreezeFrame: {
-        let size = new DataView(view.slice(1, 5).buffer).getInt32(0, true);
-        let jpeg = view.slice(1 + 4);
+        let size = new DataView(data.slice(1, 5).buffer).getInt32(0, true);
+        let jpeg = data.slice(1 + 4);
         console.info("Got freezed frame:", jpeg);
         break;
       }
@@ -224,7 +227,7 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case toPlayerType.QualityControlOwnership: {
-        let ownership = view[1] !== 0;
+        let ownership = data[1] !== 0;
         console.info("Got Quality Control Ownership:", ownership);
         break;
       }
@@ -234,7 +237,7 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       default: {
-        console.error("Got invalid data type:", view[0]);
+        console.error("Got invalid data type:", data[0]);
       }
     }
   }
@@ -289,12 +292,18 @@ class PixelStream extends HTMLVideoElement {
 
   setupPeerConnection() {
     this.pc.ontrack = (e) => {
-      // called twice for audio & video
-      console.log("Got track:", e);
-      this.srcObject = e.streams[0];
+      console.log(`Got ${e.track.kind} track:`, e);
+      if (e.track.kind === "video") {
+        this.srcObject = e.streams[0];
+      } else if (e.track.kind === "audio") {
+        const audio = document.createElement("audio");
+        audio.autoplay = true;
+        audio.srcObject = e.streams[0];
+        audio.play();
+      }
     };
     this.pc.onicecandidate = (e) => {
-      if (e.candidate && e.candidate.candidate) {
+      if (e.candidate?.candidate) {
         console.log("sending candidate:", e.candidate);
         this.ws.send(
           JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
@@ -305,7 +314,6 @@ class PixelStream extends HTMLVideoElement {
 
   async setupOffer() {
     this.pc.close();
-
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
       // iceServers: [{
@@ -338,8 +346,6 @@ class PixelStream extends HTMLVideoElement {
     );
 
     this.pc.setLocalDescription(offer);
-
-    // if (this.ws.readyState !== WebSocket.OPEN) return;
 
     this.ws.send(JSON.stringify(offer));
     console.log("sending offer:", offer);
@@ -617,18 +623,17 @@ class PixelStream extends HTMLVideoElement {
     this.dc.send(data.buffer);
   }
 
-  emitDescriptor(descriptor, messageType = toUE4type.UIInteraction) {
-    descriptor = JSON.stringify(descriptor);
+  emitDescriptor(msg, messageType = toUE4type.UIInteraction) {
+    msg = JSON.stringify(msg);
 
-    // Add the UTF-16 JSON string to the array byte buffer, going two bytes at
-    // a time.
-    let data = new DataView(new ArrayBuffer(1 + 2 + 2 * descriptor.length));
+    // Add the UTF-16 JSON string to the array byte buffer, going two bytes at a time.
+    let data = new DataView(new ArrayBuffer(1 + 2 + 2 * msg.length));
     let byteIdx = 0;
     data.setUint8(byteIdx, messageType);
     byteIdx++;
-    data.setUint16(byteIdx, descriptor.length, true);
+    data.setUint16(byteIdx, msg.length, true);
     byteIdx += 2;
-    for (let char of descriptor) {
+    for (let char of msg) {
       // charCodeAt() is UTF-16, codePointAt() is Unicode.
       data.setUint16(byteIdx, char.charCodeAt(0), true);
       byteIdx += 2;

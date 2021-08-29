@@ -8,41 +8,57 @@
 // command line format: key-value pairs connected by "=", separated by " "
 // process.argc[0] == 'path/to/node.exe'
 // process.argc[1] === __filename
-const args = process.argv.slice(2).reduce((prev, curr) => {
-  let [key, ...value] = curr.split("=");
+const args = process.argv.slice(2).reduce((pairs, pair) => {
+  let [key, ...value] = pair.split("=");
   value = value.join("") || "true";
   try {
     value = JSON.parse(value);
   } catch {}
-  prev[key] = value;
-  return prev;
+  pairs[key] = value;
+  return pairs;
 }, {});
 Object.assign(
   global,
   {
-    playerPort: 88,
-    UE4port: 8888,
+    player: 88,
+    unreal: 8888,
     token: "insigma",
+    limit: 4,
+    nextPlayerId: 100, //uint32?
+    UE4: {}, //  UE4's Socket
   },
   args
 );
 
 const WebSocket = require("ws");
 
-let UE4server = new WebSocket.Server({ port: UE4port, backlog: 1 });
-console.log("WebSocket for UE4:", UE4port);
+const UNREAL = new WebSocket.Server({ port: unreal, backlog: 1 });
 
-let UE4; //  UE4's Socket
+const PLAYER = new WebSocket.Server({
+  noServer: true,
+  clientTracking: true,
+});
+const http = require("http");
+http
+  .createServer()
+  .on("upgrade", (request, socket, head) => {
+    try {
+      if (request.url.slice(1) !== token) throw "";
+      if (PLAYER.clients.size >= limit) throw "";
+    } catch (err) {
+      socket.destroy();
+      return;
+    }
 
-let playerServer = new WebSocket.Server({ port: playerPort, backlog: 1 });
-console.log("WebSocket for players:", playerPort);
+    PLAYER.handleUpgrade(request, socket, head, function done(ws) {
+      PLAYER.emit("connection", ws, request);
+    });
+  })
+  .listen(player);
 
-let players = {}; // playerId <-> player's Socket
-
-// 必须是uint32
-let nextPlayerId = 100;
-
-UE4server.on("connection", (ws, req) => {
+UNREAL.on("connection", (ws, req) => {
+  // 1个信令服务器只能连1个UE
+  if (UE4.readyState === WebSocket.OPEN) return;
   ws.req = req;
   UE4 = ws;
 
@@ -68,18 +84,18 @@ UE4server.on("connection", (ws, req) => {
     }
 
     // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
-    let playerId = String(msg.playerId);
+    const playerId = String(msg.playerId);
     delete msg.playerId; // no need to send it to the player
-    let player = players[playerId];
-    if (!player) {
+    const p = [...PLAYER.clients].find((x) => x.id === playerId);
+    if (!p) {
       console.error("cannot find player", playerId);
       return;
     }
 
     if (["answer", "iceCandidate"].includes(msg.type)) {
-      player.send(JSON.stringify(msg));
+      p.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
-      player.close(1011, msg.reason);
+      p.close(1011, msg.reason);
     } else {
       console.error("invalid UE4 message type:", msg.type);
     }
@@ -87,9 +103,8 @@ UE4server.on("connection", (ws, req) => {
 
   ws.on("close", (code, reason) => {
     console.log("UE4 closed", reason);
-    UE4 = null;
-    for (const id in players) {
-      players[id].send("UE4 stopped");
+    for (const client of PLAYER.clients) {
+      client.send("UE4 stopped");
     }
   });
 
@@ -108,53 +123,44 @@ UE4server.on("connection", (ws, req) => {
     })
   );
 
-  for (const id in players) {
+  for (const client of PLAYER.clients) {
     // restart
-    players[id].close(1011, "UE4 started");
+    client.close(1011, "1");
   }
-  players = {};
 });
 
 //  require("crypto").createHash("sha256").update(req.url.slice(1)).digest("hex");
 
 // every player
-playerServer.on("connection", async (ws, req) => {
-  if (req.url.slice(1) !== token) {
-    ws.send("Invalid Token: " + req.url);
-    //  req.socket.destroy();
-    return;
-  }
-
-  let playerId = String(++nextPlayerId);
+PLAYER.on("connection", async (ws, req) => {
+  const playerId = String(++nextPlayerId);
 
   console.log(
     "player",
-    playerId,
+    +playerId,
     "connected:",
     req.socket.remoteAddress,
     req.socket.remotePort
   );
 
   ws.req = req;
-  players[playerId] = ws;
+  ws.id = playerId;
 
   ws.on("message", (msg) => {
-    if (UE4?.readyState !== WebSocket.OPEN) {
+    if (UE4.readyState !== WebSocket.OPEN) {
       ws.send("UE4 not ready");
       return;
     }
 
-    // offer or iceCandidate
-
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error("player", playerId, "cannot JSON.parse message", msg);
+      console.error("player", +playerId, "cannot JSON.parse message", msg);
       ws.send("JSON.parse Error");
       return;
     }
 
-    console.log("player", playerId, msg.type);
+    console.log("player", +playerId, msg.type);
 
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
@@ -168,25 +174,23 @@ playerServer.on("connection", async (ws, req) => {
       }
       ws.send("【debug】" + debug);
     } else {
-      console.error("player", playerId, "invalid message type:", msg.type);
+      console.error("player", +playerId, "invalid message type:", msg.type);
       ws.send("invalid message type: " + msg.type);
       return;
     }
   });
 
-  function onPlayerDisconnected() {
-    delete players[playerId];
-    UE4?.send(JSON.stringify({ type: "playerDisconnected", playerId }));
-  }
-
   ws.on("close", (code, reason) => {
-    console.log("player", playerId, "closed", reason);
-    onPlayerDisconnected();
+    console.log("player", +playerId, "closed", reason);
+    if (UE4.readyState === WebSocket.OPEN)
+      UE4.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   });
 
   ws.on("error", (error) => {
-    console.error("player", playerId, "connection error:", error);
+    console.error("player", +playerId, "connection error:", error);
     ws.close(1011, error.message);
-    onPlayerDisconnected();
   });
 });
+
+console.log("Listening for UE4:", unreal);
+console.log("Listening for players:", player);

@@ -44,10 +44,10 @@ async function aggregateStats() {
 
   if (ps.VideoEncoderQP > 35) {
     statsWrapper.style.color = "red";
-    statsText += `\n Bad network connection 😭`;
+    statsText += `\n Bad network 😭`;
   } else if (ps.VideoEncoderQP > 26) {
     statsWrapper.style.color = "orange";
-    statsText += `\n Spotty network connection 😂`;
+    statsText += `\n Spotty network 😂`;
   } else {
     statsWrapper.style.color = "lime";
   }
@@ -67,7 +67,7 @@ async function aggregateStats() {
       Frames Decoded: ${stat.framesDecoded.format()}
       Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond}
-      Frames dropped: ${stat.framesDropped.format()}
+      Frames Dropped: ${stat.framesDropped?.format()}
       Video <— ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
           statsText += `\n Audio <— ${stat.bytesReceived.format()}B`;
@@ -82,7 +82,7 @@ async function aggregateStats() {
       }
       case "remote-candidate": {
         statsText +=
-          `\n` + stat.protocol + " :// " + stat.ip + " : " + stat.port;
+          `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
         break;
       }
       case "transport": {
