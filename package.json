@@ -3,8 +3,8 @@
   "description": "lightweight PixelStreaming SDK for UnrealEngine",
   "scripts": {},
   "repository": "https://github.com/xosg/PixelStreamer",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "dependencies": {
-    "ws": "^8.2.0"
+    "ws": "^8.2.1"
   }
 }

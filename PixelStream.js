@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/8/27 @xosg
+ *  2021/8/30
  */
 
 /* eslint-disable */
@@ -170,17 +170,17 @@ class PixelStream extends HTMLVideoElement {
     }
 
     if (msg.type === "answer") {
-      console.log("Got answer:", msg);
-      let answerDesc = new RTCSessionDescription(msg);
-      await this.pc.setRemoteDescription(answerDesc);
-      for (let receiver of this.pc.getReceivers()) {
+      const answer = new RTCSessionDescription(msg);
+      await this.pc.setRemoteDescription(answer);
+      console.log("Got answer:", answer);
+      for (const receiver of this.pc.getReceivers()) {
         receiver.playoutDelayHint = 0;
       }
     } else if (msg.type === "iceCandidate") {
-      let candidate = new RTCIceCandidate(msg.candidate);
+      const candidate = new RTCIceCandidate(msg.candidate);
       // this.remoteCandidate = candidate;
       await this.pc.addIceCandidate(candidate);
-      console.log("Got candidate:", msg.candidate);
+      console.log("Got candidate:", candidate);
     } else {
       console.warn(this.ws.url, msg);
     }
@@ -197,13 +197,13 @@ class PixelStream extends HTMLVideoElement {
       }
       case toPlayerType.Response: {
         // user custom message
-        let detail = utf16.decode(data.slice(1));
+        const detail = utf16.decode(data.slice(1));
         this.dispatchEvent(new CustomEvent("message", { detail }));
         console.info("Got APP response:", detail);
         break;
       }
       case toPlayerType.Command: {
-        let command = JSON.parse(utf16.decode(data.slice(1)));
+        const command = JSON.parse(utf16.decode(data.slice(1)));
         console.log("Got command:", command);
         if (command.command === "onScreenKeyboard") {
           console.info("You should setup a on-screen keyboard");
@@ -211,8 +211,8 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case toPlayerType.FreezeFrame: {
-        let size = new DataView(data.slice(1, 5).buffer).getInt32(0, true);
-        let jpeg = data.slice(1 + 4);
+        const size = new DataView(data.slice(1, 5).buffer).getInt32(0, true);
+        const jpeg = data.slice(1 + 4);
         console.info("Got freezed frame:", jpeg);
         break;
       }
@@ -221,18 +221,18 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case toPlayerType.LatencyTest: {
-        let latencyTimings = JSON.parse(utf16.decode(data.slice(1)));
+        const latencyTimings = JSON.parse(utf16.decode(data.slice(1)));
         console.info("Got latency timings from UE:", latencyTimings);
 
         break;
       }
       case toPlayerType.QualityControlOwnership: {
-        let ownership = data[1] !== 0;
+        const ownership = data[1] !== 0;
         console.info("Got Quality Control Ownership:", ownership);
         break;
       }
       case toPlayerType.InitialSettings: {
-        let setting = JSON.parse(utf16.decode(data.slice(1)));
+        const setting = JSON.parse(utf16.decode(data.slice(1)));
         console.info("Got initial setting:", setting);
         break;
       }
@@ -274,8 +274,8 @@ class PixelStream extends HTMLVideoElement {
     this.dc.onopen = (e) => {
       console.log("data channel connected:", label);
       this.style.pointerEvents = "auto";
-      this.dc.send(new Uint8Array([toUE4type.RequestInitialSettings]).buffer);
-      this.dc.send(new Uint8Array([toUE4type.RequestQualityControl]).buffer);
+      this.dc.send(new Uint8Array([toUE4type.RequestInitialSettings]));
+      this.dc.send(new Uint8Array([toUE4type.RequestQualityControl]));
       this.dispatchEvent(new CustomEvent("open"));
     };
 
@@ -358,7 +358,7 @@ class PixelStream extends HTMLVideoElement {
           toUE4type.KeyDown,
           SpecialKeyCodes[e.code] || e.keyCode,
           e.repeat,
-        ]).buffer
+        ])
       );
       // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
       e.preventDefault();
@@ -368,16 +368,15 @@ class PixelStream extends HTMLVideoElement {
     this.onkeyup = (e) => {
       this.dc.send(
         new Uint8Array([toUE4type.KeyUp, SpecialKeyCodes[e.code] || e.keyCode])
-          .buffer
       );
       e.preventDefault();
     };
 
     this.onkeypress = (e) => {
-      let data = new DataView(new ArrayBuffer(3));
+      const data = new DataView(new ArrayBuffer(3));
       data.setUint8(0, toUE4type.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
-      this.dc.send(data.buffer);
+      this.dc.send(data);
       e.preventDefault();
     };
   }
@@ -490,10 +489,7 @@ class PixelStream extends HTMLVideoElement {
       // e.preventDefault();
     };
 
-    // When the context menu is shown then it is safest to release the button
-    // which was pressed when the event happened. This will guarantee we will
-    // get at least one mouse up corresponding to a mouse down event. Otherwise
-    // the mouse can get stuck.
+    // When the context menu is shown then it is safest to release the button which was pressed when the event happened. This will guarantee we will get at least one mouse up corresponding to a mouse down event. Otherwise the mouse can get stuck.
     // https://github.com/facebook/react/issues/5531
     this.oncontextmenu = (e) => {
       this.emitMouseUp(e.button, e.offsetX, e.offsetY);
@@ -546,63 +542,63 @@ class PixelStream extends HTMLVideoElement {
 
   registerMouseEnterAndLeaveEvents() {
     this.onmouseenter = (e) => {
-      let Data = new DataView(new ArrayBuffer(1));
-      Data.setUint8(0, toUE4type.MouseEnter);
-      this.dc.send(Data.buffer);
+      const data = new DataView(new ArrayBuffer(1));
+      data.setUint8(0, toUE4type.MouseEnter);
+      this.dc.send(data);
     };
 
     this.onmouseleave = (e) => {
-      let Data = new DataView(new ArrayBuffer(1));
-      Data.setUint8(0, toUE4type.MouseLeave);
-      if (this.dc.readyState === "open") this.dc.send(Data.buffer);
+      const data = new DataView(new ArrayBuffer(1));
+      data.setUint8(0, toUE4type.MouseLeave);
+      if (this.dc.readyState === "open") this.dc.send(data);
     };
   }
 
   emitMouseMove(x, y, deltaX, deltaY) {
-    let coord = this.normalize(x, y);
+    const coord = this.normalize(x, y);
     deltaX = (deltaX * 65536) / this.clientWidth;
     deltaY = (deltaY * 65536) / this.clientHeight;
-    let Data = new DataView(new ArrayBuffer(9));
-    Data.setUint8(0, toUE4type.MouseMove);
-    Data.setUint16(1, coord.x, true);
-    Data.setUint16(3, coord.y, true);
-    Data.setInt16(5, deltaX, true);
-    Data.setInt16(7, deltaY, true);
-    this.dc.send(Data.buffer);
+    const data = new DataView(new ArrayBuffer(9));
+    data.setUint8(0, toUE4type.MouseMove);
+    data.setUint16(1, coord.x, true);
+    data.setUint16(3, coord.y, true);
+    data.setInt16(5, deltaX, true);
+    data.setInt16(7, deltaY, true);
+    this.dc.send(data);
   }
 
   emitMouseDown(button, x, y) {
-    let coord = this.normalize(x, y);
-    let Data = new DataView(new ArrayBuffer(6));
-    Data.setUint8(0, toUE4type.MouseDown);
-    Data.setUint8(1, button);
-    Data.setUint16(2, coord.x, true);
-    Data.setUint16(4, coord.y, true);
-    this.dc.send(Data.buffer);
+    const coord = this.normalize(x, y);
+    const data = new DataView(new ArrayBuffer(6));
+    data.setUint8(0, toUE4type.MouseDown);
+    data.setUint8(1, button);
+    data.setUint16(2, coord.x, true);
+    data.setUint16(4, coord.y, true);
+    this.dc.send(data);
   }
 
   emitMouseUp(button, x, y) {
-    let coord = this.normalize(x, y);
-    let Data = new DataView(new ArrayBuffer(6));
-    Data.setUint8(0, toUE4type.MouseUp);
-    Data.setUint8(1, button);
-    Data.setUint16(2, coord.x, true);
-    Data.setUint16(4, coord.y, true);
-    this.dc.send(Data.buffer);
+    const coord = this.normalize(x, y);
+    const data = new DataView(new ArrayBuffer(6));
+    data.setUint8(0, toUE4type.MouseUp);
+    data.setUint8(1, button);
+    data.setUint16(2, coord.x, true);
+    data.setUint16(4, coord.y, true);
+    this.dc.send(data);
   }
 
   emitMouseWheel(delta, x, y) {
-    let coord = this.normalize(x, y);
-    let Data = new DataView(new ArrayBuffer(7));
-    Data.setUint8(0, toUE4type.MouseWheel);
-    Data.setInt16(1, delta, true);
-    Data.setUint16(3, coord.x, true);
-    Data.setUint16(5, coord.y, true);
-    this.dc.send(Data.buffer);
+    const coord = this.normalize(x, y);
+    const data = new DataView(new ArrayBuffer(7));
+    data.setUint8(0, toUE4type.MouseWheel);
+    data.setInt16(1, delta, true);
+    data.setUint16(3, coord.x, true);
+    data.setUint16(5, coord.y, true);
+    this.dc.send(data);
   }
 
   emitTouchData(type, touches, fingerIds) {
-    let data = new DataView(new ArrayBuffer(2 + 6 * touches.length));
+    const data = new DataView(new ArrayBuffer(2 + 6 * touches.length));
     data.setUint8(0, type);
     data.setUint8(1, touches.length);
     let byte = 2;
@@ -620,30 +616,31 @@ class PixelStream extends HTMLVideoElement {
       data.setUint8(byte, 255 * touch.force, true); // force is between 0.0 and 1.0 so quantize into byte.
       byte += 1;
     }
-    this.dc.send(data.buffer);
+    this.dc.send(data);
   }
 
+  // emit string
   emitDescriptor(msg, messageType = toUE4type.UIInteraction) {
     msg = JSON.stringify(msg);
 
     // Add the UTF-16 JSON string to the array byte buffer, going two bytes at a time.
-    let data = new DataView(new ArrayBuffer(1 + 2 + 2 * msg.length));
+    const data = new DataView(new ArrayBuffer(1 + 2 + 2 * msg.length));
     let byteIdx = 0;
     data.setUint8(byteIdx, messageType);
     byteIdx++;
     data.setUint16(byteIdx, msg.length, true);
     byteIdx += 2;
-    for (let char of msg) {
+    for (const char of msg) {
       // charCodeAt() is UTF-16, codePointAt() is Unicode.
       data.setUint16(byteIdx, char.charCodeAt(0), true);
       byteIdx += 2;
     }
-    this.dc.send(data.buffer);
+    this.dc.send(data);
   }
 
   normalize(x, y) {
-    let normalizedX = x / this.clientWidth;
-    let normalizedY = y / this.clientHeight;
+    const normalizedX = x / this.clientWidth;
+    const normalizedY = y / this.clientHeight;
     if (
       normalizedX < 0.0 ||
       normalizedX > 1.0 ||

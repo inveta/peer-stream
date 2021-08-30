@@ -22,7 +22,7 @@ node signal.js {key}={value}
 | player | 88      | browser port             |
 | unreal | 8888    | unreal engine port       |
 | token  | insigma | password appended to URL |
-| limit  | 4       | max number of clients    |
+| limit  | 4       | max number of players    |
 
 ## UE4
 
@@ -73,8 +73,9 @@ video.registerPointerlockEvents()
 ```
 ps.debug('PLAYER.clients.size')   // show players count
 ps.debug('PLAYER.clients.forEach(p=>p.id!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
+ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // every player's IP
 ps.debug('playerId')  // show my id
-(await ps.pc.getStats(null)).forEach(x=>x.type==='remote-candidate'&&console.log(x))    // show selected candidate
+ps.pc.getReceivers().find(x=>x.track.kind==='video').transport.iceTransport.getSelectedCandidatePair().remote    // show selected candidate
 ps.addEventListener('mouseenter',_=>ps.focus()||ps.requestPointerLock())    // pointer lock
 ps.style.pointerEvents='none'   // read only <video>
 ```
@@ -87,4 +88,4 @@ ps.style.pointerEvents='none'   // read only <video>
 
 ## License
 
-[Apache-2.0](./LICENSE)
+[MIT](./LICENSE)

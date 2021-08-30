@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/8/27 @xosg
+ *  2021/8/30
  */
 
 /* eslint-disable */
@@ -79,7 +79,7 @@ UNREAL.on("connection", (ws, req) => {
     console.log("UE4:", msg.type, msg.playerId || "");
 
     if (msg.type === "ping") {
-      UE4.send(JSON.stringify({ type: "pong", time: msg.time }));
+      ws.send(JSON.stringify({ type: "pong", time: msg.time }));
       return;
     }
 
@@ -114,7 +114,7 @@ UNREAL.on("connection", (ws, req) => {
   });
 
   // sent to UE4 as initialization signal
-  UE4.send(
+  ws.send(
     JSON.stringify({
       type: "config",
       peerConnectionOptions: {
@@ -124,7 +124,7 @@ UNREAL.on("connection", (ws, req) => {
   );
 
   for (const client of PLAYER.clients) {
-    // restart
+    // reconnect immediately
     client.close(1011, "1");
   }
 });

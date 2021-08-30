@@ -16,7 +16,7 @@ const logsWrapper = document.getElementById("logs");
 
 console.info = (...text) => {
   console.log(...text);
-  // show log top left, disappear after timeout
+  // show log, disappear after timeout
 
   const log = document.createElement("pre");
   log.innerHTML = text
@@ -56,8 +56,8 @@ async function aggregateStats() {
   stats.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        statsText += `\n DataChannel —> ${stat.bytesSent.format()}B`;
-        statsText += `\n DataChannel <— ${stat.bytesReceived.format()}B`;
+        statsText += `\n DataChannel << ${stat.bytesSent.format()}B`;
+        statsText += `\n DataChannel >> ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {
@@ -68,16 +68,14 @@ async function aggregateStats() {
       Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond}
       Frames Dropped: ${stat.framesDropped?.format()}
-      Video <— ${stat.bytesReceived.format()}B`;
+      Video >> ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
-          statsText += `\n Audio <— ${stat.bytesReceived.format()}B`;
+          statsText += `\n Audio >> ${stat.bytesReceived.format()}B`;
         break;
       }
       case "candidate-pair": {
         if (stat.state === "succeeded")
-          statsText += `\n Latency(RTT): ${
-            stat.currentRoundTripTime * 1000
-          } ms`;
+          statsText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
         break;
       }
       case "remote-candidate": {
