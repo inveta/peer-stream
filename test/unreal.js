@@ -93,28 +93,29 @@ function setupSignal() {
 }
 
 function setupCanvas() {
-  // https://codepen.io/tmrDevelops/details/XXWyNd
+  // https://codepen.io/tmrDevelops
   const $ = canvas.getContext("2d");
+  const { width, height } = canvas;
   let t = 0;
 
-  $.fillStyle = "white";
-  $.strokeStyle = "black";
+  $.fillStyle = "black";
+  $.strokeStyle = "white";
   $.lineWidth = 0.3;
 
   (function frame() {
-    $.fillRect(0, 0, canvas.width, canvas.height);
+    $.fillRect(0, 0, width, height);
     let x = 0;
     $.beginPath();
-    for (let j = 0; j < 350; j++) {
-      x += 0.55 * Math.sin(15);
-      const y = x * Math.sin(3.0 * t + x / 60) * 2;
-      const b = (j * 2 * Math.PI) / 2.99;
-      const _x = x * Math.cos(b) - y * Math.sin(b);
-      const _y = x * Math.sin(b) + y * Math.cos(b);
-      $.lineTo(canvas.width / 2 - _x, canvas.height / 2 - _y);
+    // 大小
+    for (let j = 0; j < Math.min(width, height); j++) {
+      x -= 0.4 * Math.sin(7);
+      const y = x * Math.sin(t + x / 20);
+      const b = [x, -y, -x, y];
+      $.lineTo(width / 2 - b[j % 4], height / 2 + b[(j + 1) % 4]);
     }
     $.stroke();
 
+    // 速度
     t += 1 / 60;
     requestAnimationFrame(frame);
   })();
