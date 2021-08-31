@@ -237,7 +237,7 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       default: {
-        console.error("Got invalid data type:", data[0]);
+        console.error("Got invalid data:", data);
       }
     }
   }
