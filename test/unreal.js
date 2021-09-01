@@ -34,13 +34,13 @@ async function onSignalMessage(msg) {
   }
 
   const playerId = String(msg.playerId);
-  const pc = players[playerId];
+  let pc = players[playerId];
   delete msg[playerId];
 
   if (msg.type === "offer") {
-    players[playerId]?.close();
+    pc?.close();
 
-    const pc = (players[playerId] = new RTCPeerConnection());
+    pc = players[playerId] = new RTCPeerConnection();
 
     pc.onicecandidate = (e) => {
       if (e.candidate?.candidate) {
@@ -83,41 +83,38 @@ async function onSignalMessage(msg) {
 function setupSignal() {
   window.ws = new WebSocket("ws://localhost:8888");
   ws.onclose = (e) => {
-    setTimeout(setupSignal, 500);
+    setTimeout(setupSignal, 1000);
+    h1.textContent = "Unreal Engine Simulator";
   };
   ws.onmessage = onSignalMessage;
   ws.onopen = (e) => {
     console.info("connected to", ws.url);
+    h1.textContent = ws.url;
   };
   ws.onerror = (e) => {};
 }
 
+// https://codepen.io/tmrDevelops
 function setupCanvas() {
-  // https://codepen.io/tmrDevelops
   const $ = canvas.getContext("2d");
   const { width, height } = canvas;
-  let t = 0;
+  const w = width / 2;
+  const h = height / 2;
 
-  $.fillStyle = "black";
   $.strokeStyle = "white";
-  $.lineWidth = 0.3;
+  $.lineWidth = 1;
 
-  (function frame() {
-    $.fillRect(0, 0, width, height);
-    let x = 0;
+  (function frame(time) {
+    $.clearRect(0, 0, width, height);
     $.beginPath();
-    // 大小
-    for (let j = 0; j < Math.min(width, height); j++) {
-      x -= 0.4 * Math.sin(7);
-      const y = x * Math.sin(t + x / 20);
-      const b = [x, -y, -x, y];
-      $.lineTo(width / 2 - b[j % 4], height / 2 + b[(j + 1) % 4]);
+    for (let x = 0; x < Math.min(w, h); x++) {
+      const y = x * Math.sin(time / 512 - x / 40);
+      const direction = [-x, y, x, -y];
+      $.lineTo(w - direction[x % 4], h + direction[(x + 1) % 4]);
     }
     $.stroke();
 
-    // 速度
-    t += 1 / 60;
-    requestAnimationFrame(frame);
+    window.animationFrame = requestAnimationFrame(frame);
   })();
 
   return canvas.captureStream();
