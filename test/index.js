@@ -89,7 +89,7 @@ async function aggregateStats() {
             (stat.timestamp - lastTransport.timestamp)) *
           (1000 * 8);
 
-        statsText += `\n bitrate: ${bitrate.format()}bps `;
+        statsText += `\n Bitrate: ${bitrate.format()}bps `;
 
         lastTransport = stat;
         break;

@@ -94,25 +94,25 @@ function setupSignal() {
   ws.onerror = (e) => {};
 }
 
-// https://codepen.io/tmrDevelops
 function setupCanvas() {
   const $ = canvas.getContext("2d");
-  const { width, height } = canvas;
-  const w = width / 2;
-  const h = height / 2;
+  const l = Math.min(canvas.width, canvas.height) / 2;
 
-  $.strokeStyle = "white";
+  $.strokeStyle = `hsl(${360 * Math.random()}deg 100% 50%)`;
   $.lineWidth = 1;
 
-  (function frame(time) {
-    $.clearRect(0, 0, width, height);
-    $.beginPath();
-    for (let x = 0; x < Math.min(w, h); x++) {
-      const y = x * Math.sin(time / 512 - x / 40);
-      const direction = [-x, y, x, -y];
-      $.lineTo(w - direction[x % 4], h + direction[(x + 1) % 4]);
+  $.beginPath();
+  $.arc(l, l, l, 0, Math.PI * 2);
+  $.clip();
+
+  (function frame(time = 0) {
+    $.clearRect(-l, -l, l * 2, l * 2);
+
+    for (let x = 1; x <= l; x += 8) {
+      const theta = Math.sin(x / l - time / 512) * 60;
+      $.strokeRect(-x, -x, x * 2, x * 2);
+      $.setTransform(new DOMMatrix().translate(l, l).rotate(0, 0, theta));
     }
-    $.stroke();
 
     window.animationFrame = requestAnimationFrame(frame);
   })();

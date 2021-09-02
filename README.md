@@ -31,11 +31,11 @@ node signal.js {key}={value}
 
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
 
--AudioMixer
--RenderOffScreen
--PixelStreamingPort=8888
--PixelStreamingIP=localhost
--AllowPixelStreamingCommands
+ -AudioMixer
+ -RenderOffScreen
+ -PixelStreamingPort=8888
+ -PixelStreamingIP=localhost
+ -AllowPixelStreamingCommands
 ```
 
 ## Frontend
