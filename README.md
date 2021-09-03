@@ -28,14 +28,19 @@ node signal.js {key}={value}
 
 ```
 // Plugins > Built-In > Graphics > Pixel Streaming > Enabled
-
 // Editor Preferences > Level Editor > Play > Additional Launch Parameters
+// start packaged.exe -{key}={value}
 
+ -ForceRes
+ -ResX=1920
+ -ResY=1080
  -AudioMixer
  -RenderOffScreen
- -PixelStreamingPort=8888
- -PixelStreamingIP=localhost
+ -graphicsadapter=1
+ -PixelStreamingHudStats
  -AllowPixelStreamingCommands
+ -PixelStreamingEncoderRateControl=VBR
+ -PixelStreamingURL="ws://localhost:8888"
 ```
 
 ## Frontend
@@ -43,13 +48,15 @@ node signal.js {key}={value}
 ```
 // JavaScript
 import "PixelStream.js";
-document.createElement("video", { is: "pixel-stream" }).setAttribute("signal", "ws://127.0.0.1");
+const ps = document.createElement("video", { is: "pixel-stream" });
+ps.setAttribute("signal", "ws://127.0.0.1:88");
+document.body.appendChild(ps);
 
 or:
 
 <!-- HTML -->
 <script src="PixelStream.js"></script>
-<video is="pixel-stream" signal="ws://127.0.0.1"></video>
+<video is="pixel-stream" signal="ws://127.0.0.1:88"></video>
 ```
 
 ## APIs

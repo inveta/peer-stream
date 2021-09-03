@@ -2,12 +2,12 @@
 
 ps.addEventListener("message", (e) => {});
 
-ps.addEventListener("open", (e) => {
+ps.addEventListener("playing", (e) => {
   clearInterval(ps.statTimer);
   ps.statTimer = setInterval(aggregateStats, 1000);
 });
 
-ps.addEventListener("close", (e) => {
+ps.addEventListener("suspend", (e) => {
   clearInterval(ps.statTimer);
 });
 
@@ -27,7 +27,7 @@ console.info = (...text) => {
 };
 
 Number.prototype.format = function () {
-  const suffix = ["", "K", "M", "G"];
+  const suffix = ["", "K", "M", "G", "T"];
   let quotient = this;
   while (quotient > 9999) {
     quotient /= 1024;
@@ -56,8 +56,8 @@ async function aggregateStats() {
   stats.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        statsText += `\n DataChannel << ${stat.bytesSent.format()}B`;
-        statsText += `\n DataChannel >> ${stat.bytesReceived.format()}B`;
+        statsText += `\n Data Channel << ${stat.bytesSent.format()}B`;
+        statsText += `\n Data Channel >> ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {

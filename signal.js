@@ -32,7 +32,7 @@ Object.assign(
 
 const WebSocket = require("ws");
 
-const UNREAL = new WebSocket.Server({ port: unreal, backlog: 1 });
+const UNREAL = new WebSocket.Server({ noServer: true });
 
 const PLAYER = new WebSocket.Server({
   noServer: true,
@@ -50,15 +50,30 @@ http
       return;
     }
 
-    PLAYER.handleUpgrade(request, socket, head, function done(ws) {
-      PLAYER.emit("connection", ws, request);
-    });
+    PLAYER.handleUpgrade(request, socket, head, (ws) =>
+      PLAYER.emit("connection", ws, request)
+    );
   })
   .listen(player);
 
+http
+  .createServer()
+  .on("upgrade", (request, socket, head) => {
+    try {
+      // 1个信令服务器只能连1个UE
+      if (UE4.readyState === WebSocket.OPEN) throw "";
+    } catch (err) {
+      socket.destroy();
+      return;
+    }
+
+    UNREAL.handleUpgrade(request, socket, head, (ws) =>
+      UNREAL.emit("connection", ws, request)
+    );
+  })
+  .listen(unreal);
+
 UNREAL.on("connection", (ws, req) => {
-  // 1个信令服务器只能连1个UE
-  if (UE4.readyState === WebSocket.OPEN) return;
   ws.req = req;
   UE4 = ws;
 

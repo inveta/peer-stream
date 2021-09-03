@@ -43,16 +43,15 @@ async function onSignalMessage(msg) {
     pc = players[playerId] = new RTCPeerConnection();
 
     pc.onicecandidate = (e) => {
-      if (e.candidate?.candidate) {
-        console.log("sending candidate to", playerId, e.candidate);
-        ws.send(
-          JSON.stringify({
-            type: "iceCandidate",
-            candidate: e.candidate,
-            playerId,
-          })
-        );
-      }
+      if (!e.candidate?.candidate) return;
+      console.log("sending candidate to", playerId, e.candidate);
+      ws.send(
+        JSON.stringify({
+          type: "iceCandidate",
+          candidate: e.candidate,
+          playerId,
+        })
+      );
     };
 
     // 不能放在后面
@@ -99,23 +98,23 @@ function setupCanvas() {
   const l = Math.min(canvas.width, canvas.height) / 2;
 
   $.strokeStyle = `hsl(${360 * Math.random()}deg 100% 50%)`;
-  $.lineWidth = 1;
+  $.lineWidth = 6;
 
   $.beginPath();
   $.arc(l, l, l, 0, Math.PI * 2);
   $.clip();
 
-  (function frame(time = 0) {
+  (function frame(time) {
     $.clearRect(-l, -l, l * 2, l * 2);
 
-    for (let x = 1; x <= l; x += 8) {
-      const theta = Math.sin(x / l - time / 512) * 60;
+    for (let x = 1; x <= l; x += $.lineWidth + 2) {
       $.strokeRect(-x, -x, x * 2, x * 2);
+      const theta = Math.sin(x / l - time / 512) * 60;
       $.setTransform(new DOMMatrix().translate(l, l).rotate(0, 0, theta));
     }
 
     window.animationFrame = requestAnimationFrame(frame);
-  })();
+  })(0);
 
   return canvas.captureStream();
 }

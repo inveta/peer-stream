@@ -178,7 +178,6 @@ class PixelStream extends HTMLVideoElement {
       }
     } else if (msg.type === "iceCandidate") {
       const candidate = new RTCIceCandidate(msg.candidate);
-      // this.remoteCandidate = candidate;
       await this.pc.addIceCandidate(candidate);
       console.log("Got candidate:", candidate);
     } else {
@@ -192,7 +191,7 @@ class PixelStream extends HTMLVideoElement {
     switch (data[0]) {
       case toPlayerType.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
-        console.log("Got Video Encoder Average QP:", this.VideoEncoderQP);
+        console.debug("Got Video Encoder Average QP:", this.VideoEncoderQP);
         break;
       }
       case toPlayerType.Response: {
@@ -232,8 +231,8 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case toPlayerType.InitialSettings: {
-        const setting = JSON.parse(utf16.decode(data.slice(1)));
-        console.info("Got initial setting:", setting);
+        this.InitialSettings = JSON.parse(utf16.decode(data.slice(1)));
+        console.info("Got initial setting:", this.InitialSettings);
         break;
       }
       default: {
@@ -384,8 +383,8 @@ class PixelStream extends HTMLVideoElement {
   registerTouchEvents() {
     // We need to assign a unique identifier to each finger.
     // We do this by mapping each Touch object to the identifier.
-    let fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-    let fingerIds = {};
+    const fingers = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    const fingerIds = {};
 
     this.ontouchstart = (e) => {
       // Assign a unique identifier to each touch.
@@ -602,11 +601,11 @@ class PixelStream extends HTMLVideoElement {
     data.setUint8(0, type);
     data.setUint8(1, touches.length);
     let byte = 2;
-    for (let touch of touches) {
-      let x = touch.clientX - this.offsetLeft;
-      let y = touch.clientY - this.offsetTop;
+    for (const touch of touches) {
+      const x = touch.clientX - this.offsetLeft;
+      const y = touch.clientY - this.offsetTop;
 
-      let coord = this.normalize(x, y);
+      const coord = this.normalize(x, y);
       data.setUint16(byte, coord.x, true);
       byte += 2;
       data.setUint16(byte, coord.y, true);
