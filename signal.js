@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/8/30
+ *  2021/9/7
  */
 
 /* eslint-disable */
@@ -117,7 +117,7 @@ UNREAL.on("connection", (ws, req) => {
   });
 
   ws.on("close", (code, reason) => {
-    console.log("UE4 closed", reason);
+    console.log("UE4 closed:", String(reason));
     for (const client of PLAYER.clients) {
       client.send("UE4 stopped");
     }
@@ -170,8 +170,8 @@ PLAYER.on("connection", async (ws, req) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error("player", +playerId, "cannot JSON.parse message", msg);
-      ws.send("JSON.parse Error");
+      console.info("player", playerId, String(msg));
+      ws.send("hello, " + msg.slice(0, 100));
       return;
     }
 
@@ -189,14 +189,12 @@ PLAYER.on("connection", async (ws, req) => {
       }
       ws.send("【debug】" + debug);
     } else {
-      console.error("player", +playerId, "invalid message type:", msg.type);
-      ws.send("invalid message type: " + msg.type);
-      return;
+      ws.send("hello, " + msg.type);
     }
   });
 
   ws.on("close", (code, reason) => {
-    console.log("player", +playerId, "closed", reason);
+    console.log("player", playerId, "closed:", String(reason));
     if (UE4.readyState === WebSocket.OPEN)
       UE4.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   });

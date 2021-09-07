@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/8/30
+ *  2021/9/7
  */
 
 /* eslint-disable */
@@ -82,7 +82,7 @@ class PixelStream extends HTMLVideoElement {
   constructor(...params) {
     super(...params);
 
-    window.ps = this;
+    window.ps = parent.ps = this;
 
     this.ws = { send() {}, close() {} }; // WebSocket
     this.pc = new RTCPeerConnection({});
@@ -124,6 +124,10 @@ class PixelStream extends HTMLVideoElement {
     this.ws.onopen = async (e) => {
       console.info("connected to", this.ws.url);
       await this.setupOffer();
+      clearInterval(this.ping);
+      this.ping = setInterval(() => {
+        this.ws.send("ping");
+      }, 1000 * 60);
     };
 
     this.ws.onmessage = (e) => {
@@ -132,7 +136,7 @@ class PixelStream extends HTMLVideoElement {
 
     this.ws.onclose = (e) => {
       console.info("signaller closed:", e.reason || e.code);
-
+      clearInterval(this.ping);
       const timeout = +e.reason || 3000;
       if (timeout === Infinity) return;
 
@@ -158,7 +162,7 @@ class PixelStream extends HTMLVideoElement {
     }
   }
   static get observedAttributes() {
-    return ["signal"];
+    // return ["signal"];
   }
 
   async onWebSocketMessage(msg) {
@@ -266,6 +270,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   setupDataChannel(label = "insigma") {
+    // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
     this.dc = this.pc.createDataChannel(label, { ordered: true });
     // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
     this.dc.binaryType = "arraybuffer";
@@ -388,9 +393,9 @@ class PixelStream extends HTMLVideoElement {
 
     this.ontouchstart = (e) => {
       // Assign a unique identifier to each touch.
-      for (let touch of e.changedTouches) {
+      for (const touch of e.changedTouches) {
         // remember touch
-        let finger = fingers.pop();
+        const finger = fingers.pop();
         if (finger === undefined) {
           console.info("exhausted touch indentifiers");
         }
@@ -403,7 +408,7 @@ class PixelStream extends HTMLVideoElement {
     this.ontouchend = (e) => {
       this.emitTouchData(toUE4type.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
-      for (let touch of e.changedTouches) {
+      for (const touch of e.changedTouches) {
         // forget touch
         fingers.push(fingerIds[touch.identifier]);
         delete fingerIds[touch.identifier];
@@ -425,7 +430,7 @@ class PixelStream extends HTMLVideoElement {
 
     this.ontouchstart = (e) => {
       if (finger === undefined) {
-        let firstTouch = e.changedTouches[0];
+        const firstTouch = e.changedTouches[0];
         finger = {
           id: firstTouch.identifier,
           x: firstTouch.clientX - boundingRect.left,
@@ -441,10 +446,10 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.ontouchend = (e) => {
-      for (let touch of e.changedTouches) {
+      for (const touch of e.changedTouches) {
         if (touch.identifier === finger.id) {
-          let x = touch.clientX - boundingRect.left;
-          let y = touch.clientY - boundingRect.top;
+          const x = touch.clientX - boundingRect.left;
+          const y = touch.clientY - boundingRect.top;
           this.emitMouseUp(MouseButton.MainButton, x, y);
           // Hack: Manual mouse leave event.
           this.onmouseleave(e);
@@ -456,10 +461,10 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.ontouchmove = (e) => {
-      for (let touch of e.touches) {
+      for (const touch of e.touches) {
         if (touch.identifier === finger.id) {
-          let x = touch.clientX - boundingRect.left;
-          let y = touch.clientY - boundingRect.top;
+          const x = touch.clientX - boundingRect.left;
+          const y = touch.clientY - boundingRect.top;
           this.emitMouseMove(x, y, x - finger.x, y - finger.y);
           finger.x = x;
           finger.y = y;
@@ -495,7 +500,7 @@ class PixelStream extends HTMLVideoElement {
       e.preventDefault();
     };
 
-    this.onmousewheel = (e) => {
+    this.onwheel = (e) => {
       this.emitMouseWheel(e.wheelDelta, e.offsetX, e.offsetY);
       e.preventDefault();
     };
@@ -513,16 +518,9 @@ class PixelStream extends HTMLVideoElement {
     this.onmousemove = (e) => {
       x += e.movementX;
       y += e.movementY;
-      if (x > clientWidth) {
-        x -= clientWidth;
-      } else if (x < 0) {
-        x += clientWidth;
-      }
-      if (y > clientHeight) {
-        y -= clientHeight;
-      } else if (y < 0) {
-        y += clientHeight;
-      }
+      x = (x + clientWidth) % clientWidth;
+      y = (y + clientHeight) % clientHeight;
+
       this.emitMouseMove(x, y, e.movementX, e.movementY);
     };
 
@@ -534,22 +532,18 @@ class PixelStream extends HTMLVideoElement {
       this.emitMouseUp(e.button, x, y);
     };
 
-    this.onmousewheel = (e) => {
+    this.onwheel = (e) => {
       this.emitMouseWheel(e.wheelDelta, x, y);
     };
   }
 
   registerMouseEnterAndLeaveEvents() {
     this.onmouseenter = (e) => {
-      const data = new DataView(new ArrayBuffer(1));
-      data.setUint8(0, toUE4type.MouseEnter);
-      this.dc.send(data);
+      this.dc.send(new Uint8Array([toUE4type.MouseEnter]));
     };
 
     this.onmouseleave = (e) => {
-      const data = new DataView(new ArrayBuffer(1));
-      data.setUint8(0, toUE4type.MouseLeave);
-      if (this.dc.readyState === "open") this.dc.send(data);
+      this.dc.send(new Uint8Array([toUE4type.MouseLeave]));
     };
   }
 

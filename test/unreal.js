@@ -63,8 +63,8 @@ async function onSignalMessage(msg) {
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    ws.send(JSON.stringify({ playerId, ...answer.toJSON() }));
     console.log("sending answer to", playerId, answer);
+    ws.send(JSON.stringify({ playerId, ...answer.toJSON() }));
   } else if (msg.type === "iceCandidate") {
     if (!pc) {
       console.error("player", playerId, "not found");
