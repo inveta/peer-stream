@@ -54,7 +54,7 @@ http
       PLAYER.emit("connection", ws, request)
     );
   })
-  .listen(player);
+  .listen(player, () => console.log("Listening for players:", player));
 
 http
   .createServer()
@@ -71,7 +71,7 @@ http
       UNREAL.emit("connection", ws, request)
     );
   })
-  .listen(unreal);
+  .listen(unreal, () => console.log("Listening for UE4:", unreal));
 
 UNREAL.on("connection", (ws, req) => {
   ws.req = req;
@@ -204,6 +204,3 @@ PLAYER.on("connection", async (ws, req) => {
     ws.close(1011, error.message);
   });
 });
-
-console.log("Listening for UE4:", unreal);
-console.log("Listening for players:", player);

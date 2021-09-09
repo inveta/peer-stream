@@ -436,9 +436,7 @@ class PixelStream extends HTMLVideoElement {
           x: firstTouch.clientX - boundingRect.left,
           y: firstTouch.clientY - boundingRect.top,
         };
-        // Hack: Mouse events require an enter and leave so we just
-        // enter and leave manually with each touch as this event
-        // is not fired with a touch device.
+        // Hack: Mouse events require an enter and leave so we just enter and leave manually with each touch as this event is not fired with a touch device.
         this.onmouseenter(e);
         this.emitMouseDown(MouseButton.MainButton, finger.x, finger.y);
       }

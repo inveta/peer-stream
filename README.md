@@ -14,9 +14,11 @@ PixelStreamer is a lightweight WebRTC frontend SDK(based on WebComponents), alon
 ## Signalling Server
 
 ```
-npm install ws
+npm install ws@8.2.1
 node signal.js {key}={value}
 ```
+
+optional startup options:
 
 | key    | default | usage                    |
 | ------ | ------- | ------------------------ |
@@ -62,7 +64,6 @@ document.body.appendChild(ps);
 or HTML:
 
 ```
-<!-- HTML -->
 <script src="PixelStream.js"></script>
 <video is="pixel-stream" signal="ws://127.0.0.1:88"></video>
 ```
