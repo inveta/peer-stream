@@ -1,11 +1,10 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/9/7
+ *  2021/9/13
  */
 
 /* eslint-disable */
 
-// command line format: key-value pairs connected by "=", separated by " "
 // process.argc[0] == 'path/to/node.exe'
 // process.argc[1] === __filename
 const args = process.argv.slice(2).reduce((pairs, pair) => {
@@ -119,7 +118,7 @@ UNREAL.on("connection", (ws, req) => {
   ws.on("close", (code, reason) => {
     console.log("UE4 closed:", String(reason));
     for (const client of PLAYER.clients) {
-      client.send("UE4 stopped");
+      client.send(`UE4:${unreal} stopped`);
     }
   });
 
@@ -140,6 +139,7 @@ UNREAL.on("connection", (ws, req) => {
 
   for (const client of PLAYER.clients) {
     // reconnect immediately
+    client.send(`UE4:${unreal} started`);
     client.close(1011, "1");
   }
 });
@@ -152,7 +152,7 @@ PLAYER.on("connection", async (ws, req) => {
 
   console.log(
     "player",
-    +playerId,
+    playerId,
     "connected:",
     req.socket.remoteAddress,
     req.socket.remotePort
@@ -163,7 +163,7 @@ PLAYER.on("connection", async (ws, req) => {
 
   ws.on("message", (msg) => {
     if (UE4.readyState !== WebSocket.OPEN) {
-      ws.send("UE4 not ready");
+      ws.send(`UE4:${unreal} not ready`);
       return;
     }
 
@@ -171,7 +171,7 @@ PLAYER.on("connection", async (ws, req) => {
       msg = JSON.parse(msg);
     } catch (err) {
       console.info("player", playerId, String(msg));
-      ws.send("hello, " + msg.slice(0, 100));
+      ws.send("hello " + msg.slice(0, 100));
       return;
     }
 
@@ -189,7 +189,7 @@ PLAYER.on("connection", async (ws, req) => {
       }
       ws.send("【debug】" + debug);
     } else {
-      ws.send("hello, " + msg.type);
+      ws.send("hello " + msg.type);
     }
   });
 
@@ -200,7 +200,7 @@ PLAYER.on("connection", async (ws, req) => {
   });
 
   ws.on("error", (error) => {
-    console.error("player", +playerId, "connection error:", error);
+    console.error("player", playerId, "connection error:", error);
     ws.close(1011, error.message);
   });
 });

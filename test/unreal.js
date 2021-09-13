@@ -54,12 +54,12 @@ async function onSignalMessage(msg) {
       );
     };
 
-    // 不能放在后面
-    stream.getVideoTracks().forEach((track) => pc.addTrack(track, stream));
-
     const offer = new RTCSessionDescription(msg);
     console.log("Got offer from", playerId, offer);
     await pc.setRemoteDescription(offer);
+
+    // createAnswer之前，否则要重新协商
+    stream.getVideoTracks().forEach((track) => pc.addTrack(track, stream));
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);

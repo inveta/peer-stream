@@ -11,14 +11,14 @@ PixelStreamer is a lightweight WebRTC frontend SDK(based on WebComponents), alon
 - Pixel Streaming Protocol: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
 - Adapter for IOS: https://webrtc.github.io/adapter/adapter-latest.js
 
-## Signalling Server
+## Signaling Server
 
 ```
-npm install ws@8.2.1
+npm install ws@8.2.2
 node signal.js {key}={value}
 ```
 
-optional startup options:
+startup options:
 
 | key    | default | usage                    |
 | ------ | ------- | ------------------------ |
@@ -105,7 +105,7 @@ ps.style.pointerEvents='none'   // read only <video>
 - Google Chrome 88+
 - Unreal Engine 4.27+
 - NodeJS 14+
-- WS 8.2.1+
+- npm/WS 8.2.2+
 
 ## License
 

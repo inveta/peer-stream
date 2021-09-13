@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/9/7
+ *  2021/9/13
  */
 
 /* eslint-disable */
@@ -85,8 +85,6 @@ class PixelStream extends HTMLVideoElement {
     window.ps = parent.ps = this;
 
     this.ws = { send() {}, close() {} }; // WebSocket
-    this.pc = new RTCPeerConnection({});
-    this.dc = this.pc.createDataChannel("insigma");
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -108,12 +106,17 @@ class PixelStream extends HTMLVideoElement {
 
   // setupWebsocket
   connectedCallback() {
-    // This will happen each time the node is moved, and may happen before the element's contents have been fully parsed. may be called once your element is no longer connected
+    // This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
 
-    const signal =
-      this.getAttribute("signal") ||
-      `ws://${location.hostname || "localhost"}:88/insigma`;
+    let signal = this.getAttribute("signal");
+    if (!signal) {
+      const ip = this.getAttribute("ip") || location.hostname || "localhost";
+      const port = this.getAttribute("port") || 88;
+      const token = this.getAttribute("token") || "insigma";
+      signal = `ws://${ip}:${port}/${token}`;
+    }
+
     this.ws.close(1000, "Infinity");
     this.ws = new WebSocket(signal);
 
@@ -123,7 +126,12 @@ class PixelStream extends HTMLVideoElement {
 
     this.ws.onopen = async (e) => {
       console.info("connected to", this.ws.url);
-      await this.setupOffer();
+
+      this.setupPeerConnection();
+      // If the new data channel is the first one added to the connection, renegotiation is started by delivering a negotiationneeded event.
+      this.setupDataChannel();
+      // this.pc.restartIce();
+
       clearInterval(this.ping);
       this.ping = setInterval(() => {
         this.ws.send("ping");
@@ -135,7 +143,7 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      console.info("signaller closed:", e.reason || e.code);
+      console.info("signaler closed:", e.reason || e.code);
       clearInterval(this.ping);
       const timeout = +e.reason || 3000;
       if (timeout === Infinity) return;
@@ -156,20 +164,19 @@ class PixelStream extends HTMLVideoElement {
   adoptedCallback() {}
 
   attributeChangedCallback(name, oldValue, newValue) {
-    // 一开始会触发：oldValue从null变成newValue
-    if (name === "signal") {
-      this.ws.close(1000, "200");
-    }
+    if (!this.isConnected) return;
+    // fired before connectedCallback when startup  一开始会触发：oldValue从null变成newValue
+    this.ws.close(1000, "1");
   }
   static get observedAttributes() {
-    // return ["signal"];
+    return ["signal", "ip", "port", "token"];
   }
 
   async onWebSocketMessage(msg) {
     try {
       msg = JSON.parse(msg);
     } catch {
-      console.warn("signaller:", msg);
+      console.warn("signaler:", msg);
       return;
     }
 
@@ -185,7 +192,7 @@ class PixelStream extends HTMLVideoElement {
       await this.pc.addIceCandidate(candidate);
       console.log("Got candidate:", candidate);
     } else {
-      console.warn(this.ws.url, msg);
+      console.warn("signaler:", msg);
     }
   }
 
@@ -257,16 +264,14 @@ class PixelStream extends HTMLVideoElement {
     this.muted = true;
     this.autoplay = true;
 
-    this.poster = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1'><text x='20' y='40' fill='white' font-size='30'>Loading...</text></svg>`;
-
     // this.onsuspend
     // this.onresize
     // this.requestPointerLock();
 
     this.style = `
-        background: linear-gradient(135deg, rgba(255,0,0,1) 0%, rgba(0,255,0,1) 33%, rgba(0,0,255,1) 67%, rgba(255,0,0,1) 100%);
         pointer-events: none;
-        object-fit: fill; `;
+        min-height: 300px;
+        object-fit: contain; `;
   }
 
   setupDataChannel(label = "insigma") {
@@ -295,6 +300,8 @@ class PixelStream extends HTMLVideoElement {
   }
 
   setupPeerConnection() {
+    this.pc = new RTCPeerConnection({ sdpSemantics: "unified-plan" });
+
     this.pc.ontrack = (e) => {
       console.log(`Got ${e.track.kind} track:`, e);
       if (e.track.kind === "video") {
@@ -307,34 +314,33 @@ class PixelStream extends HTMLVideoElement {
       }
     };
     this.pc.onicecandidate = (e) => {
-      if (e.candidate?.candidate) {
+      if (e.candidate) {
         console.log("sending candidate:", e.candidate);
-        this.ws.send(
-          JSON.stringify({ type: "iceCandidate", candidate: e.candidate })
-        );
+        this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
+      } else {
+        // All ICE candidates have been sent
+        // Notice that the end of negotiation is detected here when the event"s candidate property is null.
       }
     };
+    this.pc.onnegotiationneeded = (e) => {
+      this.setupOffer();
+    };
+    const setPoster = () =>
+      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:23px; fill:red;}</style>
+        <text x="10" y="30" > Signal:      ${this.pc.signalingState}     </text>
+        <text x="10" y="65" > Connect:     ${this.pc.connectionState}    </text>
+        <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
+        <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
+      </svg>`);
+    this.pc.onsignalingstatechange =
+      this.pc.onconnectionstatechange =
+      this.pc.oniceconnectionstatechange =
+      this.pc.onicegatheringstatechange =
+        setPoster;
   }
 
   async setupOffer() {
-    this.pc.close();
-    this.pc = new RTCPeerConnection({
-      sdpSemantics: "unified-plan",
-      // iceServers: [{
-      //     urls: [
-      //       "stun:stun.l.google.com:19302",
-      //       "stun:stun1.l.google.com:19302",
-      //       "stun:stun2.l.google.com:19302",
-      //       "stun:stun3.l.google.com:19302",
-      //       "stun:stun4.l.google.com:19302",
-      //     ],},],
-    });
-
-    this.pc.addTransceiver("audio", { direction: "recvonly" });
-    this.pc.addTransceiver("video", { direction: "recvonly" });
-
-    this.setupPeerConnection();
-    this.setupDataChannel();
+    // this.pc.addTransceiver("video", { direction: "recvonly" });
 
     const offer = await this.pc.createOffer({
       // 我们的场景不需要音频
@@ -358,21 +364,15 @@ class PixelStream extends HTMLVideoElement {
   registerKeyboardEvents() {
     this.onkeydown = (e) => {
       this.dc.send(
-        new Uint8Array([
-          toUE4type.KeyDown,
-          SpecialKeyCodes[e.code] || e.keyCode,
-          e.repeat,
-        ])
+        new Uint8Array([toUE4type.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat])
       );
-      // whether to prevent browser's default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
+      // whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
       e.preventDefault();
       //  e.stopPropagation
     };
 
     this.onkeyup = (e) => {
-      this.dc.send(
-        new Uint8Array([toUE4type.KeyUp, SpecialKeyCodes[e.code] || e.keyCode])
-      );
+      this.dc.send(new Uint8Array([toUE4type.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]));
       e.preventDefault();
     };
 
@@ -632,12 +632,7 @@ class PixelStream extends HTMLVideoElement {
   normalize(x, y) {
     const normalizedX = x / this.clientWidth;
     const normalizedY = y / this.clientHeight;
-    if (
-      normalizedX < 0.0 ||
-      normalizedX > 1.0 ||
-      normalizedY < 0.0 ||
-      normalizedY > 1.0
-    ) {
+    if (normalizedX < 0.0 || normalizedX > 1.0 || normalizedY < 0.0 || normalizedY > 1.0) {
       return {
         inRange: false,
         x: 65535,
