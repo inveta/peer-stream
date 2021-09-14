@@ -1,12 +1,12 @@
 ![](logo.png)
 
-# Pixel Streamer
+# Pixel Streamer: Unreal + WebRTC
 
 PixelStreamer is a lightweight WebRTC frontend SDK(based on WebComponents), along with a signalling server(based on Node.js) for UnrealEngine's PixelStreaming plugin. PixelStreamer is an out-of-box single file with 0 dependency compared to official SDK.
 
 - PixelStream.js: https://xosg.github.io/PixelStreamer/PixelStream.js
 - signal.js: https://xosg.github.io/PixelStreamer/signal.js
-- WebSocket for Node.js: https://www.npmjs.com/package/ws
+- WebSocket for NodeJS: https://www.npmjs.com/package/ws
 - Official SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
 - Pixel Streaming Protocol: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
 - Adapter for IOS: https://webrtc.github.io/adapter/adapter-latest.js
@@ -44,7 +44,6 @@ frequently used startup options:
  -AudioMixer
  -RenderOffScreen
  -graphicsadapter=1
- -PixelStreamingHudStats
  -AllowPixelStreamingCommands
  -PixelStreamingEncoderRateControl=VBR
  -PixelStreamingURL="ws://localhost:8888"
@@ -57,7 +56,7 @@ JavaScript:
 ```
 import "PixelStream.js";
 const ps = document.createElement("video", { is: "pixel-stream" });
-ps.setAttribute("signal", "ws://127.0.0.1:88");
+ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
 document.body.appendChild(ps);
 ```
 
@@ -65,7 +64,7 @@ or HTML:
 
 ```
 <script src="PixelStream.js"></script>
-<video is="pixel-stream" signal="ws://127.0.0.1:88"></video>
+<video is="pixel-stream" signal="ws://127.0.0.1:88/insigma"></video>
 ```
 
 ## APIs
@@ -92,7 +91,7 @@ video.registerPointerlockEvents()
 
 ```
 ps.debug('PLAYER.clients.size')   // show players count
-ps.debug('PLAYER.clients.forEach(p=>p.id!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
+ps.debug('PLAYER.clients.forEach(p=>p.playerId!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
 ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // every player's IP
 ps.debug('playerId')  // show my id
 ps.pc.getReceivers().find(x=>x.track.kind==='video').transport.iceTransport.getSelectedCandidatePair().remote    // show selected candidate
@@ -105,7 +104,7 @@ ps.style.pointerEvents='none'   // read only <video>
 - Google Chrome 88+
 - Unreal Engine 4.27+
 - NodeJS 14+
-- npm/WS 8.2.2+
+- npm/ws 8.0+
 
 ## License
 

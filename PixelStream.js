@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/9/13
+ *  2021/9/14
  */
 
 /* eslint-disable */
@@ -85,6 +85,7 @@ class PixelStream extends HTMLVideoElement {
     window.ps = parent.ps = this;
 
     this.ws = { send() {}, close() {} }; // WebSocket
+    this.pc = { close() {} }; // RTCPeerConnection
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -121,7 +122,7 @@ class PixelStream extends HTMLVideoElement {
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
-      console.log("signaller error:", e);
+      console.error("signaller error:", e);
     };
 
     this.ws.onopen = async (e) => {
@@ -157,7 +158,7 @@ class PixelStream extends HTMLVideoElement {
     // WebRTC的生命周期与<video>的生命周期绑定
     this.ws.close(1000, "Infinity");
     this.pc.close();
-    console.info("peer connection closing");
+    console.log("peer connection closing");
     // this.dc.close();
   }
 
@@ -202,7 +203,7 @@ class PixelStream extends HTMLVideoElement {
     switch (data[0]) {
       case toPlayerType.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
-        console.debug("Got Video Encoder Average QP:", this.VideoEncoderQP);
+        console.debug("Got QP:", this.VideoEncoderQP);
         break;
       }
       case toPlayerType.Response: {
@@ -214,7 +215,7 @@ class PixelStream extends HTMLVideoElement {
       }
       case toPlayerType.Command: {
         const command = JSON.parse(utf16.decode(data.slice(1)));
-        console.log("Got command:", command);
+        console.info("Got command:", command);
         if (command.command === "onScreenKeyboard") {
           console.info("You should setup a on-screen keyboard");
         }
@@ -243,7 +244,7 @@ class PixelStream extends HTMLVideoElement {
       }
       case toPlayerType.InitialSettings: {
         this.InitialSettings = JSON.parse(utf16.decode(data.slice(1)));
-        console.info("Got initial setting:", this.InitialSettings);
+        console.log("Got initial setting:", this.InitialSettings);
         break;
       }
       default: {
@@ -289,7 +290,7 @@ class PixelStream extends HTMLVideoElement {
     };
 
     this.dc.onclose = (e) => {
-      console.log("data channel closed:", label);
+      console.info("data channel closed:", label);
       this.style.pointerEvents = "none";
       this.dispatchEvent(new CustomEvent("close"));
     };
@@ -300,6 +301,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   setupPeerConnection() {
+    this.pc.close();
     this.pc = new RTCPeerConnection({ sdpSemantics: "unified-plan" });
 
     this.pc.ontrack = (e) => {
@@ -314,11 +316,10 @@ class PixelStream extends HTMLVideoElement {
       }
     };
     this.pc.onicecandidate = (e) => {
-      if (e.candidate) {
+      if (e.candidate?.candidate) {
         console.log("sending candidate:", e.candidate);
         this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
       } else {
-        // All ICE candidates have been sent
         // Notice that the end of negotiation is detected here when the event"s candidate property is null.
       }
     };

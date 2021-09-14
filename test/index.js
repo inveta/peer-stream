@@ -19,9 +19,7 @@ console.info = (...text) => {
   // show log, disappear after timeout
 
   const log = document.createElement("pre");
-  log.innerHTML = text
-    .map((x) => JSON.stringify(x, undefined, "\t").replace(/"|,|{|}/g, ""))
-    .join(" ");
+  log.innerHTML = text.join(" ");
   logsWrapper.appendChild(log);
   setTimeout(() => log.remove(), 3000);
 };
@@ -79,8 +77,7 @@ async function aggregateStats() {
         break;
       }
       case "remote-candidate": {
-        statsText +=
-          `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+        statsText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
         break;
       }
       case "transport": {

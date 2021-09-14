@@ -1,6 +1,6 @@
 /*
  *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/9/13
+ *  2021/9/14
  */
 
 /* eslint-disable */
@@ -49,9 +49,7 @@ http
       return;
     }
 
-    PLAYER.handleUpgrade(request, socket, head, (ws) =>
-      PLAYER.emit("connection", ws, request)
-    );
+    PLAYER.handleUpgrade(request, socket, head, (ws) => PLAYER.emit("connection", ws, request));
   })
   .listen(player, () => console.log("Listening for players:", player));
 
@@ -66,9 +64,7 @@ http
       return;
     }
 
-    UNREAL.handleUpgrade(request, socket, head, (ws) =>
-      UNREAL.emit("connection", ws, request)
-    );
+    UNREAL.handleUpgrade(request, socket, head, (ws) => UNREAL.emit("connection", ws, request));
   })
   .listen(unreal, () => console.log("Listening for UE4:", unreal));
 
@@ -76,11 +72,7 @@ UNREAL.on("connection", (ws, req) => {
   ws.req = req;
   UE4 = ws;
 
-  console.log(
-    "UE4 connected:",
-    req.socket.remoteAddress,
-    req.socket.remotePort
-  );
+  console.log("UE4 connected:", req.socket.remoteAddress, req.socket.remotePort);
 
   ws.on("message", (msg) => {
     try {
@@ -100,7 +92,7 @@ UNREAL.on("connection", (ws, req) => {
     // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
     const playerId = String(msg.playerId);
     delete msg.playerId; // no need to send it to the player
-    const p = [...PLAYER.clients].find((x) => x.id === playerId);
+    const p = [...PLAYER.clients].find((x) => x.playerId === playerId);
     if (!p) {
       console.error("cannot find player", playerId);
       return;
@@ -109,7 +101,9 @@ UNREAL.on("connection", (ws, req) => {
     if (["answer", "iceCandidate"].includes(msg.type)) {
       p.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
-      p.close(1011, msg.reason);
+      p.send(msg.reason);
+      // A control frame must have a payload length of 125 bytes or less
+      p.close(1011, "Infinity");
     } else {
       console.error("invalid UE4 message type:", msg.type);
     }
@@ -150,16 +144,10 @@ UNREAL.on("connection", (ws, req) => {
 PLAYER.on("connection", async (ws, req) => {
   const playerId = String(++nextPlayerId);
 
-  console.log(
-    "player",
-    playerId,
-    "connected:",
-    req.socket.remoteAddress,
-    req.socket.remotePort
-  );
+  console.log("player", playerId, "connected:", req.socket.remoteAddress, req.socket.remotePort);
 
   ws.req = req;
-  ws.id = playerId;
+  ws.playerId = playerId;
 
   ws.on("message", (msg) => {
     if (UE4.readyState !== WebSocket.OPEN) {
@@ -175,7 +163,7 @@ PLAYER.on("connection", async (ws, req) => {
       return;
     }
 
-    console.log("player", +playerId, msg.type);
+    console.log("player", playerId, msg.type);
 
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
