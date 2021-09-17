@@ -64,7 +64,7 @@ async function aggregateStats() {
       Resolution: ${stat.frameWidth + " x " + stat.frameHeight}
       Frames Decoded: ${stat.framesDecoded.format()}
       Packets Lost: ${stat.packetsLost.format()}
-      FPS: ${stat.framesPerSecond}
+      FPS: ${stat.framesPerSecond} Hz
       Frames Dropped: ${stat.framesDropped?.format()}
       Video >> ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")

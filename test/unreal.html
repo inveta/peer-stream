@@ -18,15 +18,23 @@
             top: 0;
             right: 0;
         }
+        #setting {
+			position: fixed;
+			bottom: 0;
+			pointer-events: none;
+			right: 0;
+			z-index: 5;
+		}
     </style>
 </head>
 
 <body>
 
     <h1 id="h1">Unreal Engine Simulator</h1>
-    <video autoplay id="video" muted></video>
+    <video autoplay id="video" muted aaa></video>
     <canvas id="canvas" width="500" height="500"></canvas>
     <pre id="stats"></pre>
+    <pre id="setting"></pre>
 
     <script src="unreal.js"></script>
 </body>

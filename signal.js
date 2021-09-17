@@ -5,6 +5,11 @@
 
 /* eslint-disable */
 
+// node signal.js player=88 unreal=8888 token=insigma limit=1
+
+const WebSocket = require("ws");
+const http = require("http");
+
 // process.argc[0] == 'path/to/node.exe'
 // process.argc[1] === __filename
 const args = process.argv.slice(2).reduce((pairs, pair) => {
@@ -29,15 +34,13 @@ Object.assign(
   args
 );
 
-const WebSocket = require("ws");
-
 const UNREAL = new WebSocket.Server({ noServer: true });
 
 const PLAYER = new WebSocket.Server({
   noServer: true,
   clientTracking: true,
 });
-const http = require("http");
+
 http
   .createServer()
   .on("upgrade", (request, socket, head) => {

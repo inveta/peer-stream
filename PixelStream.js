@@ -122,7 +122,7 @@ class PixelStream extends HTMLVideoElement {
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
-      console.error("signaller error:", e);
+      console.log(e);
     };
 
     this.ws.onopen = async (e) => {
@@ -344,8 +344,7 @@ class PixelStream extends HTMLVideoElement {
     // this.pc.addTransceiver("video", { direction: "recvonly" });
 
     const offer = await this.pc.createOffer({
-      // 我们的场景不需要音频
-      offerToReceiveAudio: this.muted ? 0 : 1,
+      offerToReceiveAudio: +this.hasAttribute("audio"),
       offerToReceiveVideo: 1,
       voiceActivityDetection: false,
     });

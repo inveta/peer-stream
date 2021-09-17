@@ -5,23 +5,28 @@ setInterval(() => {
     const pc = players[id];
     stats.innerHTML += `\n ${id} ${pc.connectionState}  `;
   }
+  setting.textContent = JSON.stringify(window.stream?.track.getSettings(), null, 2);
 }, 1000);
 
 navigator.mediaDevices
   .getUserMedia({
-    audio: false,
     video: true,
+    audio: false,
   })
-  .then((stream) => {
-    window.stream = stream;
-    video.srcObject = stream;
-  })
+  .then((stream) => (video.srcObject = stream))
   .catch((error) => {
-    window.stream = setupCanvas();
-    console.warn("camera error:", error);
+    console.warn("【camera】", error);
+    return navigator.mediaDevices.getDisplayMedia({ audio: false });
+  })
+  .then((stream) => (video.srcObject = stream))
+  .catch((error) => {
+    console.warn("【screen capture】", error);
+    setupCanvas();
   })
   .finally(() => {
     setupSignal();
+    window.stream = video.srcObject || canvas.captureStream();
+    stream.track = stream.getVideoTracks()[0];
     console.log("Unreal Simulator is running!");
   });
 
@@ -59,7 +64,7 @@ async function onSignalMessage(msg) {
     await pc.setRemoteDescription(offer);
 
     // createAnswer之前，否则要重新协商
-    stream.getVideoTracks().forEach((track) => pc.addTrack(track, stream));
+    pc.addTrack(stream.track, stream);
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
@@ -115,6 +120,4 @@ function setupCanvas() {
 
     window.animationFrame = requestAnimationFrame(frame);
   })(0);
-
-  return canvas.captureStream();
 }
