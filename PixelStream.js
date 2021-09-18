@@ -177,7 +177,7 @@ class PixelStream extends HTMLVideoElement {
     try {
       msg = JSON.parse(msg);
     } catch {
-      console.warn("signaler:", msg);
+      console.debug("signaler:", msg);
       return;
     }
 
@@ -327,7 +327,7 @@ class PixelStream extends HTMLVideoElement {
       this.setupOffer();
     };
     const setPoster = () =>
-      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:23px; fill:red;}</style>
+      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:23px;fill:red;}</style>
         <text x="10" y="30" > Signal:      ${this.pc.signalingState}     </text>
         <text x="10" y="65" > Connect:     ${this.pc.connectionState}    </text>
         <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>

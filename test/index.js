@@ -61,7 +61,7 @@ async function aggregateStats() {
       case "inbound-rtp": {
         if (stat.mediaType === "video")
           statsText += `
-      Resolution: ${stat.frameWidth + " x " + stat.frameHeight}
+      Size: ${stat.frameWidth} x ${stat.frameHeight}
       Frames Decoded: ${stat.framesDecoded.format()}
       Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond} Hz

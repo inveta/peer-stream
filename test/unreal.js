@@ -9,10 +9,7 @@ setInterval(() => {
 }, 1000);
 
 navigator.mediaDevices
-  .getUserMedia({
-    video: true,
-    audio: false,
-  })
+  .getUserMedia({ video: true, audio: false })
   .then((stream) => (video.srcObject = stream))
   .catch((error) => {
     console.warn("【camera】", error);
