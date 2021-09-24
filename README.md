@@ -2,12 +2,12 @@
 
 # Pixel Streamer: Unreal + WebRTC
 
-PixelStreamer is a lightweight WebRTC frontend SDK(based on WebComponents), along with a signalling server(based on Node.js) for UnrealEngine's PixelStreaming plugin. PixelStreamer is an out-of-box single file with 0 dependency compared to official SDK.
+PixelStreamer is a lightweight WebRTC frontend SDK (using WebComponents API), along with a signaling server (using NodeJS) for UnrealEngine's PixelStreaming plugin. PixelStreamer is an out-of-box single file with 0 dependency compared to EpicGame's SDK.
 
 - PixelStream.js: https://xosg.github.io/PixelStreamer/PixelStream.js
 - signal.js: https://xosg.github.io/PixelStreamer/signal.js
 - WebSocket for NodeJS: https://www.npmjs.com/package/ws
-- Official SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
+- EpicGame's SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
 - Pixel Streaming Protocol: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
 - Adapter for IOS: https://webrtc.github.io/adapter/adapter-latest.js
 

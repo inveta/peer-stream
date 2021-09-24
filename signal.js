@@ -1,7 +1,4 @@
-/*
- *  https://xosg.github.io/PixelStreamer/signal.js
- *  2021/9/14
- */
+// 4.27.0
 
 /* eslint-disable */
 
@@ -10,8 +7,8 @@
 const WebSocket = require("ws");
 const http = require("http");
 
-// process.argc[0] == 'path/to/node.exe'
-// process.argc[1] === __filename
+// process.argv[0] == 'path/to/node.exe'
+// process.argv[1] === __filename
 const args = process.argv.slice(2).reduce((pairs, pair) => {
   let [key, ...value] = pair.split("=");
   value = value.join("") || "true";
@@ -121,7 +118,7 @@ UNREAL.on("connection", (ws, req) => {
 
   ws.on("error", (error) => {
     console.error("UE4 connection error:", error);
-    UE4.close(1011, error.message);
+    UE4.close(1011, error.message.slice(0, 100));
   });
 
   // sent to UE4 as initialization signal

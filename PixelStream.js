@@ -1,7 +1,4 @@
-/*
- *  https://xosg.github.io/PixelStreamer/PixelStream.js
- *  2021/9/14
- */
+// 4.27.0
 
 /* eslint-disable */
 
