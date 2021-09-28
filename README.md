@@ -2,10 +2,10 @@
 
 # Pixel Streamer: Unreal + WebRTC
 
-PixelStreamer is a lightweight WebRTC frontend SDK (using WebComponents API), along with a signaling server (using NodeJS) for UnrealEngine's PixelStreaming plugin. PixelStreamer is an out-of-box single file with 0 dependency compared to EpicGame's SDK.
+Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer is a lightweight WebRTC library with 0 dependency, containing a frontend component (using WebComponents API), along with a signaling server (using NodeJS).
 
-- PixelStream.js: https://xosg.github.io/PixelStreamer/PixelStream.js
-- signal.js: https://xosg.github.io/PixelStreamer/signal.js
+- PixelStream.js (20KB): https://xosg.github.io/PixelStreamer/PixelStream.js
+- signal.js (5KB): https://xosg.github.io/PixelStreamer/signal.js
 - WebSocket for NodeJS: https://www.npmjs.com/package/ws
 - EpicGame's SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
 - Pixel Streaming Protocol: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
@@ -30,9 +30,9 @@ startup options:
 ## UE4
 
 ```
-// Plugins > Built-In > Graphics > Pixel Streaming > Enabled
-// Editor Preferences > Level Editor > Play > Additional Launch Parameters
-// start packaged.exe -{key}={value}
+Plugins > Built-In > Graphics > Pixel Streaming > Enabled
+Editor Preferences > Level Editor > Play > Additional Launch Parameters
+start packaged.exe -{key}={value}
 ```
 
 frequently used startup options:
@@ -43,7 +43,7 @@ frequently used startup options:
  -ResY=1080
  -AudioMixer
  -RenderOffScreen
- -graphicsadapter=1
+ -graphicsadapter=0
  -AllowPixelStreamingCommands
  -PixelStreamingEncoderRateControl=VBR
  -PixelStreamingURL="ws://localhost:8888"
@@ -95,7 +95,7 @@ ps.debug('PLAYER.clients.forEach(p=>p.playerId!==playerId&&p.close(1011,"Infinit
 ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // every player's IP
 ps.debug('playerId')  // show my id
 ps.pc.getReceivers().find(x=>x.track.kind==='video').transport.iceTransport.getSelectedCandidatePair().remote    // show selected candidate
-ps.addEventListener('mouseenter',_=>ps.focus()||ps.requestPointerLock())    // pointer lock
+ps.addEventListener('mouseenter',_=>{ps.focus();ps.requestPointerLock()})    // pointer lock
 ps.style.pointerEvents='none'   // read only <video>
 ```
 

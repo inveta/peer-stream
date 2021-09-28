@@ -42,10 +42,10 @@ async function aggregateStats() {
 
   if (ps.VideoEncoderQP > 35) {
     statsWrapper.style.color = "red";
-    statsText += `\n Bad network 😭`;
+    statsText += `\n Bad Network 😭`;
   } else if (ps.VideoEncoderQP > 26) {
     statsWrapper.style.color = "orange";
-    statsText += `\n Spotty network 😂`;
+    statsText += `\n Spotty Network 😂`;
   } else {
     statsWrapper.style.color = "lime";
   }
