@@ -108,4 +108,6 @@ ps.style.pointerEvents='none'   // read only <video>
 
 ## License
 
-[MIT](./LICENSE)
+[MIT License](./LICENSE)
+
+Copyright (c) 2021 XOSG
