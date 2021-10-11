@@ -1,4 +1,4 @@
-"4.27.0";
+"4.27.0 release";
 
 /* eslint-disable */
 
@@ -25,13 +25,13 @@ Object.assign(
     unreal: 8888,
     token: "insigma",
     limit: 4,
-    nextPlayerId: 100, //uint32?
-    UE4: {}, //  UE4's Socket
+    nextPlayerId: 100,
   },
   args
 );
 
 const UNREAL = new WebSocket.Server({ noServer: true });
+UNREAL.ws = {}; //  UE4's WebSocket
 
 const PLAYER = new WebSocket.Server({
   noServer: true,
@@ -51,14 +51,14 @@ http
 
     PLAYER.handleUpgrade(request, socket, head, (ws) => PLAYER.emit("connection", ws, request));
   })
-  .listen(player, () => console.log("Listening for players:", player));
+  .listen(player, () => console.log("listening for players:", player));
 
 http
   .createServer()
   .on("upgrade", (request, socket, head) => {
     try {
       // 1个信令服务器只能连1个UE
-      if (UE4.readyState === WebSocket.OPEN) throw "";
+      if (UNREAL.ws.readyState === WebSocket.OPEN) throw "";
     } catch (err) {
       socket.destroy();
       return;
@@ -66,11 +66,11 @@ http
 
     UNREAL.handleUpgrade(request, socket, head, (ws) => UNREAL.emit("connection", ws, request));
   })
-  .listen(unreal, () => console.log("Listening for UE4:", unreal));
+  .listen(unreal, () => console.log("listening for UE4:", unreal));
 
 UNREAL.on("connection", (ws, req) => {
   ws.req = req;
-  UE4 = ws;
+  UNREAL.ws = ws;
 
   console.log("UE4 connected:", req.socket.remoteAddress, req.socket.remotePort);
 
@@ -82,16 +82,16 @@ UNREAL.on("connection", (ws, req) => {
       return;
     }
 
-    console.log("UE4:", msg.type, msg.playerId || "");
+    // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
+    const playerId = String(msg.playerId || "");
+    delete msg.playerId; // no need to send it to the player
+    console.log("UE4:", msg.type, playerId);
 
     if (msg.type === "ping") {
       ws.send(JSON.stringify({ type: "pong", time: msg.time }));
       return;
     }
 
-    // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
-    const playerId = String(msg.playerId);
-    delete msg.playerId; // no need to send it to the player
     const p = [...PLAYER.clients].find((x) => x.playerId === playerId);
     if (!p) {
       console.error("cannot find player", playerId);
@@ -102,7 +102,6 @@ UNREAL.on("connection", (ws, req) => {
       p.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
       p.send(msg.reason);
-      // A control frame must have a payload length of 125 bytes or less
       p.close(1011, "Infinity");
     } else {
       console.error("invalid UE4 message type:", msg.type);
@@ -110,6 +109,7 @@ UNREAL.on("connection", (ws, req) => {
   });
 
   ws.on("close", (code, reason) => {
+    // reason是buffer？？
     console.log("UE4 closed:", String(reason));
     for (const client of PLAYER.clients) {
       client.send(`UE4:${unreal} stopped`);
@@ -118,10 +118,11 @@ UNREAL.on("connection", (ws, req) => {
 
   ws.on("error", (error) => {
     console.error("UE4 connection error:", error);
-    UE4.close(1011, error.message.slice(0, 100));
+    // A control frame must have a payload length of 125 bytes or less
+    // ws.close(1011, error.message.slice(0, 100));
   });
 
-  // sent to UE4 as initialization signal
+  // sent to UE4 as initial signal
   ws.send(
     JSON.stringify({
       type: "config",
@@ -138,8 +139,6 @@ UNREAL.on("connection", (ws, req) => {
   }
 });
 
-//  require("crypto").createHash("sha256").update(req.url.slice(1)).digest("hex");
-
 // every player
 PLAYER.on("connection", async (ws, req) => {
   const playerId = String(++nextPlayerId);
@@ -150,7 +149,7 @@ PLAYER.on("connection", async (ws, req) => {
   ws.playerId = playerId;
 
   ws.on("message", (msg) => {
-    if (UE4.readyState !== WebSocket.OPEN) {
+    if (UNREAL.ws.readyState !== WebSocket.OPEN) {
       ws.send(`UE4:${unreal} not ready`);
       return;
     }
@@ -167,7 +166,7 @@ PLAYER.on("connection", async (ws, req) => {
 
     msg.playerId = playerId;
     if (["offer", "iceCandidate"].includes(msg.type)) {
-      UE4.send(JSON.stringify(msg));
+      UNREAL.ws.send(JSON.stringify(msg));
     } else if (msg.type === "debug") {
       let debug;
       try {
@@ -183,12 +182,11 @@ PLAYER.on("connection", async (ws, req) => {
 
   ws.on("close", (code, reason) => {
     console.log("player", playerId, "closed:", String(reason));
-    if (UE4.readyState === WebSocket.OPEN)
-      UE4.send(JSON.stringify({ type: "playerDisconnected", playerId }));
+    if (UNREAL.ws.readyState === WebSocket.OPEN)
+      UNREAL.ws.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   });
 
   ws.on("error", (error) => {
     console.error("player", playerId, "connection error:", error);
-    ws.close(1011, error.message);
   });
 });

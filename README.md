@@ -1,5 +1,3 @@
-![](logo.png)
-
 # Pixel Streamer: Unreal + WebRTC
 
 Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer is a lightweight WebRTC library with 0 dependency, containing a frontend component (using WebComponents API), along with a signaling server (using NodeJS).
