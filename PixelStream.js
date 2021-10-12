@@ -161,13 +161,11 @@ class PixelStream extends HTMLVideoElement {
 
   adoptedCallback() {}
 
+  static observedAttributes = ["signal", "ip", "port", "token"];
   attributeChangedCallback(name, oldValue, newValue) {
     if (!this.isConnected) return;
     // fired before connectedCallback when startup  一开始会触发：oldValue从null变成newValue
     this.ws.close(1000, "1");
-  }
-  static get observedAttributes() {
-    return ["signal", "ip", "port", "token"];
   }
 
   async onWebSocketMessage(msg) {
@@ -235,8 +233,8 @@ class PixelStream extends HTMLVideoElement {
         break;
       }
       case recvType.QualityControlOwnership: {
-        const ownership = data[1] !== 0;
-        console.info("Got Quality Control Ownership:", ownership);
+        this.QualityControlOwnership = data[1] !== 0;
+        console.info("Got Quality Control Ownership:", this.QualityControlOwnership);
         break;
       }
       case recvType.InitialSettings: {
@@ -307,13 +305,14 @@ class PixelStream extends HTMLVideoElement {
       if (e.track.kind === "video") {
         this.srcObject = e.streams[0];
       } else if (e.track.kind === "audio") {
-        const audio = document.createElement("audio");
-        audio.autoplay = true;
-        audio.srcObject = e.streams[0];
-        audio.play();
+        this.audio = document.createElement("audio");
+        this.audio.autoplay = true;
+        this.audio.srcObject = e.streams[0];
+        this.audio.play();
       }
     };
     this.pc.onicecandidate = (e) => {
+      // firefox
       if (e.candidate?.candidate) {
         console.log("sending candidate:", e.candidate);
         this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
@@ -331,7 +330,11 @@ class PixelStream extends HTMLVideoElement {
         <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
         <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
       </svg>`);
-    this.pc.onsignalingstatechange = this.pc.onconnectionstatechange = this.pc.oniceconnectionstatechange = this.pc.onicegatheringstatechange = setPoster;
+    this.pc.onsignalingstatechange =
+      this.pc.onconnectionstatechange =
+      this.pc.oniceconnectionstatechange =
+      this.pc.onicegatheringstatechange =
+        setPoster;
   }
 
   async setupOffer() {
@@ -344,7 +347,10 @@ class PixelStream extends HTMLVideoElement {
     });
 
     // this indicate we support stereo (Chrome needs this)
-    offer.sdp = offer.sdp.replace("useinbandfec=1", "useinbandfec=1;stereo=1;sprop-maxcapturerate=48000");
+    offer.sdp = offer.sdp.replace(
+      "useinbandfec=1",
+      "useinbandfec=1;stereo=1;sprop-maxcapturerate=48000"
+    );
 
     this.pc.setLocalDescription(offer);
 
@@ -354,7 +360,9 @@ class PixelStream extends HTMLVideoElement {
 
   registerKeyboardEvents() {
     this.onkeydown = (e) => {
-      this.dc.send(new Uint8Array([sendType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]));
+      this.dc.send(
+        new Uint8Array([sendType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat])
+      );
       // whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
       e.preventDefault();
       //  e.stopPropagation
@@ -600,7 +608,7 @@ class PixelStream extends HTMLVideoElement {
   }
 
   // emit string
-  emitDescriptor(msg, messageType = sendType.UIInteraction) {
+  emitMessage(msg, messageType = sendType.UIInteraction) {
     msg = JSON.stringify(msg);
 
     // Add the UTF-16 JSON string to the array byte buffer, going two bytes at a time.
@@ -636,9 +644,9 @@ class PixelStream extends HTMLVideoElement {
     }
   }
 
-  debug(nodeJS) {
+  debug(NodeJS) {
     // 调试信令服务器
-    this.ws.send(JSON.stringify({ type: "debug", debug: nodeJS }));
+    this.ws.send(JSON.stringify({ type: "debug", debug: NodeJS }));
   }
 }
 
