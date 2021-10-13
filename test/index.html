@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="../peer-stream.js"></script>
+    <!-- <script src="../node_modules/ps.min.js"></script> -->
+
+    <script defer type="text/javascript" src="index.js"></script>
+    <style>
+      body {
+        background-color: black;
+        font-weight: bold;
+        font-size: large;
+      }
+
+      video {
+        position: absolute;
+      }
+
+      #stats {
+        position: fixed;
+        bottom: 0;
+        pointer-events: none;
+        right: 0;
+        z-index: 5;
+      }
+
+      #logs {
+        position: fixed;
+        z-index: 5;
+        left: 20px;
+        bottom: 20px;
+        color: red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="logs"></div>
+
+    <!-- WebRTC 监控 -->
+    <pre id="stats">Not connected</pre>
+
+    <video is="peer-stream" signal=""></video>
+  </body>
+</html>
