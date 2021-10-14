@@ -33,6 +33,7 @@ Object.assign(
 const ENGINE = new WebSocket.Server({ noServer: true });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
+// browser client
 const PLAYER = new WebSocket.Server({
   noServer: true,
   clientTracking: true,
@@ -51,7 +52,7 @@ http
 
     PLAYER.handleUpgrade(request, socket, head, (ws) => PLAYER.emit("connection", ws, request));
   })
-  .listen(player, () => console.log("listening for player:", player));
+  .listen(player, () => console.log("signaling for player:", player));
 
 http
   .createServer()
@@ -66,7 +67,7 @@ http
 
     ENGINE.handleUpgrade(request, socket, head, (ws) => ENGINE.emit("connection", ws, request));
   })
-  .listen(engine, () => console.log("listening for engine:", engine));
+  .listen(engine, () => console.log("signaling for engine:", engine));
 
 ENGINE.on("connection", (ws, req) => {
   ws.req = req;
@@ -122,7 +123,7 @@ ENGINE.on("connection", (ws, req) => {
     // ws.close(1011, error.message.slice(0, 100));
   });
 
-  // sent to Engine as initial signal
+  // sent to Unreal Engine as initial signal
   ws.send(
     JSON.stringify({
       type: "config",
