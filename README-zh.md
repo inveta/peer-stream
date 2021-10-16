@@ -55,7 +55,7 @@ JavaScript:
 import "peer-stream.js";
 const ps = document.createElement("video", { is: "peer-stream" });
 ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
-document.body.appendChild(ps);
+document.body.append(ps);
 ```
 
 or HTML:
@@ -74,7 +74,7 @@ ps.debug('PLAYER.clients.size')   // 显示玩家数量
 ps.debug('PLAYER.clients.forEach(p=>p.playerId!==playerId&&p.close(1011,"Infinity"));limit=1;')  // 移除其他玩家
 ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // 每个玩家的IP地址
 ps.debug('playerId')  // 我的ID
-ps.addEventListener('mouseenter',_=>{ps.focus();ps.requestPointerLock()})    // 鼠标锁
+ps.onmouseenter=_=>{ps.focus();ps.requestPointerLock()})    // 鼠标锁
 ps.style.pointerEvents='none'   // 只读的<video>
 ```
 

@@ -24,7 +24,7 @@ const MouseButton = {
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
-const recvType = {
+const RECEIVE = {
   QualityControlOwnership: 0,
   Response: 1,
   Command: 2,
@@ -36,7 +36,7 @@ const recvType = {
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
-const sendType = {
+const SEND = {
   /*
    * Control Messages. Range = 0..49.
    */
@@ -196,19 +196,19 @@ class PeerStream extends HTMLVideoElement {
     data = new Uint8Array(data);
     const utf16 = new TextDecoder("utf-16");
     switch (data[0]) {
-      case recvType.VideoEncoderAvgQP: {
+      case RECEIVE.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
         console.debug("Got QP:", this.VideoEncoderQP);
         break;
       }
-      case recvType.Response: {
+      case RECEIVE.Response: {
         // user custom message
         const detail = utf16.decode(data.slice(1));
         this.dispatchEvent(new CustomEvent("message", { detail }));
         console.info("Got APP response:", detail);
         break;
       }
-      case recvType.Command: {
+      case RECEIVE.Command: {
         const command = JSON.parse(utf16.decode(data.slice(1)));
         console.info("Got command:", command);
         if (command.command === "onScreenKeyboard") {
@@ -216,28 +216,27 @@ class PeerStream extends HTMLVideoElement {
         }
         break;
       }
-      case recvType.FreezeFrame: {
+      case RECEIVE.FreezeFrame: {
         const size = new DataView(data.slice(1, 5).buffer).getInt32(0, true);
         const jpeg = data.slice(1 + 4);
         console.info("Got freezed frame:", jpeg);
         break;
       }
-      case recvType.UnfreezeFrame: {
+      case RECEIVE.UnfreezeFrame: {
         console.info("Got 【unfreeze frame】");
         break;
       }
-      case recvType.LatencyTest: {
+      case RECEIVE.LatencyTest: {
         const latencyTimings = JSON.parse(utf16.decode(data.slice(1)));
         console.info("Got latency timings:", latencyTimings);
-
         break;
       }
-      case recvType.QualityControlOwnership: {
+      case RECEIVE.QualityControlOwnership: {
         this.QualityControlOwnership = data[1] !== 0;
         console.info("Got Quality Control Ownership:", this.QualityControlOwnership);
         break;
       }
-      case recvType.InitialSettings: {
+      case RECEIVE.InitialSettings: {
         this.InitialSettings = JSON.parse(utf16.decode(data.slice(1)));
         console.log("Got initial setting:", this.InitialSettings);
         break;
@@ -250,9 +249,7 @@ class PeerStream extends HTMLVideoElement {
 
   setupVideo() {
     this.tabIndex = 0; // easy to focus..
-    this.addEventListener("playing", (e) => {
-      this.focus();
-    });
+    this.autofocus = true;
     this.playsInline = true;
     this.disablepictureinpicture = true;
 
@@ -280,8 +277,8 @@ class PeerStream extends HTMLVideoElement {
     this.dc.onopen = (e) => {
       console.log("data channel connected:", label);
       this.style.pointerEvents = "auto";
-      this.dc.send(new Uint8Array([sendType.RequestInitialSettings]));
-      this.dc.send(new Uint8Array([sendType.RequestQualityControl]));
+      this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
+      this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
       this.dispatchEvent(new CustomEvent("open"));
     };
 
@@ -301,15 +298,15 @@ class PeerStream extends HTMLVideoElement {
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
       iceServers: [
-        {
-          urls: [
-            // "stun:stun.l.google.com:19302",
-            // "stun:stun1.l.google.com:19302",
-            // "stun:stun2.l.google.com:19302",
-            // "stun:stun3.l.google.com:19302",
-            // "stun:stun4.l.google.com:19302",
-          ],
-        },
+        // {
+        //   urls: [
+        //     "stun:stun.l.google.com:19302",
+        //     "stun:stun1.l.google.com:19302",
+        //     "stun:stun2.l.google.com:19302",
+        //     "stun:stun3.l.google.com:19302",
+        //     "stun:stun4.l.google.com:19302",
+        //   ],
+        // },
       ],
     });
 
@@ -373,22 +370,20 @@ class PeerStream extends HTMLVideoElement {
 
   registerKeyboardEvents() {
     this.onkeydown = (e) => {
-      this.dc.send(
-        new Uint8Array([sendType.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat])
-      );
+      this.dc.send(new Uint8Array([SEND.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]));
       // whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
       e.preventDefault();
       //  e.stopPropagation
     };
 
     this.onkeyup = (e) => {
-      this.dc.send(new Uint8Array([sendType.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]));
+      this.dc.send(new Uint8Array([SEND.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]));
       e.preventDefault();
     };
 
     this.onkeypress = (e) => {
       const data = new DataView(new ArrayBuffer(3));
-      data.setUint8(0, sendType.KeyPress);
+      data.setUint8(0, SEND.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
       this.dc.send(data);
       e.preventDefault();
@@ -411,12 +406,12 @@ class PeerStream extends HTMLVideoElement {
         }
         fingerIds[touch.identifier] = finger;
       }
-      this.emitTouchData(sendType.TouchStart, e.changedTouches, fingerIds);
+      this.emitTouchData(SEND.TouchStart, e.changedTouches, fingerIds);
       e.preventDefault();
     };
 
     this.ontouchend = (e) => {
-      this.emitTouchData(sendType.TouchEnd, e.changedTouches, fingerIds);
+      this.emitTouchData(SEND.TouchEnd, e.changedTouches, fingerIds);
       // Re-cycle unique identifiers previously assigned to each touch.
       for (const touch of e.changedTouches) {
         // forget touch
@@ -427,7 +422,7 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.ontouchmove = (e) => {
-      this.emitTouchData(sendType.TouchMove, e.touches, fingerIds);
+      this.emitTouchData(SEND.TouchMove, e.touches, fingerIds);
       e.preventDefault();
     };
   }
@@ -547,11 +542,11 @@ class PeerStream extends HTMLVideoElement {
 
   registerMouseEnterAndLeaveEvents() {
     this.onmouseenter = (e) => {
-      this.dc.send(new Uint8Array([sendType.MouseEnter]));
+      this.dc.send(new Uint8Array([SEND.MouseEnter]));
     };
 
     this.onmouseleave = (e) => {
-      this.dc.send(new Uint8Array([sendType.MouseLeave]));
+      this.dc.send(new Uint8Array([SEND.MouseLeave]));
     };
   }
 
@@ -560,7 +555,7 @@ class PeerStream extends HTMLVideoElement {
     deltaX = (deltaX * 65536) / this.clientWidth;
     deltaY = (deltaY * 65536) / this.clientHeight;
     const data = new DataView(new ArrayBuffer(9));
-    data.setUint8(0, sendType.MouseMove);
+    data.setUint8(0, SEND.MouseMove);
     data.setUint16(1, coord.x, true);
     data.setUint16(3, coord.y, true);
     data.setInt16(5, deltaX, true);
@@ -571,7 +566,7 @@ class PeerStream extends HTMLVideoElement {
   emitMouseDown(button, x, y) {
     const coord = this.normalize(x, y);
     const data = new DataView(new ArrayBuffer(6));
-    data.setUint8(0, sendType.MouseDown);
+    data.setUint8(0, SEND.MouseDown);
     data.setUint8(1, button);
     data.setUint16(2, coord.x, true);
     data.setUint16(4, coord.y, true);
@@ -581,7 +576,7 @@ class PeerStream extends HTMLVideoElement {
   emitMouseUp(button, x, y) {
     const coord = this.normalize(x, y);
     const data = new DataView(new ArrayBuffer(6));
-    data.setUint8(0, sendType.MouseUp);
+    data.setUint8(0, SEND.MouseUp);
     data.setUint8(1, button);
     data.setUint16(2, coord.x, true);
     data.setUint16(4, coord.y, true);
@@ -591,7 +586,7 @@ class PeerStream extends HTMLVideoElement {
   emitMouseWheel(delta, x, y) {
     const coord = this.normalize(x, y);
     const data = new DataView(new ArrayBuffer(7));
-    data.setUint8(0, sendType.MouseWheel);
+    data.setUint8(0, SEND.MouseWheel);
     data.setInt16(1, delta, true);
     data.setUint16(3, coord.x, true);
     data.setUint16(5, coord.y, true);
@@ -621,8 +616,8 @@ class PeerStream extends HTMLVideoElement {
   }
 
   // emit string
-  emitMessage(msg, messageType = sendType.UIInteraction) {
-    msg = JSON.stringify(msg);
+  emitMessage(msg, messageType = SEND.UIInteraction) {
+    if (typeof msg !== "string") msg = JSON.stringify(msg);
 
     // Add the UTF-16 JSON string to the array byte buffer, going two bytes at a time.
     const data = new DataView(new ArrayBuffer(1 + 2 + 2 * msg.length));

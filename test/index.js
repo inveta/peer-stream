@@ -20,7 +20,7 @@ console.info = (...text) => {
 
   const log = document.createElement("pre");
   log.innerHTML = text.join(" ");
-  logsWrapper.appendChild(log);
+  logsWrapper.append(log);
   setTimeout(() => log.remove(), 3000);
 };
 

@@ -58,7 +58,7 @@ JavaScript:
 import "peer-stream.js";
 const ps = document.createElement("video", { is: "peer-stream" });
 ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
-document.body.appendChild(ps);
+document.body.append(ps);
 ```
 
 or HTML:
