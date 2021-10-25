@@ -1,26 +1,14 @@
-//  document.querySelector("[is=peer-stream]");
-
-ps.addEventListener("message", (e) => {});
-
-ps.addEventListener("playing", (e) => {
-  clearInterval(ps.statTimer);
-  ps.statTimer = setInterval(aggregateStats, 1000);
-});
-
-ps.addEventListener("suspend", (e) => {
-  clearInterval(ps.statTimer);
-});
-
-const statsWrapper = document.getElementById("stats");
-const logsWrapper = document.getElementById("logs");
+ps.addEventListener("playing", aggregateStats, { once: true });
+ps.addEventListener("message", (e) => { });
+ps.addEventListener("suspend", (e) => { });
 
 console.info = (...text) => {
   console.log(...text);
   // show log, disappear after timeout
 
   const log = document.createElement("pre");
-  log.innerHTML = text.join(" ");
-  logsWrapper.append(log);
+  log.innerText = text.join(" ");
+  logs.append(log);
   setTimeout(() => log.remove(), 3000);
 };
 
@@ -34,33 +22,33 @@ Number.prototype.format = function () {
   return ~~quotient + " " + suffix[0];
 };
 
-let lastTransport = {};
 async function aggregateStats() {
-  const stats = await ps.pc.getStats(null);
 
-  let statsText = "";
+  const statsReport = await ps.pc.getStats(null);
+  stats.innerText = "";
 
-  if (ps.VideoEncoderQP > 35) {
-    statsWrapper.style.color = "red";
-    statsText += `\n Bad Network 😭`;
-  } else if (ps.VideoEncoderQP > 26) {
-    statsWrapper.style.color = "orange";
-    statsText += `\n Spotty Network 😂`;
+  // 大部分都 < 27
+  if (ps.VideoEncoderQP < 27) {
+    stats.style.color = "lime";
+  } else if (ps.VideoEncoderQP < 36) {
+    stats.style.color = "orange";
+    stats.innerText += `\n Spotty Network`;
   } else {
-    statsWrapper.style.color = "lime";
+    stats.style.color = "red";
+    stats.innerText += `\n Bad Network !!!`;
   }
-  statsText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
 
-  stats.forEach((stat) => {
+  stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
+  statsReport.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        statsText += `\n Data Channel << ${stat.bytesSent.format()}B`;
-        statsText += `\n Data Channel >> ${stat.bytesReceived.format()}B`;
+        stats.innerText += `\n Data Channel << ${stat.bytesSent.format()}B`;
+        stats.innerText += `\n Data Channel >> ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {
         if (stat.mediaType === "video")
-          statsText += `
+          stats.innerText += `
       Size: ${stat.frameWidth} x ${stat.frameHeight}
       Frames Decoded: ${stat.framesDecoded.format()}
       Packets Lost: ${stat.packetsLost.format()}
@@ -68,27 +56,27 @@ async function aggregateStats() {
       Frames Dropped: ${stat.framesDropped?.format()}
       Video >> ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
-          statsText += `\n Audio >> ${stat.bytesReceived.format()}B`;
+          stats.innerText += `\n Audio >> ${stat.bytesReceived.format()}B`;
         break;
       }
       case "candidate-pair": {
         if (stat.state === "succeeded")
-          statsText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
+          stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
         break;
       }
       case "remote-candidate": {
-        statsText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+        stats.innerText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
         break;
       }
       case "transport": {
         const bitrate =
-          ((stat.bytesReceived - lastTransport.bytesReceived) /
-            (stat.timestamp - lastTransport.timestamp)) *
+          ((stat.bytesReceived - this.bytesReceived) / (stat.timestamp - this.timestamp)) *
           (1000 * 8);
 
-        statsText += `\n Bitrate: ${bitrate.format()}bps `;
+        stats.innerText += `\n Bitrate: ${bitrate.format()}bps `;
 
-        lastTransport = stat;
+        this.bytesReceived = stat.bytesReceived;
+        this.timestamp = stat.timestamp;
         break;
       }
       default: {
@@ -96,5 +84,5 @@ async function aggregateStats() {
     }
   });
 
-  statsWrapper.innerHTML = statsText;
+  ps.timeout = setTimeout(aggregateStats, 1000);
 }

@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <!-- networking problems sniffing -->
 
-    <meta charset="utf-8" />
-    <title>Unreal Simulator</title>
-    <style>
-      body {
-        background-color: black;
-        color: white;
-        font-size: large;
-      }
+<head>
+  <!-- networking problems sniffing -->
 
-      #stats {
-        position: fixed;
-        top: 0;
-        right: 0;
-      }
+  <meta charset="utf-8" />
+  <title>Unreal Simulator</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-size: large;
+    }
 
-      #setting {
-        position: fixed;
-        bottom: 0;
-        pointer-events: none;
-        left: 0;
-        z-index: 5;
-      }
-    </style>
-  </head>
+    #stats {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
 
-  <body>
-    <h1 id="h1">Unreal Engine Simulator</h1>
-    <video autoplay id="video" muted></video>
-    <canvas id="canvas" width="500" height="500"></canvas>
-    <pre id="stats"></pre>
-    <pre id="setting"></pre>
+    #setting {
+      position: fixed;
+      bottom: 0;
+      pointer-events: none;
+      left: 0;
+    }
+  </style>
+</head>
 
-    <script src="unreal.js"></script>
-  </body>
+<body>
+  <h1 id="h1">Unreal Engine Simulator</h1>
+  <video autoplay id="video" muted></video>
+  <canvas id="canvas" width="500" height="500"></canvas>
+  <pre id="stats"></pre>
+  <pre id="setting"></pre>
+
+  <script src="unreal.js"></script>
+</body>
+
 </html>

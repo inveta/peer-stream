@@ -261,11 +261,7 @@ class PeerStream extends HTMLVideoElement {
     // this.onresize
     // this.requestPointerLock();
 
-    Object.assign(this.style, {
-      "pointer-events": "none",
-      "min-height": "300px",
-      "object-fit": "contain",
-    });
+    this.style["pointer-events"] = "none";
   }
 
   setupDataChannel(label = "insigma") {
@@ -334,9 +330,9 @@ class PeerStream extends HTMLVideoElement {
       this.setupOffer();
     };
     const setPoster = () =>
-      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:23px;fill:red;}</style>
-        <text x="10" y="30" > Signal:      ${this.pc.signalingState}     </text>
-        <text x="10" y="65" > Connect:     ${this.pc.connectionState}    </text>
+      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
+        <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
+        <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
         <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
         <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
       </svg>`);
