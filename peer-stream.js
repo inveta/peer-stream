@@ -123,7 +123,7 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.ws.onopen = async (e) => {
-      console.info("connected to", this.ws.url);
+      console.info("✅ connected to", this.ws.url);
 
       this.setupPeerConnection();
       // If the new data channel is the first one added to the connection, renegotiation is started by delivering a negotiationneeded event.
@@ -141,7 +141,7 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      console.info("signaler closed:", e.reason || e.code);
+      console.info("❌ signaler closed:", e.reason || e.code);
       clearInterval(this.ping);
       const timeout = +e.reason || 3000;
       if (timeout === Infinity) return;
@@ -155,7 +155,7 @@ class PeerStream extends HTMLVideoElement {
     // WebRTC的生命周期与<video>的生命周期绑定
     this.ws.close(1000, "Infinity");
     this.pc.close();
-    console.log("peer connection closing");
+    console.log("❌ peer connection closing");
     // this.dc.close();
   }
 
@@ -262,6 +262,7 @@ class PeerStream extends HTMLVideoElement {
     // this.requestPointerLock();
 
     this.style["pointer-events"] = "none";
+    this.style["object-fit"] = "fill";
   }
 
   setupDataChannel(label = "insigma") {
@@ -271,7 +272,7 @@ class PeerStream extends HTMLVideoElement {
     this.dc.binaryType = "arraybuffer";
 
     this.dc.onopen = (e) => {
-      console.log("data channel connected:", label);
+      console.log("✅ data channel connected:", label);
       this.style.pointerEvents = "auto";
       this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
       this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
@@ -279,7 +280,7 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.dc.onclose = (e) => {
-      console.info("data channel closed:", label);
+      console.info("❌ data channel closed:", label);
       this.style.pointerEvents = "none";
       this.dispatchEvent(new CustomEvent("close"));
     };
@@ -314,7 +315,6 @@ class PeerStream extends HTMLVideoElement {
         this.audio = document.createElement("audio");
         this.audio.autoplay = true;
         this.audio.srcObject = e.streams[0];
-        this.audio.play();
       }
     };
     this.pc.onicecandidate = (e) => {

@@ -21,21 +21,16 @@
       right: 0;
       bottom: 0;
       pointer-events: none;
+      /* 提高文字对比度 */
       text-shadow: black 0 0 .3em;
-    }
-
-    #logs {
-      position: fixed;
-      left: 1em;
-      bottom: 1em;
-      color: red;
     }
   </style>
 </head>
 
 <body>
-  <video is="peer-stream" port="100"></video>
-  <div id="logs"></div>
+  <video is="peer-stream" signal="ws://10.0.42.15:90/insigma" audio>
+    <track default kind="captions" srclang="en" />
+  </video>
 
   <!-- WebRTC 监控 -->
   <pre id="stats">Not connected</pre>

@@ -52,20 +52,22 @@ common startup options:
 
 ## Browser
 
-JavaScript:
-
-```
-import "peer-stream.js";
-const ps = document.createElement("video", { is: "peer-stream" });
-ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
-document.body.append(ps);
-```
-
-or HTML:
+HTML:
 
 ```
 <script src="peer-stream.js"></script>
 <video is="peer-stream" signal="ws://127.0.0.1:88/insigma"></video>
+```
+
+or JavaScript:
+
+```
+<script type="module">
+import "peer-stream.js";
+const ps = document.createElement("video", { is: "peer-stream" });
+ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
+document.body.append(ps);
+</script>
 ```
 
 ## APIs
