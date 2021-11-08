@@ -8,7 +8,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer i
 - EpicGame's SDK: https://github.com/EpicGames/UnrealEngine/tree/release/Samples/PixelStreaming/WebServers/SignallingWebServer
 - Pixel Streaming Plugin: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
 
-## Signaling Server
+## ߷ Signaling Server
 
 install WebSocket dependency:
 
@@ -26,7 +26,7 @@ startup options:
 | token  | insigma | password appended to URL |
 | limit  | 4       | max number of players    |
 
-## Unreal Engine 4
+## ۞ Unreal Engine 4
 
 enable the plugin:
 
@@ -50,7 +50,7 @@ common startup options:
  -PixelStreamingURL="ws://localhost:8888"
 ```
 
-## Browser
+## ֍ Browser
 
 HTML:
 
@@ -70,47 +70,44 @@ document.body.append(ps);
 </script>
 ```
 
-## APIs
+## ✉ Messages
 
-lifecycle:
-
-```
-ps.addEventListener("open", e => {});
-ps.addEventListener("message", e => {});
-ps.addEventListener("close", e => {});
-```
-
-Mouse, Keyboard, Touch events:
+sending messages:
 
 ```
-ps.registerTouchEvents()
-ps.registerKeyboardEvents()
-ps.registerFakeMouseEvents()
-ps.registerMouseHoverEvents()
-ps.registerPointerlockEvents()
+// object will be JSON.stringify()
+ps.emitMessage(msg: string | object);
 ```
 
-## Common Commands
+receiving messages:
+
+```
+ps.addEventListener("message", e => {
+    e.detail;   // string
+});
+```
+
+## ⌘ Common Commands
 
 ```
 ps.debug('PLAYER.clients.size')   // show players count
 ps.debug('PLAYER.clients.forEach(p=>p.playerId!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
 ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // every player's IP
 ps.debug('playerId')  // show my id
-ps.pc.getReceivers().find(x=>x.track.kind==='video').transport.iceTransport.getSelectedCandidatePair().remote    // show selected candidate
-ps.addEventListener('mouseenter',_=>{ps.focus();ps.requestPointerLock()})    // pointer lock
+console.log(ps.pc.remoteDescription.sdp)    // show peer info
+ps.addEventListener('mouseenter',()=>{ps.focus();ps.requestPointerLock()})    // pointer lock
 ps.style.pointerEvents='none'   // read only <video>
 ```
 
-## Requirement
+## ◰ Requirement
 
-- Google Chrome 88+
+- Google Chrome 90+
 - Unreal Engine 4.27+
 - NodeJS 14+
 - npm/ws 8.0+
 
-## License
+## © License
 
 [MIT License](./LICENSE)
 
-Copyright (c) 2021 XOSG
+Copyright © 2021 XOSG

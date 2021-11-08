@@ -1,6 +1,6 @@
 ps.addEventListener("playing", aggregateStats, { once: true });
-ps.addEventListener("message", (e) => {});
-ps.addEventListener("suspend", (e) => {});
+ps.addEventListener("message", (e) => { });
+ps.addEventListener("suspend", (e) => { });
 
 // use WebVTT to show logs
 console.info = (...text) => {
@@ -40,8 +40,8 @@ async function aggregateStats() {
   statsReport.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        stats.innerText += `\n Data Channel ⮜ ${stat.bytesSent.format()}B`;
-        stats.innerText += `\n Data Channel ⮞ ${stat.bytesReceived.format()}B`;
+        stats.innerText += `\n ✉ Data Channel ◀ ${stat.bytesSent.format()}B`;
+        stats.innerText += `\n ✉ Data Channel ▶ ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {
@@ -52,9 +52,9 @@ async function aggregateStats() {
       Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond} Hz
       Frames Dropped: ${stat.framesDropped?.format()}
-      Video ⮞ ${stat.bytesReceived.format()}B`;
+      Video ▶ ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
-          stats.innerText += `\n ♬ Audio ⮞ ${stat.bytesReceived.format()}B`;
+          stats.innerText += `\n ♬ Audio ▶ ${stat.bytesReceived.format()}B`;
         break;
       }
       case "candidate-pair": {
@@ -71,7 +71,7 @@ async function aggregateStats() {
           ((stat.bytesReceived - this.bytesReceived) / (stat.timestamp - this.timestamp)) *
           (1000 * 8);
 
-        stats.innerText += `\n ⇌ Bitrate: ${bitrate.format()}bps `;
+        stats.innerText += `\n ⇌ Bitrate: ${bitrate.format()}bps`;
 
         this.bytesReceived = stat.bytesReceived;
         this.timestamp = stat.timestamp;
@@ -81,6 +81,8 @@ async function aggregateStats() {
       }
     }
   });
+
+  stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
 
   ps.timeout = setTimeout(aggregateStats, 1000);
 }

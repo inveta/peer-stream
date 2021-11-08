@@ -25,7 +25,7 @@ navigator.mediaDevices
     setupSignal();
     window.stream = video.srcObject || canvas.captureStream();
     stream.track = stream.getVideoTracks()[0];
-    console.log("Unreal Simulator is running!");
+    console.log("✅ Unreal Simulator is running!");
   });
 
 async function onSignalMessage(msg) {
@@ -86,11 +86,11 @@ function setupSignal() {
   window.ws = new WebSocket("ws://localhost:8888");
   ws.onclose = (e) => {
     setTimeout(setupSignal, 1000);
-    h1.textContent = "Unreal Engine Simulator";
+    h1.textContent = "֍ Unreal Engine Simulator";
   };
   ws.onmessage = onSignalMessage;
   ws.onopen = (e) => {
-    console.info("connected to", ws.url);
+    console.info("✅ connected to", ws.url);
     h1.textContent = ws.url;
   };
   ws.onerror = (e) => {};

@@ -81,8 +81,8 @@ class PeerStream extends HTMLVideoElement {
 
     window.ps = parent.ps = this;
 
-    this.ws = { send() {}, close() {} }; // WebSocket
-    this.pc = { close() {} }; // RTCPeerConnection
+    this.ws = { send() { }, close() { } }; // WebSocket
+    this.pc = { close() { } }; // RTCPeerConnection
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -159,7 +159,7 @@ class PeerStream extends HTMLVideoElement {
     // this.dc.close();
   }
 
-  adoptedCallback() {}
+  adoptedCallback() { }
 
   static observedAttributes = ["signal", "ip", "port", "token"];
   attributeChangedCallback(name, oldValue, newValue) {
@@ -205,7 +205,7 @@ class PeerStream extends HTMLVideoElement {
         // user custom message
         const detail = utf16.decode(data.slice(1));
         this.dispatchEvent(new CustomEvent("message", { detail }));
-        console.info("Got APP response:", detail);
+        console.info("Got ✉:", detail);
         break;
       }
       case RECEIVE.Command: {
@@ -276,13 +276,11 @@ class PeerStream extends HTMLVideoElement {
       this.style.pointerEvents = "auto";
       this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
       this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
-      this.dispatchEvent(new CustomEvent("open"));
     };
 
     this.dc.onclose = (e) => {
       console.info("❌ data channel closed:", label);
       this.style.pointerEvents = "none";
-      this.dispatchEvent(new CustomEvent("close"));
     };
 
     this.dc.onmessage = (e) => {
@@ -330,7 +328,7 @@ class PeerStream extends HTMLVideoElement {
       this.setupOffer();
     };
     const setPoster = () =>
-      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
+    (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
         <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
         <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
         <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
@@ -340,7 +338,7 @@ class PeerStream extends HTMLVideoElement {
       this.pc.onconnectionstatechange =
       this.pc.oniceconnectionstatechange =
       this.pc.onicegatheringstatechange =
-        setPoster;
+      setPoster;
   }
 
   async setupOffer() {
@@ -628,6 +626,8 @@ class PeerStream extends HTMLVideoElement {
       byteIdx += 2;
     }
     this.dc.send(data);
+    // 有时候前端问：怎么返回undefined？是不是没发送成功？
+    return true;
   }
 
   normalize(x, y) {
