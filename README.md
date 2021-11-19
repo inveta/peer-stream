@@ -26,7 +26,7 @@ startup options:
 | token  | insigma | password appended to URL |
 | limit  | 4       | max number of players    |
 
-## ۞ Unreal Engine 4
+## ✡ Unreal Engine 4
 
 enable the plugin:
 

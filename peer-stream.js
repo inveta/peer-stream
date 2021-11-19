@@ -262,7 +262,7 @@ class PeerStream extends HTMLVideoElement {
     // this.requestPointerLock();
 
     this.style["pointer-events"] = "none";
-    this.style["object-fit"] = "fill";
+    this.style["object-fit"] = "cover";
   }
 
   setupDataChannel(label = "insigma") {

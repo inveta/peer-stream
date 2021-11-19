@@ -52,7 +52,7 @@ http
 
     PLAYER.handleUpgrade(request, socket, head, (ws) => PLAYER.emit("connection", ws, request));
   })
-  .listen(player, () => console.log("signaling for player:", player));
+  .listen(player, () => console.log("֍ signaling for player:", player));
 
 http
   .createServer()
@@ -67,7 +67,7 @@ http
 
     ENGINE.handleUpgrade(request, socket, head, (ws) => ENGINE.emit("connection", ws, request));
   })
-  .listen(engine, () => console.log("signaling for engine:", engine));
+  .listen(engine, () => console.log("✡ signaling for engine:", engine));
 
 ENGINE.on("connection", (ws, req) => {
   ws.req = req;
