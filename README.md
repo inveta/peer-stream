@@ -13,7 +13,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer i
 install WebSocket dependency:
 
 ```
-npm install ws@8.2.3
+npm install ws@8.3.0
 node signal.js {key}={value}
 ```
 
@@ -23,7 +23,7 @@ startup options:
 | ------ | ------- | ------------------------ |
 | player | 88      | browser port             |
 | engine | 8888    | unreal engine port       |
-| token  | insigma | password appended to URL |
+| token  | hello   | password appended to URL |
 | limit  | 4       | max number of players    |
 
 ## ✡ Unreal Engine 4
@@ -56,7 +56,7 @@ HTML:
 
 ```
 <script src="peer-stream.js"></script>
-<video is="peer-stream" signal="ws://127.0.0.1:88/insigma"></video>
+<video is="peer-stream" signal="ws://127.0.0.1:88/hello"></video>
 ```
 
 or JavaScript:
@@ -65,7 +65,7 @@ or JavaScript:
 <script type="module">
 import "peer-stream.js";
 const ps = document.createElement("video", { is: "peer-stream" });
-ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
+ps.setAttribute("signal", "ws://127.0.0.1:88/hello");
 document.body.append(ps);
 </script>
 ```

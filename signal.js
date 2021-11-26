@@ -2,7 +2,7 @@
 
 /* eslint-disable */
 
-// node signal.js player=88 engine=8888 token=insigma limit=1
+// node signal.js player=88 engine=8888 token=hello limit=1
 
 const WebSocket = require("ws");
 const http = require("http");
@@ -23,7 +23,7 @@ Object.assign(
   {
     player: 88,
     engine: 8888,
-    token: "insigma",
+    token: "hello",
     limit: 4,
     nextPlayerId: 100,
   },

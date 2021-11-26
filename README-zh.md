@@ -16,12 +16,12 @@ node signal.js {key}={value}
 
 启动选项:
 
-| 选项   | 默认值  | 作用                 |
-| ------ | ------- | -------------------- |
-| player | 88      | 浏览器（玩家）端口   |
-| engine | 8888    | UE4 端口             |
-| token  | insigma | 信令密码（url 末端） |
-| limit  | 4       | 玩家数量上限         |
+| 选项   | 默认值 | 作用                 |
+| ------ | ------ | -------------------- |
+| player | 88     | 浏览器（玩家）端口   |
+| engine | 8888   | UE4 端口             |
+| token  | hello  | 信令密码（url 末端） |
+| limit  | 4      | 玩家数量上限         |
 
 ## 启动 UE4
 
@@ -54,7 +54,7 @@ JavaScript:
 ```
 import "peer-stream.js";
 const ps = document.createElement("video", { is: "peer-stream" });
-ps.setAttribute("signal", "ws://127.0.0.1:88/insigma");
+ps.setAttribute("signal", "ws://127.0.0.1:88/hello");
 document.body.append(ps);
 ```
 
@@ -62,7 +62,7 @@ or HTML:
 
 ```
 <script src="peer-stream.js"></script>
-<video is="peer-stream" signal="ws://127.0.0.1:88/insigma"></video>
+<video is="peer-stream" signal="ws://127.0.0.1:88/hello"></video>
 ```
 
 ## 常用的调试命令

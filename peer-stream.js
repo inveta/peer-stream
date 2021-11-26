@@ -111,7 +111,7 @@ class PeerStream extends HTMLVideoElement {
     if (!signal) {
       const ip = this.getAttribute("ip") || location.hostname || "localhost";
       const port = this.getAttribute("port") || 88;
-      const token = this.getAttribute("token") || "insigma";
+      const token = this.getAttribute("token") || "hello";
       signal = `ws://${ip}:${port}/${token}`;
     }
 
@@ -262,10 +262,10 @@ class PeerStream extends HTMLVideoElement {
     // this.requestPointerLock();
 
     this.style["pointer-events"] = "none";
-    this.style["object-fit"] = "cover";
+    this.style["object-fit"] = "fill";
   }
 
-  setupDataChannel(label = "insigma") {
+  setupDataChannel(label = "hello") {
     // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
     this.dc = this.pc.createDataChannel(label, { ordered: true });
     // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
