@@ -26,6 +26,8 @@ Object.assign(
     token: "hello",
     limit: 4,
     nextPlayerId: 100,
+    PublicIpTurn:"",
+    UseTurn=true
   },
   args
 );
@@ -39,6 +41,21 @@ const PLAYER = new WebSocket.Server({
   clientTracking: true,
 });
 
+
+//If use turn wait for ip address else init instantly
+if(UseTurn){
+http.get({'host': 'api.ipify.org', 'port': 80, 'path': '/'}, function(resp) {
+  resp.on('data', function(ip) {
+    console.log("public IP address is: " + ip);
+    PublicIpTurn=ip;
+    Init();
+  });
+});
+}else{
+  Init();
+}
+
+function Init() {
 http
   .createServer()
   .on("upgrade", (request, socket, head) => {
@@ -63,11 +80,16 @@ http
     } catch (err) {
       socket.destroy();
       return;
+      
     }
 
     ENGINE.handleUpgrade(request, socket, head, (ws) => ENGINE.emit("connection", ws, request));
   })
   .listen(engine, () => console.log("✡ signaling for engine:", engine));
+
+
+
+
 
 ENGINE.on("connection", (ws, req) => {
   ws.req = req;
@@ -124,6 +146,19 @@ ENGINE.on("connection", (ws, req) => {
   });
 
   // sent to Unreal Engine as initial signal
+ if(UseTurn){
+  ws.send(
+    JSON.stringify({
+      type: "config",
+      peerConnectionOptions: {
+         iceServers: [{ urls: ["stun:stun.l.google.com:19302"
+        ,"turn:"+PublicIpTurn+":19303"],
+      username:"PixelStreamingUser",
+      credential:"AnotherTURNintheroad" }],
+      },
+    })
+  );
+ }else{
   ws.send(
     JSON.stringify({
       type: "config",
@@ -132,7 +167,8 @@ ENGINE.on("connection", (ws, req) => {
       },
     })
   );
-
+ }
+  
   for (const client of PLAYER.clients) {
     // reconnect immediately
     client.send(`✅ Engine:${engine} started`);
@@ -191,3 +227,5 @@ PLAYER.on("connection", async (ws, req) => {
     console.error("❌ player", playerId, "connection error:", error);
   });
 });
+
+}

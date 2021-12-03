@@ -4,6 +4,10 @@
 
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
 // special keycodes different from KeyboardEvent.keyCode
+
+const Config={
+  UseTurn:true,
+}
 const SpecialKeyCodes = {
   Backspace: 8,
   ShiftLeft: 16,
@@ -83,7 +87,6 @@ class PeerStream extends HTMLVideoElement {
 
     this.ws = { send() { }, close() { } }; // WebSocket
     this.pc = { close() { } }; // RTCPeerConnection
-
     this.setupVideo();
     this.registerKeyboardEvents();
     this.registerMouseHoverEvents();
@@ -108,11 +111,15 @@ class PeerStream extends HTMLVideoElement {
     if (!this.isConnected) return;
 
     let signal = this.getAttribute("signal");
+   
     if (!signal) {
-      const ip = this.getAttribute("ip") || location.hostname || "localhost";
+      console.log("Making Signal");
+      //this check does not work correctly and will always try to connect to local host 
+      const ip = this.getAttribute("ip") || location.hostname /*||"localhost"*/;
       const port = this.getAttribute("port") || 88;
       const token = this.getAttribute("token") || "hello";
       signal = `ws://${ip}:${port}/${token}`;
+     
     }
 
     this.ws.close(1000, "Infinity");
@@ -290,20 +297,33 @@ class PeerStream extends HTMLVideoElement {
 
   setupPeerConnection() {
     this.pc.close();
+    if(Config.UseTurn){
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
       iceServers: [
-        // {
-        //   urls: [
-        //     "stun:stun.l.google.com:19302",
-        //     "stun:stun1.l.google.com:19302",
-        //     "stun:stun2.l.google.com:19302",
-        //     "stun:stun3.l.google.com:19302",
-        //     "stun:stun4.l.google.com:19302",
-        //   ],
-        // },
+         {
+           urls: [
+             "stun:stun.l.google.com:19302",
+              "turn:"+location.hostname+":19303"
+           ],
+           username: "PixelStreamingUser",
+           credential: "AnotherTURNintheroad"
+         },
       ],
     });
+  }else{
+    this.pc = new RTCPeerConnection({
+      sdpSemantics: "unified-plan",
+      iceServers: [
+         {
+           urls: [
+             "stun:stun.l.google.com:19302",
+           ],
+        
+         },
+      ],
+    });
+  }
 
     this.pc.ontrack = (e) => {
       console.log(`Got ${e.track.kind} track:`, e);
