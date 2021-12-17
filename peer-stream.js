@@ -1,4 +1,4 @@
-"4.27.1";
+"4.27.2";
 
 /* eslint-disable */
 
@@ -79,10 +79,10 @@ class PeerStream extends HTMLVideoElement {
   constructor(...params) {
     super(...params);
 
-    window.ps = parent.ps = this;
+    window.ps = this;
 
-    this.ws = { send() { }, close() { } }; // WebSocket
-    this.pc = { close() { } }; // RTCPeerConnection
+    this.ws = { send() {}, close() {} }; // WebSocket
+    this.pc = { close() {} }; // RTCPeerConnection
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -100,6 +100,10 @@ class PeerStream extends HTMLVideoElement {
       },
       false
     );
+
+    this.addEventListener("loadeddata", (e) => {
+      this.style["aspect-ratio"] = this.videoWidth / this.videoHeight;
+    });
   }
 
   // setupWebsocket
@@ -159,7 +163,7 @@ class PeerStream extends HTMLVideoElement {
     // this.dc.close();
   }
 
-  adoptedCallback() { }
+  adoptedCallback() {}
 
   static observedAttributes = ["signal", "ip", "port", "token"];
   attributeChangedCallback(name, oldValue, newValue) {
@@ -328,7 +332,7 @@ class PeerStream extends HTMLVideoElement {
       this.setupOffer();
     };
     const setPoster = () =>
-    (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
+      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
         <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
         <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
         <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
@@ -338,7 +342,7 @@ class PeerStream extends HTMLVideoElement {
       this.pc.onconnectionstatechange =
       this.pc.oniceconnectionstatechange =
       this.pc.onicegatheringstatechange =
-      setPoster;
+        setPoster;
   }
 
   async setupOffer() {
