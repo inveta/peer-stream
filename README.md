@@ -13,7 +13,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer i
 install WebSocket dependency:
 
 ```
-npm install ws@8.3.0
+npm install ws@8.4.0
 node signal.js {key}={value}
 ```
 

@@ -10,7 +10,7 @@
 首先从 npm 安装 WebSocket 依赖，然后启动 signal.js。
 
 ```
-npm install ws@8.2.3
+npm install ws@8.4.0
 node signal.js {key}={value}
 ```
 

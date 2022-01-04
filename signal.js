@@ -1,8 +1,6 @@
-"4.27.1";
+"4.27.2";
 
-/* eslint-disable */
-
-// node signal.js player=88 engine=8888 token=hello limit=1
+// node signal.js player=88 engine=8888 token=hello limit=4
 
 const WebSocket = require("ws");
 const http = require("http");
@@ -43,7 +41,8 @@ http
   .createServer()
   .on("upgrade", (request, socket, head) => {
     try {
-      if (request.url.slice(1) !== token) throw "";
+      // 认证
+      // if (request.url.slice(1) !== token) throw "";
       if (PLAYER.clients.size >= limit) throw "";
     } catch (err) {
       socket.destroy();
@@ -128,7 +127,14 @@ ENGINE.on("connection", (ws, req) => {
     JSON.stringify({
       type: "config",
       peerConnectionOptions: {
-        // iceServers: [{ urls: ["stun:34.250.222.95:19302"] }],
+        // iceServers: [{
+        //     urls: [
+        //       "stun:stun.l.google.com:19302",
+        //       "stun:stun1.l.google.com:19302",
+        //       "stun:stun2.l.google.com:19302",
+        //       "stun:stun3.l.google.com:19302",
+        //       "stun:stun4.l.google.com:19302",
+        // ],},],
       },
     })
   );
