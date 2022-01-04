@@ -1,8 +1,0 @@
-node_modules/
-.vscode/
-package.json
-package-lock.json
-.DS_Store
-jsconfig.json
-test/index_*
-ps.zip
