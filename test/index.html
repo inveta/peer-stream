@@ -1,42 +1,46 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
 
-<head>
-  <meta charset="utf-8" />
+    <style>
+      body {
+        background-color: black;
+        font-weight: bold;
+        font-size: large;
+      }
 
-  <style>
-    body {
-      background-color: black;
-      font-weight: bold;
-      font-size: large;
-    }
+      video {
+        position: absolute;
+      }
 
-    video {
-      position: absolute;
-    }
+      #stats {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        /* 提高文字对比度 */
+        text-shadow: black 0 0 0.3em;
+      }
 
-    #stats {
-      position: fixed;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      /* 提高文字对比度 */
-      text-shadow: black 0 0 .3em;
-    }
-  </style>
-</head>
+      ::cue {
+        color: yellow;
+        background-color: transparent;
+        text-shadow: black 0 0 0.5em;
+        font-size: medium;
+      }
+    </style>
+  </head>
 
-<body>
-  <script type="text/javascript" src="../peer-stream.js"></script>
+  <body>
+    <script type="text/javascript" src="../peer-stream.js"></script>
 
-  <video is="peer-stream" signal="ws://10.0.42.15:88" audio>
-    <track default kind="captions" srclang="en" />
-  </video>
+    <video is="peer-stream" signal="ws://localhost:88" audio>
+      <track default kind="captions" srclang="en" />
+    </video>
 
-  <!-- WebRTC 监控 -->
-  <pre id="stats">Not connected</pre>
-  <script type="text/javascript" src="index.js"></script>
-
-</body>
-
+    <!-- WebRTC 监控 -->
+    <pre id="stats">Not connected</pre>
+    <script type="text/javascript" src="index.js"></script>
+  </body>
 </html>

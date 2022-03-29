@@ -13,7 +13,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, PixelStreamer i
 install WebSocket dependency:
 
 ```
-npm install ws@8.4.0
+npm install ws@8.5.0
 node signal.js {key}={value}
 ```
 
@@ -40,8 +40,9 @@ common startup options:
 
 ```
  -ForceRes
- -ResX=1920
- -ResY=1080
+ -windowed
+ -ResX=1280
+ -ResY=720
  -AudioMixer
  -RenderOffScreen
  -graphicsadapter=0
@@ -108,7 +109,7 @@ ps.style.pointerEvents='none'   // read only <video>
 
 ## © MIT License
 
-Copyright (c) 2020-2021 XOSG
+Copyright (c) 2020-2022 XOSG
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
