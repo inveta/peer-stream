@@ -40,8 +40,8 @@ async function aggregateStats() {
   statsReport.forEach((stat) => {
     switch (stat.type) {
       case "data-channel": {
-        stats.innerText += `\n ✉ Data Channel ◀ ${stat.bytesSent.format()}B`;
-        stats.innerText += `\n ✉ Data Channel ▶ ${stat.bytesReceived.format()}B`;
+        stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.format()}B`;
+        stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.format()}B`;
         break;
       }
       case "inbound-rtp": {
@@ -52,9 +52,9 @@ async function aggregateStats() {
       Packets Lost: ${stat.packetsLost.format()}
       FPS: ${stat.framesPerSecond} Hz
       Frames Dropped: ${stat.framesDropped?.format()}
-      Video ▶ ${stat.bytesReceived.format()}B`;
+      Video ↓↓ ${stat.bytesReceived.format()}B`;
         else if (stat.mediaType === "audio")
-          stats.innerText += `\n ♬ Audio ▶ ${stat.bytesReceived.format()}B`;
+          stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.format()}B`;
         break;
       }
       case "candidate-pair": {

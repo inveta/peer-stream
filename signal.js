@@ -1,4 +1,4 @@
-"4.27.2";
+"5.0.0";
 
 // node signal.js player=88 engine=8888 token=hello limit=4
 
@@ -98,7 +98,7 @@ ENGINE.on("connection", (ws, req) => {
       return;
     }
 
-    if (["answer", "iceCandidate"].includes(msg.type)) {
+    if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
       p.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
       p.send(msg.reason);
@@ -172,7 +172,7 @@ PLAYER.on("connection", async (ws, req) => {
     console.log("player", playerId, msg.type);
 
     msg.playerId = playerId;
-    if (["offer", "iceCandidate"].includes(msg.type)) {
+    if (["answer", "iceCandidate"].includes(msg.type)) {
       ENGINE.ws.send(JSON.stringify(msg));
     } else if (msg.type === "debug") {
       let debug;
@@ -196,4 +196,8 @@ PLAYER.on("connection", async (ws, req) => {
   ws.on("error", (error) => {
     console.error("❌ player", playerId, "connection error:", error);
   });
+
+  ENGINE.ws.send(
+    JSON.stringify({ type: "playerConnected", playerId: playerId, dataChannel: true, sfu: false })
+  );
 });

@@ -1,4 +1,4 @@
-"4.27.2";
+"5.0.0";
 
 /* eslint-disable */
 
@@ -33,6 +33,9 @@ const RECEIVE = {
   VideoEncoderAvgQP: 5,
   LatencyTest: 6,
   InitialSettings: 7,
+  FileExtension: 8,
+  FileMimeType: 9,
+  FileContents: 10,
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
@@ -73,6 +76,11 @@ const SEND = {
   TouchStart: 80,
   TouchEnd: 81,
   TouchMove: 82,
+
+  // Gamepad Input Messages. Range = 90..99
+  GamepadButtonPressed: 90,
+  GamepadButtonReleased: 91,
+  GamepadAnalog: 92,
 };
 
 class PeerStream extends HTMLVideoElement {
@@ -107,7 +115,7 @@ class PeerStream extends HTMLVideoElement {
   }
 
   // setupWebsocket
-  connectedCallback() {
+  async connectedCallback() {
     // This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
 
@@ -119,6 +127,7 @@ class PeerStream extends HTMLVideoElement {
       signal = `ws://${ip}:${port}/${token}`;
     }
 
+    // await new Promise((res) => setTimeout(res, 1000));
     this.ws.close(1000, "Infinity");
     this.ws = new WebSocket(signal);
 
@@ -129,9 +138,6 @@ class PeerStream extends HTMLVideoElement {
     this.ws.onopen = async (e) => {
       console.info("✅ connected to", this.ws.url);
 
-      this.setupPeerConnection();
-      // If the new data channel is the first one added to the connection, renegotiation is started by delivering a negotiationneeded event.
-      this.setupDataChannel();
       // this.pc.restartIce();
 
       clearInterval(this.ping);
@@ -153,6 +159,8 @@ class PeerStream extends HTMLVideoElement {
       clearTimeout(this.reconnect);
       this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
     };
+
+    this.setupPeerConnection();
   }
 
   disconnectedCallback() {
@@ -176,23 +184,35 @@ class PeerStream extends HTMLVideoElement {
     try {
       msg = JSON.parse(msg);
     } catch {
-      console.debug("signaler:", msg);
+      console.debug("↓↓", msg);
       return;
     }
+    if (msg.type === "offer") {
+      const offer = new RTCSessionDescription(msg);
+      console.log("↓↓ offer", offer);
 
-    if (msg.type === "answer") {
-      const answer = new RTCSessionDescription(msg);
-      await this.pc.setRemoteDescription(answer);
-      console.log("Got answer:", answer);
-      for (const receiver of this.pc.getReceivers()) {
+      await this.pc.setRemoteDescription(offer);
+
+      // Setup a transceiver for getting UE video
+      this.pc.addTransceiver("video", { direction: "recvonly" });
+
+      const answer = await this.pc.createAnswer();
+      await this.pc.setLocalDescription(answer);
+
+      console.log("↑↑ answer", answer);
+      this.ws.send(JSON.stringify(answer));
+
+      for (let receiver of this.pc.getReceivers()) {
         receiver.playoutDelayHint = 0;
       }
     } else if (msg.type === "iceCandidate") {
       const candidate = new RTCIceCandidate(msg.candidate);
       await this.pc.addIceCandidate(candidate);
-      console.log("Got candidate:", candidate);
+      console.log("↓↓ candidate:", candidate);
+    } else if (msg.type === "answer") {
+      // deprecated
     } else {
-      console.warn("signaler:", msg);
+      console.warn("↓↓", msg);
     }
   }
 
@@ -202,19 +222,19 @@ class PeerStream extends HTMLVideoElement {
     switch (data[0]) {
       case RECEIVE.VideoEncoderAvgQP: {
         this.VideoEncoderQP = +utf16.decode(data.slice(1));
-        console.debug("Got QP:", this.VideoEncoderQP);
+        console.debug("↓↓ QP:", this.VideoEncoderQP);
         break;
       }
       case RECEIVE.Response: {
         // user custom message
         const detail = utf16.decode(data.slice(1));
         this.dispatchEvent(new CustomEvent("message", { detail }));
-        console.info("Got ✉:", detail);
+        console.info("↓↓ ✉:", detail);
         break;
       }
       case RECEIVE.Command: {
         const command = JSON.parse(utf16.decode(data.slice(1)));
-        console.info("Got command:", command);
+        console.info("↓↓ command:", command);
         if (command.command === "onScreenKeyboard") {
           console.info("You should setup a on-screen keyboard");
         }
@@ -223,30 +243,30 @@ class PeerStream extends HTMLVideoElement {
       case RECEIVE.FreezeFrame: {
         const size = new DataView(data.slice(1, 5).buffer).getInt32(0, true);
         const jpeg = data.slice(1 + 4);
-        console.info("Got freezed frame:", jpeg);
+        console.info("↓↓ freezed frame:", jpeg);
         break;
       }
       case RECEIVE.UnfreezeFrame: {
-        console.info("Got 【unfreeze frame】");
+        console.info("↓↓ 【unfreeze frame】");
         break;
       }
       case RECEIVE.LatencyTest: {
         const latencyTimings = JSON.parse(utf16.decode(data.slice(1)));
-        console.info("Got latency timings:", latencyTimings);
+        console.info("↓↓ latency timings:", latencyTimings);
         break;
       }
       case RECEIVE.QualityControlOwnership: {
         this.QualityControlOwnership = data[1] !== 0;
-        console.info("Got Quality Control Ownership:", this.QualityControlOwnership);
+        console.info("↓↓ Quality Control Ownership:", this.QualityControlOwnership);
         break;
       }
       case RECEIVE.InitialSettings: {
         this.InitialSettings = JSON.parse(utf16.decode(data.slice(1)));
-        console.log("Got initial setting:", this.InitialSettings);
+        console.log("↓↓ initial setting:", this.InitialSettings);
         break;
       }
       default: {
-        console.error("Got invalid data:", data);
+        console.error("↓↓ invalid data:", data);
       }
     }
   }
@@ -269,23 +289,28 @@ class PeerStream extends HTMLVideoElement {
     this.style["object-fit"] = "fill";
   }
 
-  setupDataChannel(label = "hello") {
+  setupDataChannel(e) {
     // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
-    this.dc = this.pc.createDataChannel(label, { ordered: true });
+    // this.dc = this.pc.createDataChannel(label, { ordered: true });
+
+    this.dc = e.channel;
+
     // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
     this.dc.binaryType = "arraybuffer";
 
     this.dc.onopen = (e) => {
-      console.log("✅ data channel connected:", label);
+      console.log("✅ data channel connected");
       this.style.pointerEvents = "auto";
       this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
       this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
     };
 
     this.dc.onclose = (e) => {
-      console.info("❌ data channel closed:", label);
+      console.info("❌ data channel closed");
       this.style.pointerEvents = "none";
     };
+
+    this.dc.onerror = (e) => {};
 
     this.dc.onmessage = (e) => {
       this.onDataChannelMessage(e.data);
@@ -296,21 +321,22 @@ class PeerStream extends HTMLVideoElement {
     this.pc.close();
     this.pc = new RTCPeerConnection({
       sdpSemantics: "unified-plan",
-      iceServers: [
-        {
-          urls: [
-            "stun:stun.l.google.com:19302",
-            "stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302",
-            "stun:stun3.l.google.com:19302",
-            "stun:stun4.l.google.com:19302",
-          ],
-        },
-      ],
+      bundlePolicy: "balanced",
+      // iceServers: [
+      //   {
+      //     urls: [
+      //       "stun:stun.l.google.com:19302",
+      //       "stun:stun1.l.google.com:19302",
+      //       "stun:stun2.l.google.com:19302",
+      //       "stun:stun3.l.google.com:19302",
+      //       "stun:stun4.l.google.com:19302",
+      //     ],
+      //   },
+      // ],
     });
 
     this.pc.ontrack = (e) => {
-      console.log(`Got ${e.track.kind} track:`, e);
+      console.log(`↓↓ ${e.track.kind} track:`, e);
       if (e.track.kind === "video") {
         this.srcObject = e.streams[0];
       } else if (e.track.kind === "audio") {
@@ -322,15 +348,14 @@ class PeerStream extends HTMLVideoElement {
     this.pc.onicecandidate = (e) => {
       // firefox
       if (e.candidate?.candidate) {
-        console.log("sending candidate:", e.candidate);
+        console.log("↑↑ candidate:", e.candidate);
         this.ws.send(JSON.stringify({ type: "iceCandidate", candidate: e.candidate }));
       } else {
         // Notice that the end of negotiation is detected here when the event"s candidate property is null.
       }
     };
-    this.pc.onnegotiationneeded = (e) => {
-      this.setupOffer();
-    };
+    // this.pc.onnegotiationneeded = (e) => {
+    // };
     const setPoster = () =>
       (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
         <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
@@ -343,27 +368,10 @@ class PeerStream extends HTMLVideoElement {
       this.pc.oniceconnectionstatechange =
       this.pc.onicegatheringstatechange =
         setPoster;
-  }
 
-  async setupOffer() {
-    // this.pc.addTransceiver("video", { direction: "recvonly" });
-
-    const offer = await this.pc.createOffer({
-      offerToReceiveAudio: +this.hasAttribute("audio"),
-      offerToReceiveVideo: 1,
-      voiceActivityDetection: false,
-    });
-
-    // this indicate we support stereo (Chrome needs this)
-    offer.sdp = offer.sdp.replace(
-      "useinbandfec=1",
-      "useinbandfec=1;stereo=1;sprop-maxcapturerate=48000"
-    );
-
-    this.pc.setLocalDescription(offer);
-
-    this.ws.send(JSON.stringify(offer));
-    console.log("sending offer:", offer);
+    this.pc.ondatachannel = (e) => {
+      this.setupDataChannel(e);
+    };
   }
 
   registerKeyboardEvents() {
