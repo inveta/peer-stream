@@ -197,7 +197,8 @@ PLAYER.on("connection", async (ws, req) => {
     console.error("❌ player", playerId, "connection error:", error);
   });
 
-  ENGINE.ws.send(
-    JSON.stringify({ type: "playerConnected", playerId: playerId, dataChannel: true, sfu: false })
-  );
+  if (ENGINE.ws.readyState === WebSocket.OPEN)
+    ENGINE.ws.send(
+      JSON.stringify({ type: "playerConnected", playerId: playerId, dataChannel: true, sfu: false })
+    );
 });

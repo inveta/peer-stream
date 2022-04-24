@@ -207,8 +207,8 @@ class PeerStream extends HTMLVideoElement {
       }
     } else if (msg.type === "iceCandidate") {
       const candidate = new RTCIceCandidate(msg.candidate);
-      await this.pc.addIceCandidate(candidate);
       console.log("↓↓ candidate:", candidate);
+      await this.pc.addIceCandidate(candidate);
     } else if (msg.type === "answer") {
       // deprecated
     } else {
@@ -229,7 +229,7 @@ class PeerStream extends HTMLVideoElement {
         // user custom message
         const detail = utf16.decode(data.slice(1));
         this.dispatchEvent(new CustomEvent("message", { detail }));
-        console.info("↓↓ ✉:", detail);
+        console.info("↓↓", detail);
         break;
       }
       case RECEIVE.Command: {
