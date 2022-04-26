@@ -123,6 +123,6 @@ uglifyjs signal.js > signal.min.js
 ## 软件要求
 
 - Google Chrome 88+
-- Unreal Engine 4.27+
+- Unreal Engine 5.0+
 - NodeJS 14+
 - npm/ws 8.0+

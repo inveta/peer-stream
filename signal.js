@@ -28,11 +28,12 @@ Object.assign(
   args
 );
 
-const ENGINE = new WebSocket.Server({ noServer: true });
+global.ENGINE = new WebSocket.Server({ noServer: true });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
 // browser client
-const PLAYER = new WebSocket.Server({
+
+global.PLAYER = new WebSocket.Server({
   noServer: true,
   clientTracking: true,
 });

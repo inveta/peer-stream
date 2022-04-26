@@ -45,7 +45,7 @@ const SEND = {
    */
   IFrameRequest: 0,
   RequestQualityControl: 1,
-  MaxFpsRequest: 2,
+  FpsRequest: 2,
   AverageBitrateRequest: 3,
   StartStreaming: 4,
   StopStreaming: 5,
@@ -354,20 +354,19 @@ class PeerStream extends HTMLVideoElement {
         // Notice that the end of negotiation is detected here when the event"s candidate property is null.
       }
     };
-    // this.pc.onnegotiationneeded = (e) => {
-    // };
-    const setPoster = () =>
-      (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
-        <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
-        <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
-        <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
-        <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
-      </svg>`);
-    this.pc.onsignalingstatechange =
-      this.pc.onconnectionstatechange =
-      this.pc.oniceconnectionstatechange =
-      this.pc.onicegatheringstatechange =
-        setPoster;
+
+    // const setPoster = () =>
+    //   (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
+    //     <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
+    //     <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
+    //     <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
+    //     <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
+    //   </svg>`);
+    // this.pc.onsignalingstatechange =
+    //   this.pc.onconnectionstatechange =
+    //   this.pc.oniceconnectionstatechange =
+    //   this.pc.onicegatheringstatechange =
+    //     setPoster;
 
     this.pc.ondatachannel = (e) => {
       this.setupDataChannel(e);
