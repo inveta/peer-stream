@@ -23,7 +23,7 @@ node signal.js {key}={value}
 | token  | hello  | 信令密码（url 末端） |
 | limit  | 4      | 玩家数量上限         |
 
-## 启动 UE4
+## 启动 UE5
 
 首先开启像素流插件，然后在独立启动模式的设置中，或者打包后的文件中输入启动选项。
 

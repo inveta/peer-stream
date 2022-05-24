@@ -26,7 +26,7 @@ startup options:
 | token  | hello   | password appended to URL |
 | limit  | 4       | max number of players    |
 
-## ✡ Unreal Engine 4
+## ✡ Unreal Engine
 
 enable the plugin:
 
