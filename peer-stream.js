@@ -1,4 +1,4 @@
-"5.0.0";
+"5.0.1";
 
 /* eslint-disable */
 
@@ -301,8 +301,13 @@ class PeerStream extends HTMLVideoElement {
     this.dc.onopen = (e) => {
       console.log("✅ data channel connected");
       this.style.pointerEvents = "auto";
-      this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
-      this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
+
+      setTimeout(() => {
+        this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
+        if (!this.QualityControlOwnership) {
+          this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
+        }
+      }, 500);
     };
 
     this.dc.onclose = (e) => {
@@ -662,6 +667,7 @@ class PeerStream extends HTMLVideoElement {
   debug(NodeJS) {
     // 调试信令服务器
     this.ws.send(JSON.stringify({ type: "debug", debug: NodeJS }));
+    return true;
   }
 }
 
