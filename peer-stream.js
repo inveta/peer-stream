@@ -112,6 +112,8 @@ class PeerStream extends HTMLVideoElement {
     this.addEventListener("loadeddata", (e) => {
       this.style["aspect-ratio"] = this.videoWidth / this.videoHeight;
     });
+
+    this.setupPeerConnection();
   }
 
   // setupWebsocket
@@ -151,16 +153,12 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      console.info("❌ signaler closed:", e.reason || e.code);
+      console.info("❌ WebSocket closed:", e.reason || e.code);
       clearInterval(this.ping);
-      const timeout = +e.reason || 3000;
-      if (timeout === Infinity) return;
 
       clearTimeout(this.reconnect);
-      this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
+      this.reconnect = setTimeout(() => this.connectedCallback(), 3000);
     };
-
-    this.setupPeerConnection();
   }
 
   disconnectedCallback() {

@@ -39,16 +39,17 @@ start myPackagedGame.exe -{key}={value}
 common startup options:
 
 ```
+ -PixelStreamingURL="ws://localhost:8888"
+ -RenderOffScreen
+ -unattended
  -ForceRes
  -windowed
  -ResX=1280
  -ResY=720
  -AudioMixer
- -RenderOffScreen
  -graphicsadapter=0
  -AllowPixelStreamingCommands
  -PixelStreamingEncoderRateControl=VBR
- -PixelStreamingURL="ws://localhost:8888"
 ```
 
 ## ֍ Browser
