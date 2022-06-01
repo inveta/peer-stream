@@ -1,4 +1,4 @@
-"5.0.1";
+"5.0.2";
 
 /* eslint-disable */
 
@@ -113,24 +113,26 @@ class PeerStream extends HTMLVideoElement {
       this.style["aspect-ratio"] = this.videoWidth / this.videoHeight;
     });
 
-    this.setupPeerConnection();
+    // this.setupPeerConnection();
   }
 
   // setupWebsocket
   async connectedCallback() {
     // This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
-
-    let signal = this.getAttribute("signal");
-    if (!signal) {
-      const ip = this.getAttribute("ip") || location.hostname || "localhost";
-      const port = this.getAttribute("port") || 88;
-      const token = this.getAttribute("token") || "hello";
-      signal = `ws://${ip}:${port}/${token}`;
+    if (this.pc.connectionState === "connected") {
+      clearTimeout(this.disconnectTimer);
+      // this.pc.restartIce();
+      this.play();
+      return;
     }
 
+    this.setupPeerConnection();
+
+    let signal = this.getAttribute("signal") || `ws://${location.hostname || "localhost"}:88/hello`;
+
     // await new Promise((res) => setTimeout(res, 1000));
-    this.ws.close(1000, "Infinity");
+    this.ws.close(1000);
     this.ws = new WebSocket(signal);
 
     this.ws.onerror = (e) => {
@@ -139,8 +141,6 @@ class PeerStream extends HTMLVideoElement {
 
     this.ws.onopen = async (e) => {
       console.info("✅ connected to", this.ws.url);
-
-      // this.pc.restartIce();
 
       clearInterval(this.ping);
       this.ping = setInterval(() => {
@@ -162,20 +162,22 @@ class PeerStream extends HTMLVideoElement {
   }
 
   disconnectedCallback() {
-    // WebRTC的生命周期与<video>的生命周期绑定
-    this.ws.close(1000, "Infinity");
-    this.pc.close();
-    console.log("❌ peer connection closing");
-    // this.dc.close();
+    this.disconnectTimer = setTimeout(() => {
+      // WebRTC的生命周期与<video>的生命周期绑定
+      this.ws.close(1000);
+      this.pc.close();
+      console.log("❌ peer connection closing");
+      // this.dc.close();
+    }, 1000);
   }
 
   adoptedCallback() {}
 
-  static observedAttributes = ["signal", "ip", "port", "token"];
+  static observedAttributes = ["signal"];
   attributeChangedCallback(name, oldValue, newValue) {
     if (!this.isConnected) return;
     // fired before connectedCallback when startup  一开始会触发：oldValue从null变成newValue
-    this.ws.close(1000, "1");
+    this.ws.close(1000);
   }
 
   async onWebSocketMessage(msg) {
