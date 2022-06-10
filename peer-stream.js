@@ -1,7 +1,5 @@
 "5.0.2";
 
-/* eslint-disable */
-
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
 // special keycodes different from KeyboardEvent.keyCode
 const SpecialKeyCodes = {
@@ -120,7 +118,7 @@ class PeerStream extends HTMLVideoElement {
   async connectedCallback() {
     // This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
     if (!this.isConnected) return;
-    if (this.pc.connectionState === "connected") {
+    if (this.pc.connectionState === "connected" && this.dc.readyState === "open") {
       clearTimeout(this.disconnectTimer);
       // this.pc.restartIce();
       this.play();
@@ -382,13 +380,12 @@ class PeerStream extends HTMLVideoElement {
     this.onkeydown = (e) => {
       this.dc.send(new Uint8Array([SEND.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]));
       // whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
-      e.preventDefault();
-      //  e.stopPropagation
+      // e.preventDefault();
     };
 
     this.onkeyup = (e) => {
       this.dc.send(new Uint8Array([SEND.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]));
-      e.preventDefault();
+      // e.preventDefault();
     };
 
     this.onkeypress = (e) => {
@@ -396,7 +393,7 @@ class PeerStream extends HTMLVideoElement {
       data.setUint8(0, SEND.KeyPress);
       data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
       this.dc.send(data);
-      e.preventDefault();
+      // e.preventDefault();
     };
   }
 
@@ -642,7 +639,7 @@ class PeerStream extends HTMLVideoElement {
       byteIdx += 2;
     }
     this.dc.send(data);
-    // 有时候前端问：怎么返回undefined？是不是没发送成功？
+
     return true;
   }
 
@@ -665,7 +662,7 @@ class PeerStream extends HTMLVideoElement {
   }
 
   debug(NodeJS) {
-    // 调试信令服务器
+    // debugging the signalling server
     this.ws.send(JSON.stringify({ type: "debug", debug: NodeJS }));
     return true;
   }
