@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "signal-88": "node signal-auto.js player=88 engine=8888",
+    "new blank branch": "git checkout --orphan new",
+    "signal-88": "node signal-auth.js player=88 engine=8888",
     "88": "start C:/Users/admin/Desktop/gza0722/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888 -graphicsadapter=0 -ProjectID=UE5"
   }
 }

@@ -1,9 +1,8 @@
-"5.0.2";
+"5.0.3";
 
 // node signal.js player=88 engine=8888 token=hello limit=4
 
 const WebSocket = require("ws");
-const http = require("http");
 
 // process.argv[0] == 'path/to/node.exe'
 // process.argv[1] === __filename
@@ -16,58 +15,12 @@ const args = process.argv.slice(2).reduce((pairs, pair) => {
   pairs[key] = value;
   return pairs;
 }, {});
-Object.assign(
-  global,
-  {
-    player: 88,
-    engine: 8888,
-    token: "hello",
-    limit: 4,
-    nextPlayerId: 100,
-  },
-  args
-);
+Object.assign(global, args);
 
-global.ENGINE = new WebSocket.Server({ noServer: true });
+global.ENGINE = new WebSocket.Server({ port: global.engine || 8888 });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
-// browser client
-
-global.PLAYER = new WebSocket.Server({
-  noServer: true,
-  clientTracking: true,
-});
-
-http
-  .createServer()
-  .on("upgrade", (request, socket, head) => {
-    try {
-      // password
-      // if (request.url.slice(1) !== token) throw "";
-      // if (PLAYER.clients.size >= limit) throw "";
-    } catch (err) {
-      socket.destroy();
-      return;
-    }
-
-    PLAYER.handleUpgrade(request, socket, head, (ws) => PLAYER.emit("connection", ws, request));
-  })
-  .listen(player, () => console.log("֍ signaling for player:", player));
-
-http
-  .createServer()
-  .on("upgrade", (request, socket, head) => {
-    try {
-      // one signal one UE
-      if (ENGINE.ws.readyState === WebSocket.OPEN) throw "";
-    } catch (err) {
-      socket.destroy();
-      return;
-    }
-
-    ENGINE.handleUpgrade(request, socket, head, (ws) => ENGINE.emit("connection", ws, request));
-  })
-  .listen(engine, () => console.log("✡ signaling for engine:", engine));
+console.log("✡ signaling for engine:", ENGINE.address().port);
 
 ENGINE.on("connection", (ws, req) => {
   ws.req = req;
@@ -113,7 +66,7 @@ ENGINE.on("connection", (ws, req) => {
     // reason is buffer ??
     console.log("❌ Engine closed:", String(reason));
     for (const client of PLAYER.clients) {
-      client.send(`❌ Engine:${engine} stopped`);
+      client.send(`❌ Engine stopped`);
     }
   });
 
@@ -142,11 +95,18 @@ ENGINE.on("connection", (ws, req) => {
 
   for (const client of PLAYER.clients) {
     // reconnect immediately
-    client.send(`✅ Engine:${engine} started`);
+    client.send(`✅ Engine started`);
     client.close(1011, "1");
   }
 });
 
+// browser client
+global.PLAYER = new WebSocket.Server({
+  port: global.player || 88,
+  clientTracking: true,
+});
+console.log("֍ signaling for player:", PLAYER.address().port);
+let nextPlayerId = 100;
 // every player
 PLAYER.on("connection", async (ws, req) => {
   const playerId = String(++nextPlayerId);
