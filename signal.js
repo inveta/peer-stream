@@ -15,12 +15,11 @@ const args = process.argv.slice(2).reduce((pairs, pair) => {
   pairs[key] = value;
   return pairs;
 }, {});
-Object.assign(global, args);
 
-global.ENGINE = new WebSocket.Server({ port: global.engine || 8888 });
+global.ENGINE = new WebSocket.Server({ port: args.engine || 8888 });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
-console.log("✡ signaling for engine:", ENGINE.address().port);
+console.log("signaling for engine:", ENGINE.address().port);
 
 ENGINE.on("connection", (ws, req) => {
   ws.req = req;
@@ -102,10 +101,10 @@ ENGINE.on("connection", (ws, req) => {
 
 // browser client
 global.PLAYER = new WebSocket.Server({
-  port: global.player || 88,
+  port: args.player || 88,
   clientTracking: true,
 });
-console.log("֍ signaling for player:", PLAYER.address().port);
+console.log("signaling for player:", PLAYER.address().port);
 let nextPlayerId = 100;
 // every player
 PLAYER.on("connection", async (ws, req) => {

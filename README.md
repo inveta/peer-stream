@@ -2,31 +2,32 @@
 
 Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js is a lightweight WebRTC library with 0 dependency, containing a frontend component (using WebComponents API), along with a signaling server (using NodeJS).
 
-- peer-stream.js (20KB): https://inveta.github.io/peer-stream/peer-stream.js
-- signal.js (5KB): https://inveta.github.io/peer-stream/signal.js
-- WebSocket for NodeJS: https://www.npmjs.com/package/ws
-- EpicGame's SDK: https://github.com/EpicGames/PixelStreamingInfrastructure
-- Pixel Streaming Plugin: https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Plugins/Media/PixelStreaming
+- peer-stream.js: frontend SDK.
+- signal.js: signaling server.
+- signal-auth.js: utilities.
+- package.json: maintain all parameters.
 
-## ߷ Signaling Server
-
-install WebSocket dependency:
+## Signaling Server
 
 ```
+# install WebSocket
 npm install ws@8.5.0
-node signal.js {key}={value}
+
+# start Signaling Server
+node signal.js player=88 engine=8888
+
+# or start Signaling Server with Auth
+node signal-auth.js player=88 engine=8888
 ```
 
-startup options:
+## signal-auth.js
 
-| key    | default | usage                    |
-| ------ | ------- | ------------------------ |
-| player | 88      | browser port             |
-| engine | 8888    | unreal engine port       |
-| token  | hello   | password appended to URL |
-| limit  | 4       | max number of players    |
+- authenticate player with token before connection.
+- limit max number of players connected.
+- WebSocket throttle, prevent frequent reconnection. (or UE5 will crash)
+- start UE5 automatically when player connected. (using package.json)
 
-## ✡ Unreal Engine
+## Unreal Engine
 
 enable the plugin:
 
@@ -42,17 +43,17 @@ common startup options:
  -PixelStreamingURL="ws://localhost:8888"
  -RenderOffScreen
  -Unattended
+ -graphicsadapter=0
  -ForceRes
  -windowed
  -ResX=1280
  -ResY=720
  -AudioMixer
- -graphicsadapter=0
  -AllowPixelStreamingCommands
  -PixelStreamingEncoderRateControl=VBR
 ```
 
-## ֍ Browser
+## Browser
 
 HTML:
 
@@ -72,7 +73,7 @@ document.body.append(ps);
 </script>
 ```
 
-## ✉ Messages
+## Messages
 
 sending messages:
 
@@ -89,7 +90,7 @@ ps.addEventListener("message", e => {
 });
 ```
 
-## ⌘ Common Commands
+## Common Commands
 
 ```
 ps.debug('PLAYER.clients.size')   // show players count
@@ -101,7 +102,7 @@ ps.addEventListener('mouseenter',()=>{ps.focus();ps.requestPointerLock()})    //
 ps.style.pointerEvents='none'   // read only <video>
 ```
 
-## ◰ Requirement
+## Requirement
 
 - Google Chrome 90+
 - Unreal Engine 5.0.0+
