@@ -22,6 +22,11 @@ ENGINE.ws = {}; // Unreal Engine's WebSocket
 console.log("signaling for engine:", ENGINE.address().port);
 
 ENGINE.on("connection", (ws, req) => {
+  // only one UE5
+  if (global.ENGINE.clients.size > 1) {
+    ws.close();
+  }
+
   ws.req = req;
   ENGINE.ws = ws;
 
@@ -117,7 +122,7 @@ PLAYER.on("connection", async (ws, req) => {
 
   ws.on("message", (msg) => {
     if (ENGINE.ws.readyState !== WebSocket.OPEN) {
-      ws.send(`❌ Engine:${engine} not ready`);
+      ws.send(`❌ Engine not ready`);
       return;
     }
 

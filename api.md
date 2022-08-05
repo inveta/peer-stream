@@ -1,4 +1,4 @@
-# 创建对象（PLSB）
+# 创建 PLSB 对象
 
 ## 生成 POI（点）
 
@@ -7,7 +7,7 @@ ps.emitMessage({
   "type":     "spawn-POI",
   "location": "X=18086 Y=1223779 Z=5204",   // cm
   "icon":     "\uE999",
-  "title":    "POI点的标题",
+  "title":    "POI点的标题",  // 可为空
   "color":    "R=1 G=1 B=1 A=1",  // 0 ~ 1
   "id":       "poi001",
   "shape":    "0"
@@ -23,7 +23,7 @@ ps.emitMessage({
 - 类型：固定字符串“spawn-POI”。
 - 坐标：单位 cm，需要将经纬度海拔转成三维空间中的 XYZ。
 - 图标：传一个 Unicode 字符（预先自定义字体图标库）。
-- 标题：POI 图标旁边展示的标题（可为空）。
+- 标题：POI 图标旁边展示的标题。
 - 颜色：POI 点的主题颜色。
 - 形状：0 菱形，1 圆形，2 圆角方形。
 
