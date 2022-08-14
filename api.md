@@ -1,6 +1,6 @@
 # 创建 PLSB 对象
 
-## 生成 POI（点）
+## 【旧版接口】生成 POI（点）
 
 ```
 ps.emitMessage({
@@ -9,9 +9,36 @@ ps.emitMessage({
   "icon":     "\uE999",
   "title":    "POI点的标题",  // 可为空
   "color":    "R=1 G=1 B=1 A=1",  // 0 ~ 1
+  "shape":    "0",
   "id":       "poi001",
-  "shape":    "0"
 })
+
+// 飞过去
+ps.emitMessage({
+  "type": "flyToIndex",
+  "id":   "X=18086 Y=1223779 Z=5204"
+})
+```
+
+- 类型：固定字符串“spawn-POI”。
+- 坐标：单位 cm，需要将经纬度海拔转成三维空间中的 XYZ。
+- 图标：传一个 Unicode 字符（预先自定义字体图标库）。
+- 标题：POI 图标旁边展示的标题。
+- 颜色：POI 点的主题颜色。
+- 形状：0 菱形，1 圆形，2 圆角方形。
+
+## 生成 POI（点）
+
+```
+ps.emitMessage([
+    "spawn-POI",
+    "location: X=18086 Y=1223779 Z=5204", // cm
+    "icon:\uE998",  // char
+    "title:POI标题",    // string
+    "color: R=0 G=1 B=.5",   // 0~1
+    "shape:2",  // 0、1、2
+    "id:poi001",
+].join('\r\n'));
 
 // 飞过去
 ps.emitMessage({
@@ -30,15 +57,15 @@ ps.emitMessage({
 ## 生成路径（线）
 
 ```
-ps.emitMessage({
-  "type":     "spawn-path",
-  "points":   "X=0 Y=0 Z=1500; X=-1000 Y=0 Z=2000; X=0 Y=0 Z=0; X=1000 Y=0 Z=2000; X=0 Y=0 Z=1500 ",  // cm
-  "location": "X=15702 Y=1160912 Z=5500",  // cm
-  "width":    "100",  // cm
-  "material": "0",  // int
-  "color":    "R=0 G=1 B=1 A=.5",   // 0 ~ 1
-  "id":       "path001"
-})
+ps.emitMessage([
+    "spawn-path",
+    "points: X=0 Y=0 Z=1500; X=-1000 Y=0 Z=2000; X=0 Y=0 Z=0; X=1000 Y=0 Z=2000; X=0 Y=0 Z=1500",   // cm
+    "location: X=15702 Y=1160912 Z=5500", // cm
+    "width:100",    // cm
+    "material:0",    // int
+    "color: R=0 G=1 B=1 A=.5",   // 0~1
+    "id:path001",
+].join('\r\n'));
 
 // 飞过去
 ps.emitMessage({
@@ -57,16 +84,15 @@ ps.emitMessage({
 ## 生成区域围栏（面）
 
 ```
-ps.emitMessage({
-  "type":     "spawn-area",
-  "points":   "X=1000 Y=0;  X=-809 Y=588;  X=309 Y=-951;  X=309 Y=951;  X=-809 Y=-588 ",   // cm
-  "color":    "R=0 G=1 B=1 A=.1",   // 0 ~ 1
-  "material": "0",  // int
-  "height":   "300" , // cm
-  "location": "X=15702 Y=1260912 Z=5200",  // cm
-  "id":       "area001"
-})
-
+ps.emitMessage([
+    "spawn-area",
+    "points: X=1000 Y=0;  X=-809 Y=588;  X=309 Y=-951;  X=309 Y=951;  X=-809 Y=-588",   // cm
+    "location: X=15702 Y=1260912 Z=5200", // cm
+    "height:300",    // cm
+    "material:0",    // int
+    "color: R=0 G=1 B=1 A=.1",   // 0~1
+    "id:area001",
+].join('\r\n'));
 
 // 飞过去
 ps.emitMessage({
