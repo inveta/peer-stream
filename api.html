@@ -201,7 +201,7 @@
     </aside>
 
     <script type="module">
-      let markdown = new URL("./api.md", location.href);
+      let markdown = new URL("./demo.md", location.href);
       info.prepend("✅ ", markdown.href);
       markdown = await fetch(markdown)
         .then((r) => r.text())

@@ -111,15 +111,14 @@ ps.emitMessage({
 ## 生成动画特效（面）
 
 ```
-ps.emitMessage({
-  "type":     "spawn-VFX",
-  "texture":  "0",  // int
-  "location": "X=16772 Y=1264692 Z=5230",  // cm
-  "scale":    "1.0",
-  "period":   "1.0",    // s
-  "id":       "vfx001"
-})
-
+ps.emitMessage([
+    "spawn-VFX",
+    "location: X=16772 Y=1264692 Z=5230", // cm
+    "scale:1.0",    // float
+    "texture:0",    // int
+    "period: 1.0",   // s
+    "id:vfx001",
+].join('\r\n'));
 
 // 飞过去
 ps.emitMessage({
@@ -138,14 +137,13 @@ ps.emitMessage({
 ## 生成模型（体）
 
 ```
-ps.emitMessage({
-  "type":     "spawn-model",
-  "mesh":     "0",  // int
-  "location": "X=16772 Y=1269692 Z=5230",  // cm
-  "scale":    "1.0",
-  "id":       "model001"
-})
-
+ps.emitMessage([
+    "spawn-mesh",
+    "location: X=16772 Y=1269692 Z=5230", // cm
+    "scale:1.0",    // float
+    "mesh:0",    // int
+    "id:mesh001",
+].join('\r\n'));
 
 // 飞过去
 ps.emitMessage({
@@ -154,7 +152,7 @@ ps.emitMessage({
 })
 ```
 
-- 类型：固定字符串“spawn-model”。
+- 类型：固定字符串“spawn-mesh”。
 - 模型：选择模型编号。
 - 位置：三维空间中 XYZ 坐标（需要从经纬海拔转换）。
 - 缩放：模型整体的缩放倍数。
