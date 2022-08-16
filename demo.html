@@ -1,135 +1,286 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
 
+    <!-- 左侧 -->
     <style>
-      body {
+      input[type="radio"] {
+        padding: 0.5em;
+        margin: 0;
+        cursor: pointer;
+        width: 100%;
+        appearance: none;
+      }
+
+      form {
+        position: fixed;
+        box-shadow: black 0.2em 0.2em 0.5em 0px;
+        left: 0;
+        top: 0;
+        width: 20%;
+        max-height: 100%;
+        border-bottom-right-radius: 1em;
+        resize: horizontal;
+        padding: 0.5em;
+        overflow-x: hidden;
         background-color: black;
-        font-weight: bold;
+      }
+
+      form [name="h1"] {
+        display: block;
         font-size: large;
       }
 
-      video {
-        position: absolute;
+      form [name="h1"]::before {
+        content: attr(value);
       }
 
-      #stats {
-        position: fixed;
-        right: 0;
-        bottom: 0;
-        pointer-events: none;
-        /* text contrast */
-        text-shadow: black 0 0 0.3em;
+      form [name="h1"]::after {
+        float: right;
+        content: ">";
       }
 
-      ::cue {
-        color: yellow;
-        background-color: transparent;
-        text-shadow: black 0 0 0.5em;
+      form [name="h1"]:checked {
+        color: cyan;
+      }
+
+      form [name="h1"]:checked:after {
+        content: "v";
+      }
+
+      form [name="h1"]:checked + div {
+        display: block;
+      }
+
+      form [name="h1"] + div {
+        display: none;
+      }
+
+      form [name="h2"] {
         font-size: medium;
+        text-align: right;
+      }
+
+      form [name="h2"]::after {
+        content: attr(value);
+        vertical-align: middle;
+      }
+
+      form [name="h2"]:checked {
+        font-weight: bolder;
+      }
+
+      form [name="h2"]:checked::before {
+        content: "";
+        width: 1em;
+        height: 1em;
+        vertical-align: middle;
+        background-color: cyan;
+        display: inline-block;
+        margin-right: 0.7em;
+        border-radius: 50%;
+      }
+    </style>
+
+    <!-- 其他 -->
+    <style>
+      * {
+        color: white;
+        box-sizing: border-box;
+      }
+
+      video {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+      }
+
+      /* 右下角开关 */
+      input[type="checkbox"] {
+        position: fixed;
+        right: 0.8em;
+        bottom: 0.5em;
+        appearance: none;
+        font-size: xx-large;
+        text-shadow: 0px 0px 0.2em black;
+        cursor: pointer;
+        z-index: 1;
+      }
+
+      input[type="checkbox"]:hover {
+        color: cyan;
+      }
+
+      input[type="checkbox"]:before {
+        content: "隐藏";
+      }
+
+      input[type="checkbox"]:checked:before {
+        content: "接口";
+      }
+
+      input[type="checkbox"]:checked ~ form,
+      input[type="checkbox"]:checked ~ aside {
+        display: none;
+      }
+    </style>
+
+    <!-- 右侧 -->
+    <style>
+      aside {
+        position: fixed;
+        box-shadow: black -0.2em 0.2em 0.5em 0px;
+        top: 0;
+        right: 0;
+        width: 30%;
+        padding: 1em;
+        border-bottom-left-radius: 1em;
+        background-color: black;
+      }
+
+      aside #code {
+        font-size: large;
+        /* IDE常用的等宽字体 */
+        font-family: "Courier New";
+        background-color: dimgray;
+        /* padding和border-radius相等 */
+        padding: 0.6em;
+        border-radius: 0.6em;
+        max-height: 33vh;
+        /* 溢出时才出现滚动条 */
+        overflow: auto;
+      }
+
+      aside #other {
+        font-size: large;
+        white-space: pre-wrap;
+      }
+
+      /* 运行按钮 */
+      button {
+        float: right;
+        padding: 0.5em 1em;
+        border-radius: 0.5em;
+        border: none;
+        font-size: large;
+        font-weight: bold;
+        cursor: pointer;
+        background-color: cyan;
+        color: black;
+        box-shadow: 0 0.4em gray;
+      }
+
+      button:hover {
+        background-color: white;
+      }
+
+      button:active {
+        box-shadow: 0 0;
+        transform: translateY(0.4em);
       }
     </style>
   </head>
 
   <body>
-    <script type="text/javascript" src="./peer-stream.js"></script>
+    <script type="text/javascript" src="../peer-stream.js"></script>
 
-    <video is="peer-stream" signal="ws://localhost:88/hello" audio>
-      <track default kind="captions" srclang="en" />
-    </video>
+    <video is="peer-stream" signal="ws://127.0.0.1:88"></video>
+    <input type="checkbox" />
+    <form id="form"></form>
+    <aside>
+      <button>运行</button>
+      <h2>✎ 在线代码编辑</h2>
+      <pre contenteditable="" id="code" autofocus spellcheck="false"></pre>
+      <pre id="other"></pre>
+      <h2>✉ 消息接收：</h2>
+      <pre id="info"></pre>
+    </aside>
 
-    <!-- WebRTC monitor -->
-    <pre id="stats">Not connected</pre>
-    <script type="text/javascript">
-      ps.addEventListener("playing", aggregateStats, { once: true });
-      ps.addEventListener("message", (e) => {});
-      ps.addEventListener("suspend", (e) => {});
+    <script type="module">
+      let markdown = new URL("./demo.md", location.href);
+      info.prepend("✅ ", markdown.href);
+      markdown = await fetch(markdown)
+        .then((r) => r.text())
+        .catch((e) => alert(e.message));
+      markdown = markdown.split(/\n+/).filter((x) => x.trim());
+      markdown = markdown.slice(markdown.findIndex((x) => x.startsWith("# ")));
 
-      // use WebVTT to show logs
-      console.info = (...text) => {
-        console.log(...text);
-        const cue = new VTTCue(ps.currentTime, ps.currentTime + 3, text.join(" "));
-        cue.align = "left";
-        cue.line = 0;
-        ps.textTracks[0].addCue(cue);
-      };
-
-      Number.prototype.format = function () {
-        const suffix = ["", "K", "M", "G", "T"];
-        let quotient = this;
-        while (quotient > 9999) {
-          quotient /= 1024;
-          suffix.shift();
-        }
-        return ~~quotient + " " + suffix[0];
-      };
-
-      async function aggregateStats() {
-        const statsReport = await ps.pc.getStats(null);
-        stats.innerText = "";
-
-        // most < 27
-        if (ps.VideoEncoderQP < 27) {
-          stats.style.color = "lime";
-        } else if (ps.VideoEncoderQP < 36) {
-          stats.style.color = "orange";
-          stats.innerText += `\n Spotty Network`;
-        } else {
-          stats.style.color = "red";
-          stats.innerText += `\n Bad Network ❌`;
-        }
-
-        stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
-        statsReport.forEach((stat) => {
-          switch (stat.type) {
-            case "data-channel": {
-              stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.format()}B`;
-              stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.format()}B`;
-              break;
-            }
-            case "inbound-rtp": {
-              if (stat.mediaType === "video")
-                stats.innerText += `
-      Size: ${stat.frameWidth} x ${stat.frameHeight}
-      Frames Decoded: ${stat.framesDecoded.format()}
-      Packets Lost: ${stat.packetsLost.format()}
-      FPS: ${stat.framesPerSecond} Hz
-      Frames Dropped: ${stat.framesDropped?.format()}
-      Video ↓↓ ${stat.bytesReceived.format()}B`;
-              else if (stat.mediaType === "audio")
-                stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.format()}B`;
-              break;
-            }
-            case "candidate-pair": {
-              if (stat.state === "succeeded")
-                stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
-              break;
-            }
-            case "remote-candidate": {
-              stats.innerText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
-              break;
-            }
-            case "transport": {
-              const bitrate =
-                ((stat.bytesReceived - this.bytesReceived) / (stat.timestamp - this.timestamp)) *
-                (1000 * 8);
-
-              stats.innerText += `\n ⇌ Bitrate: ${bitrate.format()}bps`;
-
-              this.bytesReceived = stat.bytesReceived;
-              this.timestamp = stat.timestamp;
-              break;
-            }
-            default: {
-            }
+      for (const line of markdown) {
+        switch (line.slice(0, 2)) {
+          case "# ": {
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.value = line.slice(2);
+            input.name = "h1";
+            // 支持反选
+            input.onclick = () => {
+              if (form.H1 === input) {
+                input.checked = false;
+                form.H1 = null;
+              } else form.H1 = input;
+            };
+            const div = document.createElement("div");
+            form.append(input, div);
+            break;
           }
-        });
-
-        stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
-
-        ps.timeout = setTimeout(aggregateStats, 1000);
+          case "##": {
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.value = line.slice(3);
+            input.name = "h2";
+            input.CODE = "";
+            input.OTHER = "";
+            form.lastChild.append(input);
+            break;
+          }
+          case "``": {
+            // 扫描器是否处于2个```之间
+            form.code = !form.code;
+            break;
+          }
+          default: {
+            form.lastChild.lastChild[form.code ? "CODE" : "OTHER"] += line + "\n";
+          }
+        }
       }
+
+      form.onchange = (e) => {
+        const { name, value, CODE, OTHER } = e.target;
+        if (name === "h2") {
+          code.textContent = "// " + value + "\n" + CODE;
+          other.textContent = OTHER;
+        }
+      };
+
+      form["h1"][0].click();
+      form["h2"][0].click();
+
+      ps.addEventListener("message", ({ detail }) => {
+        try {
+          // 有可能传来1个json
+          detail = JSON.stringify(JSON.parse(detail), null, "  ");
+        } catch {}
+
+        info.prepend(detail, "\n");
+      });
+
+      document.querySelector("button").onclick = () => {
+        let detail = "";
+        try {
+          // textContent有格式问题
+          detail = eval(code.innerText);
+        } catch (err) {
+          detail = "❌ 错误！" + err.message;
+          alert(detail);
+        }
+        if (detail) {
+          info.prepend(detail, "\n");
+        }
+      };
     </script>
   </body>
 </html>

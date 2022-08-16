@@ -46,10 +46,10 @@ ps.emitMessage([
 ps.emitMessage([
     "spawn-area",
     "points: X=1000 Y=0;  X=-809 Y=588;  X=309 Y=-951;  X=309 Y=951;  X=-809 Y=-588",   // cm
-    "location: X=0 Y=0 Z=0", // cm
+    "location: X=0 Y=2000 Z=0", // cm
     "height:300",    // cm
     "material:0",    // int
-    "color: R=1 G=0 B=1 A=.2",   // 0~1
+    "color: R=1 G=0 B=0 A=.4",   // 0~1
     "id:area001",
 ].join('\r\n'));
 ```
@@ -65,9 +65,9 @@ ps.emitMessage([
 ```
 ps.emitMessage([
     "spawn-VFX",
-    "location: X=0 Y=0 Z=0", // cm
+    "location: X=0 Y=-2000 Z=0", // cm
     "scale:1.0",    // float
-    "texture:0",    // int
+    "texture:1",    // int
     "period: 1.0",   // s
     "id:vfx001",
 ].join('\r\n'));
@@ -84,8 +84,8 @@ ps.emitMessage([
 ```
 ps.emitMessage([
     "spawn-mesh",
-    "location: X=0 Y=0 Z=0", // cm
-    "scale:1.0",    // float
+    "location: X=-2000 Y=0 Z=0", // cm
+    "scale:10",    // float
     "mesh:0",    // int
     "id:mesh001",
 ].join('\r\n'));

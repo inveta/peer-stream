@@ -41,9 +41,12 @@ global.PLAYER.on("connection", (ws, req) => {
   }
 });
 
+
+
 const fs = require("fs");
 const path = require("path");
 
+// serve HTTP static files
 global.PLAYER._server.prependListener("request", (req, res) => {
   // websocket请求时不触发
 

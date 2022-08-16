@@ -1,7 +1,7 @@
 {
   "scripts": {
     "88": "start C:/Users/admin/Desktop/Windows/demo.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888 -graphicsadapter=0 -ProjectID=UE5",
-    "signal-88": "node signal-auth.js player=88 engine=8888",
+    "signal-88": "node signal-pro.js player=88 engine=8888",
     "new blank branch": "git checkout --orphan new"
   },
   "dependencies": {

@@ -4,7 +4,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js 
 
 - peer-stream.js: frontend SDK.
 - signal.js: signaling server.
-- signal-auth.js: utilities.
+- signal-pro.js: signaling server with advanced features.
 - package.json: maintain all parameters.
 
 ## Signaling Server
@@ -16,16 +16,18 @@ npm install ws@8.5.0
 # start Signaling Server
 node signal.js player=88 engine=8888
 
-# or start Signaling Server with Auth
-node signal-auth.js player=88 engine=8888
+# or start Signaling Server Pro
+node signal-pro.js player=88 engine=8888
 ```
 
-## signal-auth.js
+## signal-pro.js
 
-- authenticate player with token before connection.
-- limit max number of players connected.
-- WebSocket throttle, prevent frequent reconnection. (or UE5 will crash)
-- start UE5 automatically when player connected. (using package.json)
+- require("signal.js");
+- authenticate player with token before connection;
+- limit max number of players connected;
+- WebSocket throttle, prevent frequent reconnection; (or UE5 will crash)
+- start UE5 automatically when player connected; (using package.json)
+- serve HTTP static files; (share same port with WebSocket)
 
 ## Unreal Engine
 
