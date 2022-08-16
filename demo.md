@@ -85,7 +85,7 @@ ps.emitMessage([
 ps.emitMessage([
     "spawn-mesh",
     "location: X=-2000 Y=0 Z=0", // cm
-    "scale:10",    // float
+    "scale:5.0",    // float
     "mesh:0",    // int
     "id:mesh001",
 ].join('\r\n'));
