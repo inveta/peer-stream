@@ -104,9 +104,12 @@ ENGINE.on("connection", (ws, req) => {
   }
 });
 
+const http = require("http");
+
 // browser client
 global.PLAYER = new WebSocket.Server({
-  port: args.player || 88,
+  server: http.createServer().listen(args.player || 88),
+  // port: args.player || 88,
   clientTracking: true,
 });
 console.log("signaling for player:", PLAYER.address().port);
