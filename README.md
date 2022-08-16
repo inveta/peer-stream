@@ -6,6 +6,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js 
 - signal.js: signaling server.
 - signal-pro.js: signaling server with advanced features.
 - package.json: maintain all parameters.
+- test.html: frontend page.
 
 ## Signaling Server
 

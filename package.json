@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "88": "start demo.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888 -graphicsadapter=0 -ProjectID=UE5",
-    "signal-88": "node signal-pro.js player=88 engine=8888",
+    "engine": "start demo.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888 -graphicsadapter=0 -ProjectID=UE5",
+    "player": "start http://localhost:88/demo.html",
+    "signal": "node signal-pro.js player=88 engine=8888",
     "new blank branch": "git checkout --orphan new"
   },
   "dependencies": {

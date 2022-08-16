@@ -1,2 +1,2 @@
-start http://localhost:88/demo.html
-npm run signal-88
+npm run player
+npm run signal

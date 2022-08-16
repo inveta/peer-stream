@@ -30,7 +30,7 @@ global.PLAYER.on("connection", (ws, req) => {
   if (!global.lock && global.ENGINE.ws.readyState !== WebSocket.OPEN) {
     global.lock = true;
     child_process.exec(
-      "npm run " + global.PLAYER.address().port,
+      "npm run engine",
       {
         cwd: __dirname,
       },
@@ -40,8 +40,6 @@ global.PLAYER.on("connection", (ws, req) => {
     );
   }
 });
-
-
 
 const fs = require("fs");
 const path = require("path");
