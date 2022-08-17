@@ -1,20 +1,9 @@
 "5.0.3";
 
-// node signal.js player=88 engine=8888 token=hello limit=4
-
+// node signal.js player=88 engine=8888
 const WebSocket = require("ws");
 
-// process.argv[0] == 'path/to/node.exe'
-// process.argv[1] === __filename
-const args = process.argv.slice(2).reduce((pairs, pair) => {
-  let [key, ...value] = pair.split("=");
-  value = value.join("") || "true";
-  try {
-    value = JSON.parse(value);
-  } catch {}
-  pairs[key] = value;
-  return pairs;
-}, {});
+const args = Object.fromEntries(process.argv.map((a) => a.split("=", 2)));
 
 global.ENGINE = new WebSocket.Server({ port: args.engine || 8888 });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
@@ -30,13 +19,13 @@ ENGINE.on("connection", (ws, req) => {
   ws.req = req;
   ENGINE.ws = ws;
 
-  console.log("✅ Engine connected:", req.socket.remoteAddress, req.socket.remotePort);
+  console.log("Engine connected:", req.socket.remoteAddress, req.socket.remotePort);
 
   ws.on("message", (msg) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.error("❌【JSON error】 Engine:", msg);
+      console.error("? Engine:", msg);
       return;
     }
 
@@ -52,7 +41,7 @@ ENGINE.on("connection", (ws, req) => {
 
     const p = [...PLAYER.clients].find((x) => x.playerId === playerId);
     if (!p) {
-      console.error("❌ player not found:", playerId);
+      console.error("? player not found:", playerId);
       return;
     }
 
@@ -62,20 +51,20 @@ ENGINE.on("connection", (ws, req) => {
       p.send(msg.reason);
       p.close(1011, "Infinity");
     } else {
-      console.error("❌ invalid Engine message type:", msg.type);
+      console.error("? invalid Engine message type:", msg.type);
     }
   });
 
   ws.on("close", (code, reason) => {
     // reason is buffer ??
-    console.log("❌ Engine closed:", String(reason));
+    console.log("Engine closed:", String(reason));
     for (const client of PLAYER.clients) {
-      client.send(`❌ Engine stopped`);
+      client.send(`Engine stopped`);
     }
   });
 
   ws.on("error", (error) => {
-    console.error("❌ Engine connection error:", error);
+    console.error("! Engine connection error:", error);
     // A control frame must have a payload length of 125 bytes or less
     // ws.close(1011, error.message.slice(0, 100));
   });
@@ -99,7 +88,7 @@ ENGINE.on("connection", (ws, req) => {
 
   for (const client of PLAYER.clients) {
     // reconnect immediately
-    client.send(`✅ Engine started`);
+    client.send(`Engine started`);
     client.close(1011, "1");
   }
 });
@@ -118,14 +107,14 @@ let nextPlayerId = 100;
 PLAYER.on("connection", async (ws, req) => {
   const playerId = String(++nextPlayerId);
 
-  console.log("✅ player", playerId, "connected:", req.socket.remoteAddress, req.socket.remotePort);
+  console.log("player", playerId, "connected:", req.socket.remoteAddress, req.socket.remotePort);
 
   ws.req = req;
   ws.playerId = playerId;
 
   ws.on("message", (msg) => {
     if (ENGINE.ws.readyState !== WebSocket.OPEN) {
-      ws.send(`❌ Engine not ready`);
+      ws.send(`! Engine not ready`);
       return;
     }
 
@@ -133,7 +122,7 @@ PLAYER.on("connection", async (ws, req) => {
       msg = JSON.parse(msg);
     } catch (err) {
       console.info("player", playerId, String(msg));
-      ws.send("hello " + msg.slice(0, 100));
+      ws.send("? " + msg.slice(0, 100));
       return;
     }
 
@@ -151,18 +140,18 @@ PLAYER.on("connection", async (ws, req) => {
       }
       ws.send("【debug】" + debug);
     } else {
-      ws.send("hello " + msg.type);
+      ws.send("? " + msg.type);
     }
   });
 
   ws.on("close", (code, reason) => {
-    console.log("❌ player", playerId, "closed:", String(reason));
+    console.log("player", playerId, "closed:", String(reason));
     if (ENGINE.ws.readyState === WebSocket.OPEN)
       ENGINE.ws.send(JSON.stringify({ type: "playerDisconnected", playerId }));
   });
 
   ws.on("error", (error) => {
-    console.error("❌ player", playerId, "connection error:", error);
+    console.error("! player", playerId, "connection error:", error);
   });
 
   if (ENGINE.ws.readyState === WebSocket.OPEN)

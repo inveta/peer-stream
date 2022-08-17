@@ -49,7 +49,6 @@ global.PLAYER._server.prependListener("request", (req, res) => {
   // websocket请求时不触发
 
   const file = path.join(__dirname, req.url);
-
   const r = fs.createReadStream(file);
 
   r.on("error", (err) => {

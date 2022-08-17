@@ -1,2 +1,1 @@
-npm run player
-npm run signal
+npm run player && npm run signal 
