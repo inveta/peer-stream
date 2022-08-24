@@ -5,10 +5,10 @@ const WebSocket = require("ws");
 
 const args = Object.fromEntries(process.argv.map((a) => a.split("=", 2)));
 
-global.ENGINE = new WebSocket.Server({ port: args.engine || 8888 });
+global.ENGINE = new WebSocket.Server({ port: args.engine || 8888 }, () => {
+  console.log("signaling for engine:", args.engine || 8888);
+});
 ENGINE.ws = {}; // Unreal Engine's WebSocket
-
-console.log("signaling for engine:", ENGINE.address().port);
 
 ENGINE.on("connection", (ws, req) => {
   // only one UE5
@@ -97,11 +97,12 @@ const http = require("http");
 
 // browser client
 global.PLAYER = new WebSocket.Server({
-  server: http.createServer().listen(args.player || 88),
+  server: http.createServer().listen(args.player || 88, () => {
+    console.log("signaling for player:", args.player || 88);
+  }),
   // port: args.player || 88,
   clientTracking: true,
 });
-console.log("signaling for player:", PLAYER.address().port);
 let nextPlayerId = 100;
 // every player
 PLAYER.on("connection", async (ws, req) => {
