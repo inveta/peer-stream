@@ -3,10 +3,9 @@
 // node signal.js player=88 engine=8888
 const WebSocket = require("ws");
 
-const args = Object.fromEntries(process.argv.map((a) => a.split("=", 2)));
 
-global.ENGINE = new WebSocket.Server({ port: args.engine || 8888 }, () => {
-  console.log("signaling for engine:", args.engine || 8888);
+global.ENGINE = new WebSocket.Server({ port: +process.env.engine || 8888 }, () => {
+  console.log("signaling for engine:", +process.env.engine || 8888);
 });
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
@@ -95,17 +94,82 @@ ENGINE.on("connection", (ws, req) => {
 
 const http = require("http");
 
+const fs = require("fs");
+const path = require("path");
+function listener(req, res) {
+  // websocket请求时不触发
+  // serve HTTP static files
+
+  const file = path.join(__dirname, req.url);
+  const r = fs.createReadStream(file);
+
+  r.on("error", (err) => {
+    res.end(err.message);
+  });
+
+  r.on("ready", (e) => {
+    r.pipe(res);
+  });
+}
+
 // browser client
 global.PLAYER = new WebSocket.Server({
-  server: http.createServer().listen(args.player || 88, () => {
-    console.log("signaling for player:", args.player || 88);
+  server: http.createServer((+process.env.http) === 0 ? undefined : listener).listen(+process.env.player || 88, () => {
+    console.log("signaling for player:", +process.env.player || 88);
   }),
-  // port: args.player || 88,
+  // port:   88,
   clientTracking: true,
 });
 let nextPlayerId = 100;
 // every player
 PLAYER.on("connection", async (ws, req) => {
+  // password
+  if (process.env.token) {
+    if (req.url.slice(1) !== process.env.token) {
+      ws.close()
+      return;
+    }
+  }
+
+  // players max count
+  if (process.env.limit) {
+    if (global.PLAYER.clients.size > process.env.limit) {
+      ws.close();
+      return;
+    }
+  }
+
+  // throttle
+  if (+process.env.throttle !== 0) {
+    if (global.throttle) {
+      ws.close();
+      return;
+    } else {
+      global.throttle = true;
+      setTimeout(() => {
+        global.throttle = false;
+      }, 500);
+    }
+  }
+
+
+  // start UE5 automatically
+  if (process.env.UE5) {
+    if (!global.lock && global.ENGINE.ws.readyState !== WebSocket.OPEN) {
+      global.lock = true;
+      child_process.exec(
+        process.env.UE5,
+        {
+          cwd: __dirname,
+        },
+        (err, stdout, stderr) => {
+          global.lock = false;
+        }
+      );
+    }
+  }
+
+
   const playerId = String(++nextPlayerId);
 
   console.log("player", playerId, "connected:", req.socket.remoteAddress, req.socket.remotePort);
