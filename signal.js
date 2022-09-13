@@ -1,8 +1,6 @@
 "5.0.3";
 
-// node signal.js player=88 engine=8888
 const WebSocket = require("ws");
-
 
 global.ENGINE = new WebSocket.Server({ port: +process.env.engine || 8888 }, () => {
   console.log("signaling for engine:", +process.env.engine || 8888);
@@ -11,7 +9,7 @@ ENGINE.ws = {}; // Unreal Engine's WebSocket
 
 ENGINE.on("connection", (ws, req) => {
   // only one UE5
-  if (global.ENGINE.clients.size > 1) {
+  if (ENGINE.clients.size > 1) {
     ws.close();
   }
 
@@ -86,9 +84,17 @@ ENGINE.on("connection", (ws, req) => {
   );
 
   for (const client of PLAYER.clients) {
-    // reconnect immediately
-    client.send(`Engine started`);
-    client.close(1011, "1");
+    ENGINE.ws.send(
+      JSON.stringify({
+        type: "playerConnected",
+        playerId: client.playerId,
+        dataChannel: true,
+        sfu: false,
+      })
+    );
+    // // reconnect immediately
+    // client.send(`Engine started`);
+    // client.close(1011, "1");
   }
 });
 
@@ -107,16 +113,20 @@ function listener(req, res) {
     res.end(err.message);
   });
 
-  r.on("ready", (e) => {
+  r.on("ready", () => {
     r.pipe(res);
   });
 }
 
+const child_process = require("child_process");
+
 // browser client
 global.PLAYER = new WebSocket.Server({
-  server: http.createServer((+process.env.http) === 0 ? undefined : listener).listen(+process.env.player || 88, () => {
-    console.log("signaling for player:", +process.env.player || 88);
-  }),
+  server: http
+    .createServer(+process.env.http === 0 ? undefined : listener)
+    .listen(+process.env.player || 88, () => {
+      console.log("signaling for player:", +process.env.player || 88);
+    }),
   // port:   88,
   clientTracking: true,
 });
@@ -126,14 +136,14 @@ PLAYER.on("connection", async (ws, req) => {
   // password
   if (process.env.token) {
     if (req.url.slice(1) !== process.env.token) {
-      ws.close()
+      ws.close();
       return;
     }
   }
 
   // players max count
   if (process.env.limit) {
-    if (global.PLAYER.clients.size > process.env.limit) {
+    if (PLAYER.clients.size > process.env.limit) {
       ws.close();
       return;
     }
@@ -152,10 +162,9 @@ PLAYER.on("connection", async (ws, req) => {
     }
   }
 
-
   // start UE5 automatically
   if (process.env.UE5) {
-    if (!global.lock && global.ENGINE.ws.readyState !== WebSocket.OPEN) {
+    if (!global.lock && ENGINE.ws.readyState !== WebSocket.OPEN) {
       global.lock = true;
       child_process.exec(
         process.env.UE5,
@@ -168,7 +177,6 @@ PLAYER.on("connection", async (ws, req) => {
       );
     }
   }
-
 
   const playerId = String(++nextPlayerId);
 
@@ -224,3 +232,9 @@ PLAYER.on("connection", async (ws, req) => {
       JSON.stringify({ type: "playerConnected", playerId: playerId, dataChannel: true, sfu: false })
     );
 });
+
+setInterval(() => {
+  for (const client of PLAYER.clients) {
+    client.send("ping");
+  }
+}, 50 * 1000);

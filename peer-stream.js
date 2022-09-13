@@ -139,11 +139,6 @@ class PeerStream extends HTMLVideoElement {
 
     this.ws.onopen = async (e) => {
       console.info("✅ connected to", this.ws.url);
-
-      clearInterval(this.ping);
-      this.ping = setInterval(() => {
-        this.ws.send("ping");
-      }, 1000 * 50);
     };
 
     this.ws.onmessage = (e) => {
@@ -151,11 +146,16 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.ws.onclose = (e) => {
-      console.info("❌ WebSocket closed:", e.reason || e.code);
-      clearInterval(this.ping);
+      let timeout = 3000;
+      console.info("❌ WebSocket closed", e.code);
+      if (e.code === 3333) {
+        this.setAttribute("signal", e.reason);
+        console.log("redirect =>", e.reason);
+        timeout = 500;
+      }
 
       clearTimeout(this.reconnect);
-      this.reconnect = setTimeout(() => this.connectedCallback(), 3000);
+      this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
     };
   }
 
@@ -553,7 +553,7 @@ class PeerStream extends HTMLVideoElement {
     };
 
     this.onmouseleave = (e) => {
-      this.dc.send(new Uint8Array([SEND.MouseLeave]));
+      if (this.dc.readyState === "open") this.dc.send(new Uint8Array([SEND.MouseLeave]));
     };
   }
 
