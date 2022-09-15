@@ -102,7 +102,7 @@ const http = require("http");
 
 const fs = require("fs");
 const path = require("path");
-function listener(req, res) {
+function onRequest(req, res) {
   // websocket请求时不触发
   // serve HTTP static files
 
@@ -123,7 +123,7 @@ const child_process = require("child_process");
 // browser client
 global.PLAYER = new WebSocket.Server({
   server: http
-    .createServer(+process.env.http === 0 ? undefined : listener)
+    .createServer(process.env.http ? onRequest : undefined)
     .listen(+process.env.player || 88, () => {
       console.log("signaling for player:", +process.env.player || 88);
     }),
@@ -233,6 +233,7 @@ PLAYER.on("connection", async (ws, req) => {
     );
 });
 
+// keep alive
 setInterval(() => {
   for (const client of PLAYER.clients) {
     client.send("ping");
