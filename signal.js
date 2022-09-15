@@ -150,7 +150,7 @@ PLAYER.on("connection", async (ws, req) => {
   }
 
   // throttle
-  if (+process.env.throttle !== 0) {
+  if (process.env.throttle) {
     if (global.throttle) {
       ws.close();
       return;
