@@ -5,7 +5,7 @@ process.env.limit = 4;
 process.env.throttle = true;
 process.env.http = true;
 process.env.UE5 =
-  "start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888 -graphicsadapter=0 -ProjectID=UE5";
+  "start C:/Users/admin/Desktop/Windows/demo.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:8888/path -graphicsadapter=0 -ProjectID=/path";
 
 require("./signal.js");
 
