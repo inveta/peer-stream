@@ -47,7 +47,6 @@ ENGINE.on("connection", (ue, req) => {
 
   ue.on("close", (code, reason) => {
     // reason is buffer ??
-    // console.log("Engine closed:", String(reason));
     // for (const client of PLAYER.clients) {
     //   client.send(`Engine stopped`);
     // }
@@ -104,8 +103,7 @@ function onRequest(req, res) {
   // websocket请求时不触发
   // serve HTTP static files
 
-  const file = path.join(__dirname, req.url);
-  const r = fs.createReadStream(file);
+  const r = fs.createReadStream(path.join(__dirname, req.url));
 
   r.on("error", (err) => {
     res.end(err.message);
@@ -230,7 +228,12 @@ PLAYER.on("connection", (fe, req) => {
 
   if (fe.ue.readyState === WebSocket.OPEN)
     fe.ue.send(
-      JSON.stringify({ type: "playerConnected", playerId: playerId, dataChannel: true, sfu: false })
+      JSON.stringify({
+        type: "playerConnected",
+        playerId: playerId,
+        dataChannel: true,
+        sfu: false,
+      })
     );
 });
 
@@ -248,12 +251,20 @@ function print() {
   ENGINE.clients.forEach((ue) => {
     console.log();
     // console.log(123,ue.url )
-    console.group(ue.req.socket.remoteAddress, ue.req.socket.remotePort, ue.req.url);
+    console.group(
+      ue.req.socket.remoteAddress,
+      ue.req.socket.remotePort,
+      ue.req.url
+    );
     [...players]
       .filter((fe) => fe.ue === ue)
       .forEach((fe) => {
         players.delete(fe);
-        console.log(fe.req.socket.remoteAddress, fe.req.socket.remotePort, fe.req.url);
+        console.log(
+          fe.req.socket.remoteAddress,
+          fe.req.socket.remotePort,
+          fe.req.url
+        );
       });
     console.groupEnd();
   });
@@ -262,7 +273,11 @@ function print() {
     console.log();
     console.group("[[ idle ]]");
     players.forEach((fe) => {
-      console.log(fe.req.socket.remoteAddress, fe.req.socket.remotePort, fe.req.url);
+      console.log(
+        fe.req.socket.remoteAddress,
+        fe.req.socket.remotePort,
+        fe.req.url
+      );
     });
     console.groupEnd();
   }
