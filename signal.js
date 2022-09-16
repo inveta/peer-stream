@@ -2,15 +2,19 @@
 
 const WebSocket = require("ws");
 
-global.ENGINE = new WebSocket.Server({ port: +process.env.engine || 8888 }, () => {
-  console.log("signaling for engine:", +process.env.engine || 8888);
-});
+global.ENGINE = new WebSocket.Server(
+  { port: +process.env.engine || 8888, clientTracking: true },
+  () => {
+    console.log("signaling for engine:", +process.env.engine || 8888);
+  }
+);
 ENGINE.ws = {}; // Unreal Engine's WebSocket
 
 ENGINE.on("connection", (ws, req) => {
   // only one UE5
   if (ENGINE.clients.size > 1) {
     ws.close();
+    return;
   }
 
   ws.req = req;
