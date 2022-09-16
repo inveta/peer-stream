@@ -127,7 +127,7 @@ class PeerStream extends HTMLVideoElement {
 
     this.setupPeerConnection();
 
-    let signal = this.getAttribute("signal") || `ws://${location.host}/hello`;
+    let signal = this.getAttribute("signal") || location.href.replace(/^http/, "ws");
 
     // await new Promise((res) => setTimeout(res, 1000));
     this.ws.close(1000);
