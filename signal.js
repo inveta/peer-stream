@@ -116,9 +116,7 @@ const child_process = require("child_process");
 global.PLAYER = new WebSocket.Server({
   server: http
     .createServer(process.env.http ? onRequest : undefined)
-    .listen(+process.env.player || 88, () => {
-      // console.log("signaling for player:", +process.env.player || 88);
-    }),
+    .listen(+process.env.player || 88, () => { }),
   // port:   88,
   clientTracking: true,
 });
@@ -242,7 +240,7 @@ function print() {
   const players = new Set(PLAYER.clients);
 
   ENGINE.clients.forEach((ue) => {
-    console.log('-',
+    console.log(
       ue.req.socket.remoteAddress,
       ue.req.socket.remotePort,
       ue.req.url
@@ -252,7 +250,7 @@ function print() {
       .forEach((fe) => {
         players.delete(fe);
         console.log(
-          '    |',
+          '     ',
           fe.req.socket.remoteAddress,
           fe.req.socket.remotePort,
           fe.req.url
@@ -261,10 +259,10 @@ function print() {
   });
 
   if (players.size) {
-    console.log('-', "(( idle ))");
+    console.log("idle players:");
     players.forEach((fe) => {
       console.log(
-        '    |',
+        '     ',
         fe.req.socket.remoteAddress,
         fe.req.socket.remotePort,
         fe.req.url
