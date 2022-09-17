@@ -21,21 +21,19 @@ ENGINE.on("connection", (ue, req) => {
     }
 
     // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
-    const playerId = String(msg.playerId || "");
-    delete msg.playerId; // no need to send it to the player
-    // console.log("Engine:", msg.type, playerId);
 
     if (msg.type === "ping") {
       ue.send(JSON.stringify({ type: "pong", time: msg.time }));
       return;
     }
 
-    const fe = [...PLAYER.clients].find((fe) => fe.playerId === playerId);
+    const fe = [...PLAYER.clients].find((fe) => fe.req.socket.remotePort === +msg.playerId);
     if (!fe) {
       // console.error("? player not found:", playerId);
       return;
     }
 
+    delete msg.playerId; // no need to send it to the player
     if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
       fe.send(JSON.stringify(msg));
     } else if (msg.type == "disconnectPlayer") {
@@ -82,15 +80,14 @@ ENGINE.on("connection", (ue, req) => {
       ue.send(
         JSON.stringify({
           type: "playerConnected",
-          playerId: fe.playerId,
+          playerId: fe.req.socket.remotePort,
           dataChannel: true,
           sfu: false,
         })
       );
     }
-
-    print();
   }
+  print();
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +123,6 @@ global.PLAYER = new WebSocket.Server({
   // port:   88,
   clientTracking: true,
 });
-let nextPlayerId = 100;
 // every player
 PLAYER.on("connection", (fe, req) => {
   fe.req = req;
@@ -165,23 +161,20 @@ PLAYER.on("connection", (fe, req) => {
 
   // start UE5 automatically
   if (process.env.UE5) {
-    if (!global.lock && fe.ue.readyState !== WebSocket.OPEN) {
-      global.lock = true;
+    if (fe.ue.readyState !== WebSocket.OPEN) {
       child_process.exec(
-        process.env.UE5.replace("/path", req.url),
+        process.env.UE5.replaceAll("/path", req.url),
         {
           cwd: __dirname,
         },
         (err, stdout, stderr) => {
-          global.lock = false;
+
         }
       );
     }
   }
 
-  const playerId = String(++nextPlayerId);
 
-  fe.playerId = playerId;
 
   fe.on("message", (msg) => {
     if (fe.ue.readyState !== WebSocket.OPEN) {
@@ -192,14 +185,13 @@ PLAYER.on("connection", (fe, req) => {
     try {
       msg = JSON.parse(msg);
     } catch (err) {
-      console.info("player", playerId, String(msg));
       fe.send("? " + msg.slice(0, 100));
       return;
     }
 
     // console.log("player", playerId, msg.type);
 
-    msg.playerId = playerId;
+    msg.playerId = req.socket.remotePort;
     if (["answer", "iceCandidate"].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg));
     } else if (msg.type === "debug") {
@@ -217,7 +209,7 @@ PLAYER.on("connection", (fe, req) => {
 
   fe.on("close", (code, reason) => {
     if (fe.ue.readyState === WebSocket.OPEN)
-      fe.ue.send(JSON.stringify({ type: "playerDisconnected", playerId }));
+      fe.ue.send(JSON.stringify({ type: "playerDisconnected", playerId: req.socket.remotePort }));
 
     print();
   });
@@ -230,7 +222,7 @@ PLAYER.on("connection", (fe, req) => {
     fe.ue.send(
       JSON.stringify({
         type: "playerConnected",
-        playerId: playerId,
+        playerId: req.socket.remotePort,
         dataChannel: true,
         sfu: false,
       })
@@ -250,7 +242,6 @@ function print() {
 
   ENGINE.clients.forEach((ue) => {
     console.log();
-    // console.log(123,ue.url )
     console.group(
       ue.req.socket.remoteAddress,
       ue.req.socket.remotePort,
@@ -282,3 +273,5 @@ function print() {
     console.groupEnd();
   }
 }
+
+
