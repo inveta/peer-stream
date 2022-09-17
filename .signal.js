@@ -1,3 +1,5 @@
+"http://localhost:88/test.html";
+
 process.env.player = 88;
 process.env.engine = 8888;
 process.env.token = "hello";
@@ -9,4 +11,3 @@ process.env.UE5 =
 
 require("./signal.js");
 
-console.log("http://localhost:88/test.html");

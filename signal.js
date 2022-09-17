@@ -4,9 +4,7 @@ const WebSocket = require("ws");
 
 global.ENGINE = new WebSocket.Server(
   { port: +process.env.engine || 8888, clientTracking: true },
-  () => {
-    // console.log("signaling for engine:", +process.env.engine || 8888);
-  }
+  () => { }
 );
 
 ENGINE.on("connection", (ue, req) => {
@@ -27,6 +25,7 @@ ENGINE.on("connection", (ue, req) => {
       return;
     }
 
+    // player's port as playerID
     const fe = [...PLAYER.clients].find((fe) => fe.req.socket.remotePort === +msg.playerId);
     if (!fe) {
       // console.error("? player not found:", playerId);
@@ -128,7 +127,6 @@ PLAYER.on("connection", (fe, req) => {
   fe.req = req;
 
   fe.ue = [...ENGINE.clients].find((ue) => ue.req.url === req.url) || {};
-  print();
 
   // password
   // if (process.env.token) {
@@ -140,7 +138,7 @@ PLAYER.on("connection", (fe, req) => {
 
   // players max count
   if (process.env.limit) {
-    if (PLAYER.clients.size > process.env.limit) {
+    if (PLAYER.clients.size > +process.env.limit) {
       fe.close();
       return;
     }
@@ -227,6 +225,9 @@ PLAYER.on("connection", (fe, req) => {
         sfu: false,
       })
     );
+
+  print();
+
 });
 
 // keep alive
@@ -241,8 +242,7 @@ function print() {
   const players = new Set(PLAYER.clients);
 
   ENGINE.clients.forEach((ue) => {
-    console.log();
-    console.group(
+    console.log('-',
       ue.req.socket.remoteAddress,
       ue.req.socket.remotePort,
       ue.req.url
@@ -252,25 +252,24 @@ function print() {
       .forEach((fe) => {
         players.delete(fe);
         console.log(
+          '    |',
           fe.req.socket.remoteAddress,
           fe.req.socket.remotePort,
           fe.req.url
         );
       });
-    console.groupEnd();
   });
 
   if (players.size) {
-    console.log();
-    console.group("[[ idle ]]");
+    console.log('-', "(( idle ))");
     players.forEach((fe) => {
       console.log(
+        '    |',
         fe.req.socket.remoteAddress,
         fe.req.socket.remotePort,
         fe.req.url
       );
     });
-    console.groupEnd();
   }
 }
 
