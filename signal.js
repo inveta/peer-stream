@@ -89,7 +89,35 @@ ENGINE.on("connection", (ue, req) => {
   print();
 });
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const http = require("http");
 
@@ -99,14 +127,12 @@ function onRequest(req, res) {
   // websocket请求时不触发
   // serve HTTP static files
 
-  const r = fs.createReadStream(path.join(__dirname, req.url));
+  const read = fs.createReadStream(path.join(__dirname, req.url));
 
-  r.on("error", (err) => {
+  read.on("error", (err) => {
     res.end(err.message);
-  });
-
-  r.on("ready", () => {
-    r.pipe(res);
+  }).on("ready", () => {
+    read.pipe(res);
   });
 }
 
