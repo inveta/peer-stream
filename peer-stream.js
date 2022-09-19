@@ -87,8 +87,8 @@ class PeerStream extends HTMLVideoElement {
 
     window.ps = this;
 
-    this.ws = { send() {}, close() {} }; // WebSocket
-    this.pc = { close() {} }; // RTCPeerConnection
+    this.ws = { send() { }, close() { } }; // WebSocket
+    this.pc = { close() { } }; // RTCPeerConnection
 
     this.setupVideo();
     this.registerKeyboardEvents();
@@ -125,7 +125,6 @@ class PeerStream extends HTMLVideoElement {
       return;
     }
 
-    this.setupPeerConnection();
 
     let signal = this.getAttribute("signal") || location.href.replace(/^http/, "ws");
 
@@ -170,7 +169,7 @@ class PeerStream extends HTMLVideoElement {
     }, 1000);
   }
 
-  adoptedCallback() {}
+  adoptedCallback() { }
 
   static observedAttributes = ["signal"];
   attributeChangedCallback(name, oldValue, newValue) {
@@ -187,6 +186,8 @@ class PeerStream extends HTMLVideoElement {
       return;
     }
     if (msg.type === "offer") {
+      this.setupPeerConnection();
+
       const offer = new RTCSessionDescription(msg);
       console.log("↓↓ offer", offer);
 
@@ -314,7 +315,7 @@ class PeerStream extends HTMLVideoElement {
       this.style.pointerEvents = "none";
     };
 
-    this.dc.onerror = (e) => {};
+    this.dc.onerror;
 
     this.dc.onmessage = (e) => {
       this.onDataChannelMessage(e.data);

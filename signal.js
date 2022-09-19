@@ -1,8 +1,8 @@
 "5.0.3";
 
-const WebSocket = require("ws");
+const { Server } = require("ws");
 
-global.ENGINE = new WebSocket.Server(
+global.ENGINE = new Server(
   { port: +process.env.engine || 8888, clientTracking: true },
   () => { }
 );
@@ -10,13 +10,11 @@ global.ENGINE = new WebSocket.Server(
 ENGINE.on("connection", (ue, req) => {
   ue.req = req;
 
+  ue.fe = new Set()
+
   ue.on("message", (msg) => {
-    try {
-      msg = JSON.parse(msg);
-    } catch (err) {
-      // console.error("? Engine:", msg);
-      return;
-    }
+    msg = JSON.parse(msg);
+
 
     // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
 
@@ -43,10 +41,8 @@ ENGINE.on("connection", (ue, req) => {
   });
 
   ue.on("close", (code, reason) => {
-    // reason is buffer ??
-    // for (const client of PLAYER.clients) {
-    //   client.send(`Engine stopped`);
-    // }
+
+    ue.fe.forEach(fe => fe.ue = null)
     print();
   });
 
@@ -73,9 +69,11 @@ ENGINE.on("connection", (ue, req) => {
     })
   );
 
+  // 认领空闲的前端们
   for (const fe of PLAYER.clients) {
-    if (fe.req.url === req.url) {
+    if (!fe.ue) {
       fe.ue = ue;
+      ue.fe.add(fe)
       ue.send(
         JSON.stringify({
           type: "playerConnected",
@@ -136,10 +134,12 @@ function onRequest(req, res) {
   });
 }
 
-const child_process = require("child_process");
+
+
+const pool = Object.entries(process.env).filter(([key]) => key.startsWith('UE5_')).map(([, value]) => value)
 
 // front end
-global.PLAYER = new WebSocket.Server({
+global.PLAYER = new Server({
   server: http
     .createServer(process.env.http ? onRequest : undefined)
     .listen(+process.env.player || 88, () => { }),
@@ -150,7 +150,13 @@ global.PLAYER = new WebSocket.Server({
 PLAYER.on("connection", (fe, req) => {
   fe.req = req;
 
-  fe.ue = [...ENGINE.clients].find((ue) => ue.req.url === req.url) || {};
+  if (process.env.one2one) {
+    fe.ue = [...ENGINE.clients].find(ue => ue.fe.size === 0)
+  } else {
+    fe.ue = [...ENGINE.clients].sort((a, b) => a.fe.size - b.fe.size)[0]
+  }
+
+  // .find((ue) => ue.req.url === req.url) || {};
 
   // password
   // if (process.env.token) {
@@ -181,25 +187,39 @@ PLAYER.on("connection", (fe, req) => {
     }
   }
 
-  // start UE5 automatically
-  if (process.env.UE5) {
-    if (fe.ue.readyState !== WebSocket.OPEN) {
-      child_process.exec(
-        process.env.UE5.replaceAll("/path", req.url),
-        {
-          cwd: __dirname,
-        },
-        (err, stdout, stderr) => {
 
-        }
-      );
-    }
+
+
+
+
+  if (fe.ue) {
+    fe.ue.fe.add(fe)
+    fe.ue.send(
+      JSON.stringify({
+        type: "playerConnected",
+        playerId: req.socket.remotePort,
+        dataChannel: true,
+        sfu: false,
+      })
+    );
+  } else if (pool.length) {
+    require("child_process").exec(
+      pool[0],
+      { cwd: __dirname, },
+      (err, stdout, stderr) => { }
+    );
+    pool.push(pool.shift())
+
   }
 
 
 
+  print();
+
+
+
   fe.on("message", (msg) => {
-    if (fe.ue.readyState !== WebSocket.OPEN) {
+    if (!fe.ue) {
       fe.send(`! Engine not ready`);
       return;
     }
@@ -230,8 +250,11 @@ PLAYER.on("connection", (fe, req) => {
   });
 
   fe.on("close", (code, reason) => {
-    if (fe.ue.readyState === WebSocket.OPEN)
+    if (fe.ue) {
       fe.ue.send(JSON.stringify({ type: "playerDisconnected", playerId: req.socket.remotePort }));
+      fe.ue.fe.delete(fe)
+    }
+
 
     print();
   });
@@ -240,17 +263,7 @@ PLAYER.on("connection", (fe, req) => {
     // console.error("! player", playerId, "connection error:", error);
   });
 
-  if (fe.ue.readyState === WebSocket.OPEN)
-    fe.ue.send(
-      JSON.stringify({
-        type: "playerConnected",
-        playerId: req.socket.remotePort,
-        dataChannel: true,
-        sfu: false,
-      })
-    );
 
-  print();
 
 });
 
@@ -263,38 +276,38 @@ setInterval(() => {
 
 function print() {
   console.clear();
-  const players = new Set(PLAYER.clients);
+  console.log()
 
-  ENGINE.clients.forEach((ue) => {
+  ENGINE.clients.forEach(ue => {
     console.log(
       ue.req.socket.remoteAddress,
       ue.req.socket.remotePort,
       ue.req.url
     );
-    [...players]
-      .filter((fe) => fe.ue === ue)
-      .forEach((fe) => {
-        players.delete(fe);
-        console.log(
-          '     ',
-          fe.req.socket.remoteAddress,
-          fe.req.socket.remotePort,
-          fe.req.url
-        );
-      });
-  });
-
-  if (players.size) {
-    console.log("idle players:");
-    players.forEach((fe) => {
+    ue.fe.forEach(fe => {
       console.log(
         '     ',
         fe.req.socket.remoteAddress,
         fe.req.socket.remotePort,
         fe.req.url
       );
-    });
+    })
+  })
+
+  const fe = [...PLAYER.clients].filter(fe => !fe.ue)
+  if (fe.length) {
+    console.log("idle players:");
+    fe.forEach(fe => {
+      console.log(
+        '     ',
+        fe.req.socket.remoteAddress,
+        fe.req.socket.remotePort,
+        fe.req.url
+      );
+    })
   }
+
+
 }
 
 
