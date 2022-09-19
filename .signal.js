@@ -5,7 +5,7 @@ process.env.player = 88;
 // UE5端口
 process.env.engine = 8888;
 
-process.env.token = "hello";
+process.env.token = "/hello";
 process.env.limit = 4;
 process.env.throttle = true;
 

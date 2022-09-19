@@ -11,49 +11,7 @@ ENGINE.on("connection", (ue, req) => {
   ue.req = req;
 
   ue.fe = new Set()
-
-  ue.on("message", (msg) => {
-    msg = JSON.parse(msg);
-
-
-    // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
-
-    if (msg.type === "ping") {
-      ue.send(JSON.stringify({ type: "pong", time: msg.time }));
-      return;
-    }
-
-    // player's port as playerID
-    const fe = [...ue.fe].find((fe) =>
-      fe.req.socket.remotePort === +msg.playerId
-    );
-    if (!fe) {
-      // console.error("? player not found:", playerId);
-      return;
-    }
-
-    delete msg.playerId; // no need to send it to the player
-    if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
-      fe.send(JSON.stringify(msg));
-    } else if (msg.type == "disconnectPlayer") {
-      fe.close(1011, msg.reason);
-    } else {
-      // console.error("? invalid Engine message type:", msg.type);
-    }
-  });
-
-  ue.on("close", (code, reason) => {
-
-    ue.fe.forEach(fe => fe.ue = null)
-    print();
-  });
-
-  ue.on("error", (error) => {
-    // A control frame must have a payload length of 125 bytes or less
-    // ue.close(1011, error.message.slice(0, 100));
-  });
-
-  // sent to Unreal Engine as initial signal
+  // sent to UE5 as initial signal
   ue.send(
     JSON.stringify({
       type: "config",
@@ -86,6 +44,49 @@ ENGINE.on("connection", (ue, req) => {
     }
   }
   print();
+
+  ue.on("message", (msg) => {
+    msg = JSON.parse(msg);
+
+
+    // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
+
+    if (msg.type === "ping") {
+      ue.send(JSON.stringify({ type: "pong", time: msg.time }));
+      return;
+    }
+
+    // player's port as playerID
+    const fe = [...ue.fe].find((fe) =>
+      fe.req.socket.remotePort === +msg.playerId
+    );
+    if (!fe) {
+      // console.error("? player not found:", playerId);
+      return;
+    }
+
+    delete msg.playerId; // no need to send it to the player
+    if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
+      fe.send(JSON.stringify(msg));
+    } else if (msg.type === "disconnectPlayer") {
+      fe.close(1011, msg.reason);
+    } else {
+      // console.error("? invalid Engine message type:", msg.type);
+    }
+  });
+
+  ue.on("close", (code, reason) => {
+
+    ue.fe.forEach(fe => fe.ue = null)
+    print();
+  });
+
+  ue.on("error", (error) => {
+    // A control frame must have a payload length of 125 bytes or less
+    // ue.close(1011, error.message.slice(0, 100));
+  });
+
+
 });
 
 
@@ -158,15 +159,14 @@ PLAYER.on("connection", (fe, req) => {
     fe.ue = [...ENGINE.clients].sort((a, b) => a.fe.size - b.fe.size)[0]
   }
 
-  // .find((ue) => ue.req.url === req.url) || {};
 
   // password
-  // if (process.env.token) {
-  //   if (req.url.slice(1) !== process.env.token) {
-  //     fe.close();
-  //     return;
-  //   }
-  // }
+  if (process.env.token) {
+    if (req.url !== process.env.token) {
+      fe.close();
+      return;
+    }
+  }
 
   // players max count
   if (process.env.limit) {
