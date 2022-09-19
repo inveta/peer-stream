@@ -273,7 +273,7 @@ class PeerStream extends HTMLVideoElement {
 
   setupVideo() {
     this.tabIndex = 0; // easy to focus..
-    this.autofocus = true;
+    // this.autofocus = true;
     this.playsInline = true;
     this.disablepictureinpicture = true;
 
@@ -663,11 +663,7 @@ class PeerStream extends HTMLVideoElement {
     }
   }
 
-  debug(NodeJS) {
-    // debugging the signalling server
-    this.ws.send(JSON.stringify({ type: "debug", debug: NodeJS }));
-    return true;
-  }
+
 }
 
 customElements.define("peer-stream", PeerStream, { extends: "video" });

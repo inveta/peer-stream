@@ -24,7 +24,9 @@ ENGINE.on("connection", (ue, req) => {
     }
 
     // player's port as playerID
-    const fe = [...PLAYER.clients].find((fe) => fe.req.socket.remotePort === +msg.playerId);
+    const fe = [...ue.fe].find((fe) =>
+      fe.req.socket.remotePort === +msg.playerId
+    );
     if (!fe) {
       // console.error("? player not found:", playerId);
       return;
@@ -47,7 +49,6 @@ ENGINE.on("connection", (ue, req) => {
   });
 
   ue.on("error", (error) => {
-    // console.error("! Engine connection error:", error);
     // A control frame must have a payload length of 125 bytes or less
     // ue.close(1011, error.message.slice(0, 100));
   });
@@ -117,15 +118,14 @@ ENGINE.on("connection", (ue, req) => {
 
 
 
-const http = require("http");
 
-const fs = require("fs");
-const path = require("path");
 function onRequest(req, res) {
   // websocket请求时不触发
   // serve HTTP static files
 
-  const read = fs.createReadStream(path.join(__dirname, req.url));
+  const read = require("fs").createReadStream(
+    require("path").join(__dirname, req.url)
+  );
 
   read.on("error", (err) => {
     res.end(err.message);
@@ -136,11 +136,13 @@ function onRequest(req, res) {
 
 
 
-const pool = Object.entries(process.env).filter(([key]) => key.startsWith('UE5_')).map(([, value]) => value)
+const pool = Object.entries(process.env)
+  .filter(([key]) => key.startsWith('UE5_'))
+  .map(([, value]) => value)
 
 // front end
 global.PLAYER = new Server({
-  server: http
+  server: require("http")
     .createServer(process.env.http ? onRequest : undefined)
     .listen(+process.env.player || 88, () => { }),
   // port:   88,
@@ -224,26 +226,13 @@ PLAYER.on("connection", (fe, req) => {
       return;
     }
 
-    try {
-      msg = JSON.parse(msg);
-    } catch (err) {
-      fe.send("? " + msg.slice(0, 100));
-      return;
-    }
+    msg = JSON.parse(msg);
 
     // console.log("player", playerId, msg.type);
 
     msg.playerId = req.socket.remotePort;
     if (["answer", "iceCandidate"].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg));
-    } else if (msg.type === "debug") {
-      let debug;
-      try {
-        debug = String(eval(msg.debug));
-      } catch (err) {
-        debug = err.message;
-      }
-      fe.send("【debug】" + debug);
     } else {
       fe.send("? " + msg.type);
     }
@@ -251,7 +240,10 @@ PLAYER.on("connection", (fe, req) => {
 
   fe.on("close", (code, reason) => {
     if (fe.ue) {
-      fe.ue.send(JSON.stringify({ type: "playerDisconnected", playerId: req.socket.remotePort }));
+      fe.ue.send(JSON.stringify({
+        type: "playerDisconnected",
+        playerId: req.socket.remotePort
+      }));
       fe.ue.fe.delete(fe)
     }
 
@@ -269,11 +261,12 @@ PLAYER.on("connection", (fe, req) => {
 
 // keep alive
 setInterval(() => {
-  for (const client of PLAYER.clients) {
-    client.send("ping");
+  for (const fe of PLAYER.clients) {
+    fe.send("ping");
   }
 }, 50 * 1000);
 
+// 打印映射关系
 function print() {
   console.clear();
   console.log()
