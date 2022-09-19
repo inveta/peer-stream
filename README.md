@@ -1,40 +1,47 @@
-# peer-stream.js
+# UE5 Pixel Streaming
 
 Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js is a lightweight WebRTC library with 0 dependency, containing a frontend component (using WebComponents API), along with a signaling server (using NodeJS).
 
-- peer-stream.js: frontend SDK.
-- signal.js: signaling server.
-- signal-pro.js: signaling server with advanced features.
-- package.json: maintain all parameters.
-- test.html: frontend page.
+- peer-stream.js: browser SDK for player.
+- signal.js: node.js signaling server.
+- .signal.js: signal.js with env variables.
+- test.html: browser web page.
 
-## Signaling Server
+## Demo
 
-```
+```s
 # install WebSocket
 npm install ws@8.5.0
 
 # start Signaling Server
-node signal.js player=88 engine=8888
+player=88 engine=8888 node signal.js
 
-# or start Signaling Server Pro
-node signal-pro.js player=88 engine=8888
+# visit webpage
+start http://localhost:88/test.html
 ```
 
-## signal-pro.js
+## Env Variables for signal.js
 
-- require("signal.js");
-- authenticate player with token before connection;
-- limit max number of players connected;
-- WebSocket throttle, prevent frequent reconnection; (or UE5 will crash)
-- start UE5 automatically when player connected; (using package.json)
-- serve HTTP static files; (share same port with WebSocket)
+| env      | type      | default   | usage                                                     |
+| -------- | --------- | --------- | --------------------------------------------------------- |
+| player   | number    | 88        | WS port number for player                                 |
+| engine   | number    | 8888      | WS port number for UE5                                    |
+| http     | bool      | false     | serve http static files (same port with player)           |
+| UE5_*    | string[ ] |           | run command when player connected (e.g. starting UE5.exe) |
+| one2one  | bool      | false     | one-to-one mapping for player & UE5                       |
+| token    | string    |           | authenticate the player                                   |
+| limit    | number    | +Infinity | limit max number of players connected                     |
+| throttle | bool      | false     | WebSocket throttle, prevent frequent reconnection         |
+
+## Load Balance in signal.js
+
+signal.js accept multi UE5 & player connections, where each UE5 maps to multi-players with load-balancing. Turn `one2one` on to keep one-to-one mapping. Provide `UE5_*` to start UE5 automatically. More detailed example in `.signal.js`.
 
 ## Unreal Engine
 
 enable the plugin:
 
-```
+```s
 Plugins > Built-In > Graphics > Pixel Streaming > Enabled
 Editor Preferences > Level Editor > Play > Additional Launch Parameters
 start myPackagedGame.exe -{key}={value}
@@ -42,11 +49,11 @@ start myPackagedGame.exe -{key}={value}
 
 common startup options:
 
-```
+```s
  -PixelStreamingURL="ws://localhost:8888"
  -RenderOffScreen
  -Unattended
- -graphicsadapter=0
+ -GraphicsAdapter=0
  -ForceRes
  -windowed
  -ResX=1280
@@ -56,18 +63,18 @@ common startup options:
  -PixelStreamingEncoderRateControl=VBR
 ```
 
-## Browser
+## peer-stream.js
 
 HTML:
 
-```
+```html
 <script src="peer-stream.js"></script>
 <video is="peer-stream" signal="ws://127.0.0.1:88/hello"></video>
 ```
 
 or JavaScript:
 
-```
+```html
 <script type="module">
 import "peer-stream.js";
 const ps = document.createElement("video", { is: "peer-stream" });
@@ -76,33 +83,21 @@ document.body.append(ps);
 </script>
 ```
 
-## Messages
+### Messages
 
 sending messages:
 
-```
+```js
 // object will be JSON.stringify()
 ps.emitMessage(msg: string | object);
 ```
 
 receiving messages:
 
-```
+```js
 ps.addEventListener("message", e => {
     e.detail;   // string
 });
-```
-
-## Common Commands
-
-```
-ps.debug('PLAYER.clients.size')   // show players count
-ps.debug('PLAYER.clients.forEach(p=>p.playerId!==playerId&&p.close(1011,"Infinity"));limit=1;')  // kick other players
-ps.debug('[...PLAYER.clients].map(x=>x.req.socket.remoteAddress)')  // every player's IP
-ps.debug('playerId')  // show my id
-console.log(ps.pc.remoteDescription.sdp)    // show peer info
-ps.addEventListener('mouseenter',()=>{ps.focus();ps.requestPointerLock()})    // pointer lock
-ps.style.pointerEvents='none'   // read only <video>
 ```
 
 ## Requirement
