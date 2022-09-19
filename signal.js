@@ -61,7 +61,6 @@ ENGINE.on("connection", (ue, req) => {
 			fe.req.socket.remotePort === +msg.playerId
 		);
 		if (!fe) {
-			// console.error("? player not found:", playerId);
 			return;
 		}
 
@@ -146,7 +145,6 @@ global.PLAYER = new Server({
 	server: require("http")
 		.createServer(process.env.http ? onRequest : undefined)
 		.listen(+process.env.player || 88, () => { }),
-	// port:   88,
 	clientTracking: true,
 });
 // every player
@@ -188,11 +186,6 @@ PLAYER.on("connection", (fe, req) => {
 			}, 500);
 		}
 	}
-
-
-
-
-
 
 	if (fe.ue) {
 		fe.ue.fe.add(fe)
