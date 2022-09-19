@@ -16,6 +16,9 @@ npm install ws@8.5.0
 # start Signaling Server
 player=88 engine=8888 node signal.js
 
+# start packaged UE5
+start path/to/UE5.exe -PixelStreamingURL="ws://localhost:8888"
+
 # visit webpage
 start http://localhost:88/test.html
 ```
@@ -33,7 +36,7 @@ start http://localhost:88/test.html
 | limit    | number    | +Infinity | limit max number of players connected                     |
 | throttle | bool      | false     | WebSocket throttle, prevent frequent reconnection         |
 
-## Load Balance in signal.js
+### Load Balance in signal.js
 
 signal.js accept multi UE5 & player connections, where each UE5 maps to multi-players with load-balancing. Turn `one2one` on to keep one-to-one mapping. Provide `UE5_*` to start UE5 automatically. More detailed example in `.signal.js`.
 

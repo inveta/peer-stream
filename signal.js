@@ -88,37 +88,6 @@ ENGINE.on("connection", (ue, req) => {
 
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function onRequest(req, res) {
 	// websocket请求时不触发
 	// serve HTTP static files
@@ -290,8 +259,12 @@ function print() {
 			);
 		})
 	}
-
-
 }
 
-
+// debug
+require('readline').createInterface({
+	input: process.stdin,
+	output: process.stdout
+}).on('line', (line) => {
+	console.log(eval(line));
+});
