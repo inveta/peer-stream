@@ -1,6 +1,6 @@
 # 虚幻引擎UE5 像素流 依赖 [中文](README-zh.md) [English](README.md)
 
-和官方臃肿不堪的像素流SDK相比，我们开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
+和官方臃肿不堪的像素流SDK相比，我们在官方的基础上做了大量的优化和精简，开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
 
  | 文件名         | 大小 | 作用                         |
  | -------------- | ---- | ---------------------------- |
@@ -9,7 +9,7 @@
  | .signal.js     | <1KB | 通过环境变量调节signal.js。  |
  | test.html      | 3KB  | 测试网页。                   |
 
-## Demo
+## 示例
 
 ```s
 # 安装 WebSocket
@@ -32,7 +32,7 @@ signal.js在官方库的基础上做了大量优化
 - 文件只有5KB，压缩后只有3KB。
 - 提供http文件服务，和WebSocket共享端口号。
 - 面向前端和面向UE5的端口号绑定，通过WebSocket子协议区分。
-- 通过环境变量统一传参。
+- 通过环境变量统一传参，支持命令行或配置文件。
 - 提供密码认证服务。
 - 可以限制最大连接数。
 - 支持多个UE5连接。
@@ -55,7 +55,7 @@ signal.js在官方库的基础上做了大量优化
 | one2one  | 布尔       | false     | 限制UE5和前端一一映射          |
 | token    | 字符串     | ''        | WebSocket 密码认证             |
 | limit    | 正整数     | +Infinity | 限制前端最大连接数             |
-| throttle | 布尔       | false     | WebSocket 节流, 避免频繁的重连 |
+| throttle | 布尔       | false     | WebSocket 节流，避免频繁的重连 |
 
 ### 负载均衡与UE5自启动
 
