@@ -640,7 +640,11 @@ class PeerStream extends HTMLVideoElement {
 		}
 		this.dc.send(data);
 
-		return "↑↑ sent";
+		return new Promise(resolve => this.addEventListener(
+			'message',
+			e => resolve(e.detail),
+			{ once: true }
+		));
 	}
 
 	normalize(x, y) {
