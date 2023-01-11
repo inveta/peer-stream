@@ -139,14 +139,14 @@ start path/to/UE5.exe -{key}={value}
 
 ### 引入
 
-HTML:
+纯HTML写法:
 
 ```html
 <script src="peer-stream.js"></script>
 <video is="peer-stream" id="ws://127.0.0.1:88/"></video>
 ```
 
-or JavaScript:
+或者使用JavaScript:
 
 ```html
 <script type="module">
