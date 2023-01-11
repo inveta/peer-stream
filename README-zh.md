@@ -135,6 +135,7 @@ start path/to/UE5.exe -{key}={value}
 - 支持3333端口重定向。
 - 支持视频自动播放。
 - video标签的id即信令服务器地址，默认指向网页的域名。
+- 支持异步请求。（不稳定）
 
 ### 引入
 
@@ -171,4 +172,11 @@ ps.emitMessage(msg: string | object);
 ps.addEventListener("message", e => {
     // JSON.parse(e.detail)
 });
+```
+
+异步请求：
+
+```js
+response = await ps.emitMessage(request);
+// 返回不稳定
 ```
