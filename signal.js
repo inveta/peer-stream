@@ -69,16 +69,38 @@ ENGINE.on("connection", (ue, req) => {
 			fe.ue = null
 		})
 		print();
+		if (ENGINE.clients.size === 0 && process.env.daemon) {
+			if (UE5_pool.length) {
+				require("child_process").exec(
+					UE5_pool[0],
+					{ cwd: __dirname, },
+				);
+				UE5_pool.push(UE5_pool.shift())
+			}
+		}
 	};
 
 	ue.onerror;
 
 });
 
+
 // 自启动命令池
-const UE5_pool = Object.entries(process.env)
+global.UE5_pool = Object.entries(process.env)
 	.filter(([key]) => key.startsWith('UE5_'))
 	.map(([, value]) => value)
+
+setTimeout(() => {
+	if (ENGINE.clients.size === 0 && process.env.daemon) {
+		if (UE5_pool.length) {
+			require("child_process").exec(
+				UE5_pool[0],
+				{ cwd: __dirname, },
+			);
+			UE5_pool.push(UE5_pool.shift())
+		}
+	}
+}, 5000);
 
 
 const HTTP =
