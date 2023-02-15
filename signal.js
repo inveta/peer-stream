@@ -69,15 +69,7 @@ ENGINE.on("connection", (ue, req) => {
 			fe.ue = null
 		})
 		print();
-		if (ENGINE.clients.size === 0 && process.env.daemon) {
-			if (UE5_pool.length) {
-				require("child_process").exec(
-					UE5_pool[0],
-					{ cwd: __dirname, },
-				);
-				UE5_pool.push(UE5_pool.shift())
-			}
-		}
+		preload();
 	};
 
 	ue.onerror;
@@ -90,17 +82,7 @@ global.UE5_pool = Object.entries(process.env)
 	.filter(([key]) => key.startsWith('UE5_'))
 	.map(([, value]) => value)
 
-setTimeout(() => {
-	if (ENGINE.clients.size === 0 && process.env.daemon) {
-		if (UE5_pool.length) {
-			require("child_process").exec(
-				UE5_pool[0],
-				{ cwd: __dirname, },
-			);
-			UE5_pool.push(UE5_pool.shift())
-		}
-	}
-}, 5000);
+setTimeout(preload, 5000);
 
 
 const HTTP =
@@ -234,6 +216,7 @@ PLAYER.on("connection", (fe, req) => {
 
 	fe.onerror;
 
+	preload()
 });
 
 // keep alive
@@ -285,3 +268,19 @@ require('readline').createInterface({
 }).on('line', (line) => {
 	console.log(eval(line));
 });
+
+
+
+function preload() {
+	if (process.env.preload) {
+		if ([...ENGINE.clients].every(ue => ue.fe.size)) {
+			if (UE5_pool.length) {
+				require("child_process").exec(
+					UE5_pool[0],
+					{ cwd: __dirname, },
+				);
+				UE5_pool.push(UE5_pool.shift())
+			}
+		}
+	}
+}
