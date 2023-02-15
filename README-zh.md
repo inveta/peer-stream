@@ -183,4 +183,4 @@ response = await ps.emitMessage(request);
 
 ## IOS端Safari兼容
 
-由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器禁止video自动播放，需要手动调用ps.play()播放视频流。
+由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器禁止video自动播放，必须由用户行为触发调用ps.play()来播放视频流。
