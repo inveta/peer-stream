@@ -17,7 +17,7 @@ process.env.UE5_GPU_0 = "start C:/Users/admin/Desktop/Windows/gza.exe -Unattende
 process.env.UE5_GPU_1 = "start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_1 -AllowPixelStreamingCommands";
 process.env.UE5_GPU_2 = "start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_2 -AllowPixelStreamingCommands";
 
-// 守护进程
+// 预加载1个空闲的UE5进程
 process.env.preload = 1;
 
 // process.env.UE5_10_0_42_16 = 'curl http://10.0.42.16/RUN-UE5'
