@@ -34,6 +34,8 @@ const RECEIVE = {
 	FileExtension: 8,
 	FileMimeType: 9,
 	FileContents: 10,
+	InputControlOwnership: 12,
+	Protocol: 255
 };
 
 // Must be kept in sync with PixelStreamingProtocol::EToUE4Msg C++ enum.
@@ -272,6 +274,29 @@ class PeerStream extends HTMLVideoElement {
 				console.log("↓↓ initial setting:", this.InitialSettings);
 				break;
 			}
+			case RECEIVE.InputControlOwnership: {
+				this.InputControlOwnership = data[1] !== 0;
+				console.log("↓↓ input control ownership:", this.InputControlOwnership);
+				break;
+			}
+			case RECEIVE.Protocol: {
+				let protocol = JSON.parse(utf16.decode(data.slice(1)));
+				console.log(protocol)
+				if (protocol.Direction === 0) {
+					for (let key in protocol) {
+						SEND[key] = protocol[key].id
+					}
+				} else if (protocol.Direction === 1) {
+					for (let key in protocol) {
+						RECEIVE[key] = protocol[key].id
+					}
+				}
+
+				this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
+				this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
+
+				break
+			}
 			default: {
 				console.error("↓↓ invalid data:", data);
 			}
@@ -309,10 +334,10 @@ class PeerStream extends HTMLVideoElement {
 			console.log("✅", this.dc);
 			this.style.pointerEvents = "auto";
 
-			setTimeout(() => {
-				this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
-				this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
-			}, 500);
+			// setTimeout(() => {
+			// 	this.dc.send(new Uint8Array([SEND.RequestInitialSettings]));
+			// 	this.dc.send(new Uint8Array([SEND.RequestQualityControl]));
+			// }, 500);
 		};
 
 		this.dc.onclose = (e) => {
