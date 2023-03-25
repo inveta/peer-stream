@@ -1,4 +1,4 @@
-"5.0.4";
+"5.1.0";
 
 const { Server } = require("ws");
 
@@ -284,3 +284,6 @@ function preload() {
 		}
 	}
 }
+
+
+process.title = __filename
