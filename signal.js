@@ -85,13 +85,22 @@ const HTTP = require('http')
   .createServer()
   .listen(+process.env.PORT || 88)
 
+const path = require('path');
 HTTP.on('request', (req, res) => {
   // websocket请求时不触发
   // serve HTTP static files
 
   const read = require('fs').createReadStream(
-    require('path').join(__dirname, req.url)
+    path.join(__dirname, req.url)
   )
+  const types = ({
+    '.html': 'text/html',
+    '.css': 'text/css',
+    '.js': 'text/javascript',
+  });
+  const type = types[path.extname(req.url)];
+  if (type)
+    res.setHeader('Content-Type', type);
 
   read
     .on('error', (err) => {
