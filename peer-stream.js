@@ -658,9 +658,9 @@ class PeerStream extends HTMLVideoElement {
 		byteIdx++;
 		data.setUint16(byteIdx, msg.length, true);
 		byteIdx += 2;
-		for (const char of msg) {
+		for (let i = 0; i < msg.length; i++) {
 			// charCodeAt() is UTF-16, codePointAt() is Unicode.
-			data.setUint16(byteIdx, char.charCodeAt(0), true);
+			data.setUint16(byteIdx, msg.charCodeAt(i), true);
 			byteIdx += 2;
 		}
 		this.dc.send(data);
