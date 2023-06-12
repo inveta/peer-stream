@@ -14,7 +14,7 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js 
 npm install ws@8.5.0
 
 # start Signaling Server
-PORT=88 node signal.js
+node .signal.js
 
 # start packaged UE5
 start path/to/UE5.exe -PixelStreamingURL="ws://localhost:88"
