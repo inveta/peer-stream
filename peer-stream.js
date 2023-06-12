@@ -673,8 +673,21 @@ class PeerStream extends HTMLVideoElement {
 	}
 
 	normalize(x, y) {
-		const normalizedX = x / this.clientWidth;
-		const normalizedY = y / this.clientHeight;
+		const { clientWidth, clientHeight, videoWidth, videoHeight } = this;
+    const videoRatio = videoWidth / videoHeight;
+    const clientRatio = clientWidth / clientHeight;
+    const _videoWidth =
+      videoRatio > clientRatio ? clientHeight * videoRatio : clientWidth;
+    const _videoHeight =
+      videoRatio > clientRatio ? clientHeight : clientWidth / videoRatio;
+    const diffX =
+      Math.abs(clientWidth / 2 - x) * (1 - clientWidth / _videoWidth);
+    const diffY =
+      Math.abs(clientHeight / 2 - y) * (1 - clientHeight / _videoHeight);
+    const ratioX = clientWidth / 2 - x > 0 ? 1 : -1;
+    const ratioY = clientHeight / 2 - y > 0 ? 1 : -1;
+    const normalizedX = (x + Math.round(diffX) * ratioX) / clientWidth;
+    const normalizedY = (y + Math.round(diffY) * ratioY) / clientHeight;
 		if (normalizedX < 0.0 || normalizedX > 1.0 || normalizedY < 0.0 || normalizedY > 1.0) {
 			return {
 				inRange: false,
