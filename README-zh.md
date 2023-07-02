@@ -182,6 +182,21 @@ response = await ps.emitMessage(request);
 // 返回不稳定
 ```
 
+### video事件监听
+
+```js
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video#events
+ps.addEventListener('事件名称', e => {
+    // 回调函数
+});
+```
+
+- "message":	接收应用层返回消息：e.detail。
+- "playing":	场景开始渲染时，在该事件之后才能安全发送ps.emitMessage()。
+- "suspend":	三维停止渲染时。
+- "resize":	video元素被拉伸时。
+- "pointerlockchange":	沉浸式鼠标切换时。
+
 ## IOS端Safari兼容
 
-由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器（小程序）禁止video自动播放，必须由用户行为触发调用ps.play()来播放视频流。
+由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器（小程序）禁止video自动播放，必须由用户行为（点击）触发调用ps.play()来播放视频流。
