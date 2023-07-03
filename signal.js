@@ -2,6 +2,117 @@
 
 const { Server } = require('ws')
 
+G_StartUe5Pool = []
+function InitUe5Pool() {
+  execUe5Pool = Object.entries(process.env)
+    .filter(([key]) => key.startsWith('UE5_'))
+    .map(([key, value]) => {
+      return [key, value]
+    })
+
+  for (const item of execUe5Pool) {
+    const [key, value] = item
+    // 将命令行字符串转换为数组
+    const args = value.split(' ')
+
+    // 使用正则表达式提取 -PixelStreamingURL 参数的值
+    const match = value.match(/-PixelStreamingURL=([^ ]+)/)
+
+    // 如果匹配成功，则输出 PixelStreamingURL 的值
+    if (!match) {
+      console.error(`PixelStreamingURL not found. ${value}`)
+      continue
+    }
+    const url = require('url')
+    const pixelStreamingURL = match[1]
+    const paseUrl = url.parse(pixelStreamingURL)
+    paseUrl.pathname = key
+    const newPixelStreamingURL = url.format(paseUrl)
+
+    // 使用正则表达式或字符串替换修改 PixelStreamingURL 值
+    const modifiedArgs = args.map((arg) =>
+      arg.replace(
+        /-PixelStreamingURL=.*/,
+        `-PixelStreamingURL=${newPixelStreamingURL}`
+      )
+    )
+
+    let localCmd = true
+    let startCmd
+
+    const ipAddress = args[0]
+    const isIpAddress = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.test(args[0])
+    if (isIpAddress) {
+      localCmd = false
+      modifiedArgs.shift()
+      startCmd = modifiedArgs.join(' ')
+      G_StartUe5Pool.push([localCmd, ipAddress, key, startCmd])
+      continue
+    }
+    startCmd = modifiedArgs.join(' ')
+    G_StartUe5Pool.push([localCmd, '', key, startCmd])
+  }
+}
+function GetFreeUe5() {
+  onLineExecIp = []
+  onLineClient = []
+
+  for (exeUeItem of G_StartUe5Pool) {
+    const [localCmd, ipAddress, key, startCmd] = exeUeItem
+    hasStartUp = false
+    for (ueClient of ENGINE.clients) {
+      //websocket 获取的url前面会加上一个'/'
+      if ('/' + key == ueClient.req.url) {
+        hasStartUp = true
+        break
+      }
+    }
+    if (false == hasStartUp) {
+      if (true == localCmd) {
+        return exeUeItem
+      }
+      index = onLineExecIp.indexOf(ipAddress)
+      if (-1 != index) {
+        return [...exeUeItem, onLineClient[index]]
+      }
+    }
+  }
+  return
+}
+function getIPv4(ip) {
+  const net = require('net')
+  if (net.isIPv6(ip)) {
+    const match = ip.match(/::ffff:(\d+\.\d+\.\d+\.\d+)/)
+    if (match) {
+      return match[1]
+    }
+  }
+  return ip
+}
+function StartExecUe() {
+  execUe5 = GetFreeUe5()
+  if (execUe5) {
+    const [localCmd, ipAddress, key, startCmd, exeWs] = execUe5
+    //启动本地的UE
+    if (localCmd) {
+      require('child_process').exec(
+        startCmd,
+        { cwd: __dirname },
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error: ${error}`)
+            return
+          }
+        }
+      )
+    } else {
+      //启动远端的UE
+    }
+  }
+}
+
+InitUe5Pool()
+
 global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => {})
 const iceServers = [
   {
@@ -68,39 +179,28 @@ ENGINE.on('connection', (ue, req) => {
       fe.ue = null
     })
     print()
-    preload()
   }
 
   ue.onerror
 })
 
-// 自启动命令池
-global.UE5_pool = Object.entries(process.env)
-  .filter(([key]) => key.startsWith('UE5_'))
-  .map(([, value]) => value)
-
-setTimeout(preload, 5000)
-
 const HTTP = require('http')
   .createServer()
   .listen(+process.env.PORT || 88)
 
-const path = require('path');
+const path = require('path')
 HTTP.on('request', (req, res) => {
   // websocket请求时不触发
   // serve HTTP static files
 
-  const read = require('fs').createReadStream(
-    path.join(__dirname, req.url)
-  )
-  const types = ({
+  const read = require('fs').createReadStream(path.join(__dirname, req.url))
+  const types = {
     '.html': 'text/html',
     '.css': 'text/css',
     '.js': 'text/javascript',
-  });
-  const type = types[path.extname(req.url)];
-  if (type)
-    res.setHeader('Content-Type', type);
+  }
+  const type = types[path.extname(req.url)]
+  if (type) res.setHeader('Content-Type', type)
 
   read
     .on('error', (err) => {
@@ -120,21 +220,20 @@ HTTP.on('upgrade', (req, socket, head) => {
     }
   }
 
-  // throttle
-  if (process.env.throttle) {
-    if (global.throttle) {
-      socket.destroy()
-      return
-    } else {
-      global.throttle = true
-      setTimeout(() => {
-        global.throttle = false
-      }, 500)
-    }
-  }
-
   // WS子协议
   if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
+    // throttle 防止前端频繁刷新
+    if (process.env.throttle) {
+      if (global.throttle) {
+        socket.destroy()
+        return
+      } else {
+        global.throttle = true
+        setTimeout(() => {
+          global.throttle = false
+        }, 500)
+      }
+    }
     // players max count
     if (process.env.limit) {
       if (PLAYER.clients.size >= process.env.limit) {
@@ -179,13 +278,8 @@ PLAYER.on('connection', (fe, req) => {
         sfu: false,
       })
     )
-  } else if (UE5_pool.length) {
-    require('child_process').exec(
-      UE5_pool[0],
-      { cwd: __dirname },
-      (err, stdout, stderr) => {}
-    )
-    UE5_pool.push(UE5_pool.shift())
+  } else {
+    StartExecUe()
   }
 
   print()
@@ -216,13 +310,17 @@ PLAYER.on('connection', (fe, req) => {
       )
       fe.ue.fe.delete(fe)
     }
+    // 当用户连接数大于ue实例的时候，有用户退出意味着可以，认领空闲的前端们
+    for (const fe of PLAYER.clients) {
+      if (!fe.ue) {
+        PLAYER.emit('connection', fe, fe.req)
+      }
+    }
 
     print()
   }
 
   fe.onerror
-
-  preload()
 })
 
 // keep alive
@@ -276,16 +374,5 @@ require('readline')
   .on('line', (line) => {
     console.log(eval(line))
   })
-
-function preload() {
-  if (process.env.preload) {
-    if ([...ENGINE.clients].every((ue) => ue.fe.size)) {
-      if (UE5_pool.length) {
-        require('child_process').exec(UE5_pool[0], { cwd: __dirname })
-        UE5_pool.push(UE5_pool.shift())
-      }
-    }
-  }
-}
 
 process.title = __filename
