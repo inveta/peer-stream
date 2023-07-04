@@ -364,7 +364,27 @@ function print() {
     })
   }
 }
+function Preload() {
+  //只在one2one模型下载进行预加载，共享模式，加载不太频繁，不考虑
+  if (!process.env.one2one) {
+    return
+  }
+  if (!process.env.preload) {
+    return
+  }
+  let ueNumber = ENGINE.clients.size
+  let playerNumber = PLAYER.clients.size
+  if (ueNumber < playerNumber + parseInt(process.env.preload)) {
+    StartExecUe()
+  }
+}
 
+function PreloadKeepAlive() {
+  setInterval(() => {
+    Preload()
+  }, 5 * 1000)
+}
+PreloadKeepAlive()
 // debug
 require('readline')
   .createInterface({
