@@ -57,6 +57,10 @@ function GetFreeUe5() {
   onLineExecIp = []
   onLineClient = []
 
+  for (exeWs of EXECUE.clients) {
+    onLineExecIp.push(getIPv4(exeWs.req.socket.remoteAddress))
+    onLineClient.push(exeWs)
+  }
   for (exeUeItem of G_StartUe5Pool) {
     const [localCmd, ipAddress, key, startCmd] = exeUeItem
     hasStartUp = false
@@ -107,11 +111,24 @@ function StartExecUe() {
       )
     } else {
       //启动远端的UE
+      exeWs.send(startCmd)
     }
   }
 }
 
 InitUe5Pool()
+
+function InitExecUe() {
+  //exec-ue的websocket连接管理
+  global.EXECUE = new Server({ noServer: true, clientTracking: true }, () => {})
+  EXECUE.on('connection', (socket, req) => {
+    socket.req = req
+  })
+  EXECUE.on('onclose', () => {})
+  EXECUE.on('error', () => {})
+}
+
+InitExecUe()
 
 global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => {})
 const iceServers = [
@@ -243,6 +260,10 @@ HTTP.on('upgrade', (req, socket, head) => {
     }
     PLAYER.handleUpgrade(req, socket, head, (fe) => {
       PLAYER.emit('connection', fe, req)
+    })
+  } else if (req.headers['sec-websocket-protocol'] === 'exec-ue') {
+    EXECUE.handleUpgrade(req, socket, head, (fe) => {
+      EXECUE.emit('connection', fe, req)
     })
   } else {
     ENGINE.handleUpgrade(req, socket, head, (fe) => {
