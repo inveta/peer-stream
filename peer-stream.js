@@ -220,7 +220,10 @@ class PeerStream extends HTMLVideoElement {
 			await this.pc.addIceCandidate(candidate);
 		} else if (msg.type === "answer") {
 			// deprecated
-		} else {
+		} else if(msg.type === "playerqueue"){
+      this.dispatchEvent(new CustomEvent("playerqueue",msg));
+      console.log("↓↓ playerqueue:",msg);
+    } else {
 			console.warn("↓↓", msg);
 		}
 	}

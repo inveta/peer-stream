@@ -385,6 +385,42 @@ function PreloadKeepAlive() {
   }, 5 * 1000)
 }
 PreloadKeepAlive()
+
+//在one模式下，当gpu资源实例不足时，用户进行排队，并定期通知给用户当前排队进展
+function PlayerQueue() {
+  const fe = [...PLAYER.clients].filter((fe) => !fe.ue)
+  if (!fe.length) {
+    return
+  }
+  let seq = 1
+  let msg = {}
+  msg.type = 'playerqueue'
+  fe.forEach((fe) => {
+    msg.seq = seq
+    seq = seq + 1
+    if (!fe.PlayerQueueSeq) {
+      fe.PlayerQueueSeq = msg.seq
+      fe.send(JSON.stringify(msg))
+      return
+    }
+    if (fe.PlayerQueueSeq != msg.seq) {
+      fe.PlayerQueueSeq = msg.seq
+      fe.send(JSON.stringify(msg))
+      return
+    }
+  })
+}
+
+function PlayerQueueKeepAlive() {
+  if (!process.env.one2one) {
+    return
+  }
+  setInterval(() => {
+    PlayerQueue()
+  }, 5 * 1000)
+}
+
+PlayerQueueKeepAlive()
 // debug
 require('readline')
   .createInterface({
