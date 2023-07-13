@@ -221,7 +221,7 @@ class PeerStream extends HTMLVideoElement {
 		} else if (msg.type === "answer") {
 			// deprecated
 		} else if(msg.type === "playerqueue"){
-      this.dispatchEvent(new CustomEvent("playerqueue",msg));
+      this.dispatchEvent(new CustomEvent("playerqueue",{ detail: msg }));
       console.log("↓↓ playerqueue:",msg);
     } else {
 			console.warn("↓↓", msg);
