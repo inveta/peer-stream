@@ -33,6 +33,8 @@ start http://localhost:88/test.html
 | token    | string   | ''        | WebSocket password                                 |
 | limit    | number   | +Infinity | limit max number of players connected              |
 | throttle | bool     | false     | WebSocket throttle, prevent frequent reconnection  |
+| exeUeCoolTime | number  | 60      |Time interval between starting the same UE instance again next time|
+| preload | number        | 1       | Number of pre started UE instances  |
 
 ### Load Balance
 
