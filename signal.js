@@ -46,11 +46,11 @@ function InitUe5Pool() {
       localCmd = false
       modifiedArgs.shift()
       startCmd = modifiedArgs.join(' ')
-      G_StartUe5Pool.push([localCmd, ipAddress, key, startCmd])
+      G_StartUe5Pool.push([localCmd, ipAddress, key, startCmd, new Date(0)])
       continue
     }
     startCmd = modifiedArgs.join(' ')
-    G_StartUe5Pool.push([localCmd, '', key, startCmd])
+    G_StartUe5Pool.push([localCmd, '', key, startCmd, new Date(0)])
   }
 }
 function GetFreeUe5() {
@@ -62,7 +62,7 @@ function GetFreeUe5() {
     onLineClient.push(exeWs)
   }
   for (exeUeItem of G_StartUe5Pool) {
-    const [localCmd, ipAddress, key, startCmd] = exeUeItem
+    const [localCmd, ipAddress, key, startCmd, lastDate] = exeUeItem
     hasStartUp = false
     for (ueClient of ENGINE.clients) {
       //websocket 获取的url前面会加上一个'/'
@@ -71,12 +71,23 @@ function GetFreeUe5() {
         break
       }
     }
+    let now = new Date()
+    let difSecond = (now - lastDate) / 1000
+    let coolTime = 60
+    if (process.env.exeUeCoolTime) {
+      coolTime = parseInt(process.env.preload)
+    }
+    if (difSecond < coolTime) {
+      continue
+    }
     if (false == hasStartUp) {
       if (true == localCmd) {
+        exeUeItem[4] = now
         return exeUeItem
       }
       index = onLineExecIp.indexOf(ipAddress)
       if (-1 != index) {
+        exeUeItem[4] = now
         return [...exeUeItem, onLineClient[index]]
       }
     }
@@ -96,7 +107,7 @@ function getIPv4(ip) {
 function StartExecUe() {
   execUe5 = GetFreeUe5()
   if (execUe5) {
-    const [localCmd, ipAddress, key, startCmd, exeWs] = execUe5
+    const [localCmd, ipAddress, key, startCmd, lastDate, exeWs] = execUe5
     //启动本地的UE
     if (localCmd) {
       require('child_process').exec(

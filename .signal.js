@@ -22,5 +22,7 @@ process.env.UE5_GPU_2 = "start C:/Users/admin/Desktop/Windows/gza.exe -Unattende
 
 // process.env.UE5_10_0_42_16 = 'curl http://10.0.42.16/RUN-UE5'
 
+//启动UE实例的冷却时间
+//process.env.exeUeCoolTime = 60
 require("./signal.js");
 
