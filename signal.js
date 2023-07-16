@@ -75,7 +75,7 @@ function GetFreeUe5() {
     let difSecond = (now - lastDate) / 1000
     let coolTime = 60
     if (process.env.exeUeCoolTime) {
-      coolTime = parseInt(process.env.preload)
+      coolTime = parseInt(process.env.exeUeCoolTime)
     }
     if (difSecond < coolTime) {
       continue
