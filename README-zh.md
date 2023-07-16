@@ -57,6 +57,8 @@ signal.js在官方库的基础上做了大量优化
 | token    | 字符串     | ''        | WebSocket 密码认证             |
 | limit    | 正整数     | +Infinity | 限制前端最大连接数             |
 | throttle | 布尔       | false     | WebSocket 节流，避免频繁的重连 |
+| exeUeCoolTime | 正整数  | 60      | 下次再启动同一个UE实例的时间间隔  |
+| preload | 正整数        | 1       | 预启动UE实例的个数  |
 
 ### 负载均衡与UE5自启动
 
@@ -196,6 +198,7 @@ ps.addEventListener('事件名称', e => {
 - "suspend":	三维停止渲染时。
 - "resize":	video元素被拉伸时。
 - "pointerlockchange":	沉浸式鼠标切换时。
+- "playerqueue":	返回用户排队情况，seq表示当前排队序号  
 
 ## IOS端Safari兼容
 
