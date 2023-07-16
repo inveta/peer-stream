@@ -396,6 +396,7 @@ function print() {
     })
   }
 }
+let lastPreStart = new Date(0)
 function Preload() {
   //只在one2one模型下载进行预加载，共享模式，加载不太频繁，不考虑
   if (!process.env.one2one) {
@@ -407,6 +408,18 @@ function Preload() {
   let ueNumber = ENGINE.clients.size
   let playerNumber = PLAYER.clients.size
   if (ueNumber < playerNumber + parseInt(process.env.preload)) {
+    //预加载的时间间隔需要和实例的冷却时间匹配
+    //https://github.com/inveta/peer-stream/issues/80
+    let now = new Date()
+    let difSecond = (now - lastPreStart) / 1000
+    let coolTime = 60
+    if (process.env.exeUeCoolTime) {
+      coolTime = parseInt(process.env.exeUeCoolTime)
+    }
+    if (difSecond < coolTime) {
+      return
+    }
+    lastPreStart = now
     StartExecUe()
   }
 }
