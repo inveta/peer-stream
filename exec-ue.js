@@ -3,24 +3,19 @@ signalPort = 88
 
 const protocol = 'exec-ue'
 
+const WebSocket = require('ws')
+
 function ConnectWsServer() {
   // 创建 WebSocket 客户端并连接到服务器
-  const WebSocket = require('ws')
+  console.log(`ConnectWsServer signalIp=${signalIp} signalPort=${signalPort}`)
+
   const client = new WebSocket(`ws://${signalIp}:${signalPort}`, protocol)
-  let reconnect = false
   // 监听连接错误事件
   client.on('error', () => {
     console.log(
       `WebSocket client error signalIp=${signalIp} signalPort=${signalPort}`
     )
     client.close()
-    if (true == reconnect) {
-      return
-    }
-    reconnect = true
-    setTimeout(() => {
-      ConnectWsServer()
-    }, 10 * 1000)
   })
 
   // 监听连接关闭事件
@@ -29,13 +24,6 @@ function ConnectWsServer() {
       `WebSocket client close signalIp=${signalIp} signalPort=${signalPort}`
     )
     client.close()
-    if (true == reconnect) {
-      return
-    }
-    reconnect = true
-    setTimeout(() => {
-      ConnectWsServer()
-    }, 10 * 1000)
   })
 
   // 监听连接成功事件
@@ -65,6 +53,33 @@ function ConnectWsServer() {
       }
     )
   })
+  client.on('pong', heartbeat)
+  return client
 }
 
-ConnectWsServer()
+function heartbeat() {
+  this.isAlive = true
+}
+
+let wsClient = ConnectWsServer()
+wsClient.isAlive = true
+
+const interval = setInterval(() => {
+  if (wsClient.readyState == WebSocket.CONNECTING) {
+    return
+  }
+  if (wsClient.readyState == WebSocket.OPEN) {
+    if (false == wsClient.isAlive) {
+      wsClient.terminate()
+      return
+    }
+    wsClient.isAlive = false
+    wsClient.ping('', true)
+  }
+  if (wsClient.readyState == WebSocket.CLOSED) {
+    wsClient.close()
+
+    wsClient = ConnectWsServer()
+    wsClient.isAlive = true
+  }
+}, 10 * 1000)
