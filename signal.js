@@ -134,6 +134,9 @@ function InitExecUe() {
   global.EXECUE = new Server({ noServer: true, clientTracking: true }, () => {})
   EXECUE.on('connection', (socket, req) => {
     socket.req = req
+
+    socket.isAlive = true
+    socket.on('pong', heartbeat)
   })
   EXECUE.on('onclose', () => {})
   EXECUE.on('error', () => {})
@@ -367,19 +370,26 @@ function heartbeat() {
 
 // keep alive
 setInterval(() => {
-  for (const fe of PLAYER.clients) {
+  PLAYER.clients.forEach(function each(fe) {
     if (fe.isAlive === false) return fe.terminate()
 
     fe.isAlive = false
     fe.ping('', false)
-  }
+  })
 
-  for (const ue of ENGINE.clients) {
+  ENGINE.clients.forEach(function each(ue) {
     if (ue.isAlive === false) return ue.terminate()
 
     ue.isAlive = false
     ue.ping('', false)
-  }
+  })
+
+  EXECUE.clients.forEach(function each(ws) {
+    if (ws.isAlive === false) return ws.terminate()
+
+    ws.isAlive = false
+    ws.ping('', false)
+  })
 }, 30 * 1000)
 
 // 打印映射关系
