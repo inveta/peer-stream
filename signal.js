@@ -157,6 +157,9 @@ const iceServers = [
 ENGINE.on('connection', (ue, req) => {
   ue.req = req
 
+  ue.isAlive = true
+  ue.on('pong', heartbeat)
+
   ue.fe = new Set()
   // sent to UE5 as initial signal
   ue.send(
@@ -292,6 +295,9 @@ global.PLAYER = new Server({
 PLAYER.on('connection', (fe, req) => {
   fe.req = req
 
+  fe.isAlive = true
+  fe.on('pong', heartbeat)
+
   if (process.env.one2one) {
     // 选择空闲的ue
     fe.ue = [...ENGINE.clients].find((ue) => ue.fe.size === 0)
@@ -355,12 +361,26 @@ PLAYER.on('connection', (fe, req) => {
   fe.onerror
 })
 
+function heartbeat() {
+  this.isAlive = true
+}
+
 // keep alive
 setInterval(() => {
   for (const fe of PLAYER.clients) {
-    fe.send('ping')
+    if (fe.isAlive === false) return fe.terminate()
+
+    fe.isAlive = false
+    fe.ping('', false)
   }
-}, 50 * 1000)
+
+  for (const ue of ENGINE.clients) {
+    if (ue.isAlive === false) return ue.terminate()
+
+    ue.isAlive = false
+    ue.ping('', false)
+  }
+}, 30 * 1000)
 
 // 打印映射关系
 function print() {
