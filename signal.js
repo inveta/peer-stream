@@ -227,7 +227,7 @@ HTTP.on('request', (req, res) => {
 
   read
     .on('error', (err) => {
-      res.end(err.message)
+      res.end("no such file or directory")
     })
     .on('ready', () => {
       read.pipe(res)
