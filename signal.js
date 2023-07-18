@@ -216,7 +216,7 @@ HTTP.on('request', (req, res) => {
   // websocket请求时不触发
   // serve HTTP static files
 
-  const read = require('fs').createReadStream(path.join(__dirname, req.url))
+  const read = require('fs').createReadStream(path.join(__dirname, path.normalize(req.url)))
   const types = {
     '.html': 'text/html',
     '.css': 'text/css',
