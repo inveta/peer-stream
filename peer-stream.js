@@ -83,17 +83,7 @@ const SEND = {
 	GamepadAnalog: 92,
 };
 
-const iceServers = [
-	{
-		urls: [
-			"stun:stun.l.google.com:19302",
-			"stun:stun1.l.google.com:19302",
-			"stun:stun2.l.google.com:19302",
-			"stun:stun3.l.google.com:19302",
-			"stun:stun4.l.google.com:19302",
-		],
-	},
-]
+let iceServers = undefined
 
 class PeerStream extends HTMLVideoElement {
 	constructor() {
@@ -220,10 +210,14 @@ class PeerStream extends HTMLVideoElement {
 			await this.pc.addIceCandidate(candidate);
 		} else if (msg.type === "answer") {
 			// deprecated
-		} else if(msg.type === "playerqueue"){
+		} else if (msg.type === "playerqueue"){
       this.dispatchEvent(new CustomEvent("playerqueue",{ detail: msg }));
       console.log("↓↓ playerqueue:",msg);
-    } else {
+    } else if (msg.type === "seticeServers"){
+      iceServers = msg.iceServers
+      console.log("↓↓ seticeServers:",msg);
+    } 
+    else {
 			console.warn("↓↓", msg);
 		}
 	}
@@ -361,7 +355,7 @@ class PeerStream extends HTMLVideoElement {
 		this.pc = new RTCPeerConnection({
 			sdpSemantics: "unified-plan",
 			bundlePolicy: "balanced",
-			// iceServers
+			iceServers:iceServers
 		});
 
 		this.pc.ontrack = (e) => {

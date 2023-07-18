@@ -145,17 +145,6 @@ function InitExecUe() {
 InitExecUe()
 
 global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => {})
-const iceServers = [
-  {
-    urls: [
-      'stun:stun.l.google.com:19302',
-      'stun:stun1.l.google.com:19302',
-      'stun:stun2.l.google.com:19302',
-      'stun:stun3.l.google.com:19302',
-      'stun:stun4.l.google.com:19302',
-    ],
-  },
-]
 
 ENGINE.on('connection', (ue, req) => {
   ue.req = req
@@ -169,7 +158,7 @@ ENGINE.on('connection', (ue, req) => {
     JSON.stringify({
       type: 'config',
       peerConnectionOptions: {
-        // iceServers
+        iceServers: global.iceServers,
       },
     })
   )
@@ -308,6 +297,11 @@ PLAYER.on('connection', (fe, req) => {
     // 选择人最少的ue
     fe.ue = [...ENGINE.clients].sort((a, b) => a.fe.size - b.fe.size)[0]
   }
+
+  fe.send(JSON.stringify({
+    type: 'seticeServers',
+    iceServers:global.iceServers
+  }))
 
   if (fe.ue) {
     fe.ue.fe.add(fe)
