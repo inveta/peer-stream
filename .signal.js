@@ -29,7 +29,7 @@ process.env.UE5_GPU_2 =
 //process.env.exeUeCoolTime = 60
 
 //ice配置
-process.env.iceServers = [
+global.iceServers = [
   {
     urls: [
       'stun:stun.l.google.com:19302',

@@ -158,7 +158,7 @@ ENGINE.on('connection', (ue, req) => {
     JSON.stringify({
       type: 'config',
       peerConnectionOptions: {
-        iceServers: process.env.iceServers,
+        iceServers: global.iceServers,
       },
     })
   )
@@ -300,7 +300,7 @@ PLAYER.on('connection', (fe, req) => {
 
   fe.send(JSON.stringify({
     type: 'seticeServers',
-    iceServers:process.env.iceServers
+    iceServers:global.iceServers
   }))
 
   if (fe.ue) {
