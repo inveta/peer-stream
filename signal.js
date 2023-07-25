@@ -365,21 +365,21 @@ function heartbeat() {
 // keep alive
 setInterval(() => {
   PLAYER.clients.forEach(function each(fe) {
-    if (fe.isAlive === false) return fe.terminate()
+    if (fe.isAlive === false) return fe.close()
 
     fe.isAlive = false
     fe.ping('', false)
   })
 
   ENGINE.clients.forEach(function each(ue) {
-    if (ue.isAlive === false) return ue.terminate()
+    if (ue.isAlive === false) return ue.close()
 
     ue.isAlive = false
     ue.ping('', false)
   })
 
   EXECUE.clients.forEach(function each(ws) {
-    if (ws.isAlive === false) return ws.terminate()
+    if (ws.isAlive === false) return ws.close()
 
     ws.isAlive = false
     ws.ping('', false)
