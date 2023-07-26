@@ -216,6 +216,10 @@ class PeerStream extends HTMLVideoElement {
     } else if (msg.type === "seticeServers"){
       iceServers = msg.iceServers
       console.log("↓↓ seticeServers:",msg);
+    } else if (msg.type === "ping"){
+      console.log("↓↓ ping:",msg);
+      msg.type = "pong"
+      this.ws.send(JSON.stringify(msg));
     } 
     else {
 			console.warn("↓↓", msg);
