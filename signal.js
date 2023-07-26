@@ -288,7 +288,6 @@ PLAYER.on('connection', (fe, req) => {
   fe.req = req
 
   fe.isAlive = true
-  fe.on('pong', heartbeat)
 
   if (process.env.one2one) {
     // 选择空闲的ue
@@ -330,7 +329,10 @@ PLAYER.on('connection', (fe, req) => {
     msg.playerId = req.socket.remotePort
     if (['answer', 'iceCandidate'].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg))
-    } else {
+    }else if(msg.type === "pong"){
+      fe.isAlive = true
+    } 
+    else {
       fe.send('? ' + msg.type)
     }
   }
@@ -367,8 +369,10 @@ setInterval(() => {
   PLAYER.clients.forEach(function each(fe) {
     if (fe.isAlive === false) return fe.close()
 
+    fe.send(JSON.stringify({
+      type: 'ping',
+    }))
     fe.isAlive = false
-    fe.ping('', false)
   })
 
   ENGINE.clients.forEach(function each(ue) {
