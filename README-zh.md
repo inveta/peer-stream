@@ -199,6 +199,7 @@ ps.addEventListener('事件名称', e => {
 - "resize":	video元素被拉伸时。
 - "pointerlockchange":	沉浸式鼠标切换时。
 - "playerqueue":	返回用户排队情况，seq表示当前排队序号  
+- "playerdisconnected":	signal不在线的回调事件 
 
 ## IOS端Safari兼容
 
