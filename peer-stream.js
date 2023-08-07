@@ -151,7 +151,7 @@ class PeerStream extends HTMLVideoElement {
 			} else {
 				console.warn(e);
 			}
-
+      this.dispatchEvent(new CustomEvent("playerdisconnected",{}));
 			clearTimeout(this.reconnect);
 			this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
 		};
