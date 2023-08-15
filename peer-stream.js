@@ -209,13 +209,22 @@ class PeerStream extends HTMLVideoElement {
 			console.log("↓↓ candidate:", candidate);
 			await this.pc.addIceCandidate(candidate);
 		} else if (msg.type === "answer") {
-			// deprecated
+			const answer = new RTCSessionDescription(msg)
+      await this.pc.setRemoteDescription(answer)
+      console.log('↓↓ answer:', answer)
+      for (const receiver of this.pc.getReceivers()) {
+        receiver.playoutDelayHint = 0
+      }
 		} else if (msg.type === "playerqueue"){
       this.dispatchEvent(new CustomEvent("playerqueue",{ detail: msg }));
       console.log("↓↓ playerqueue:",msg);
     } else if (msg.type === "seticeServers"){
       iceServers = msg.iceServers
       console.log("↓↓ seticeServers:",msg);
+    } else if (msg.type === 'playerConnected') {
+      console.log('↓↓ playerConnected:', msg)
+      this.setupPeerConnection2()
+      this.setupDataChannel2()
     } else if (msg.type === "ping"){
       console.log("↓↓ ping:",msg);
       msg.type = "pong"
@@ -341,6 +350,8 @@ class PeerStream extends HTMLVideoElement {
 			// }, 500);
 		};
 
+    
+
 		this.dc.onclose = (e) => {
 			console.info("❌ data channel closed");
 			this.style.pointerEvents = "none";
@@ -353,6 +364,29 @@ class PeerStream extends HTMLVideoElement {
 			this.onDataChannelMessage(e.data);
 		};
 	}
+
+  setupDataChannel2(label = 'hello') {
+    // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
+    this.dc = this.pc.createDataChannel(label, { ordered: true })
+    // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
+    this.dc.binaryType = 'arraybuffer'
+
+    this.dc.onopen = (e) => {
+      console.log('✅ data channel connected:', label)
+      this.style.pointerEvents = 'auto'
+      this.dc.send(new Uint8Array([SEND.RequestInitialSettings]))
+      this.dc.send(new Uint8Array([SEND.RequestQualityControl]))
+    }
+
+    this.dc.onclose = (e) => {
+      console.info('❌ data channel closed:', label)
+      this.style.pointerEvents = 'none'
+    }
+
+    this.dc.onmessage = (e) => {
+      this.onDataChannelMessage(e.data)
+    }
+  }
 
 	setupPeerConnection() {
 		this.pc.close();
@@ -382,23 +416,65 @@ class PeerStream extends HTMLVideoElement {
 			}
 		};
 
-		// const setPoster = () =>
-		//   (this.poster = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><style>text{font-size:7mm;fill:red;}</style>
-		//     <text x="10" y="030"> Signal:      ${this.pc.signalingState}     </text>
-		//     <text x="10" y="065"> Connect:     ${this.pc.connectionState}    </text>
-		//     <text x="10" y="100"> ICE Gather:  ${this.pc.iceGatheringState}  </text>
-		//     <text x="10" y="135"> ICE Connect: ${this.pc.iceConnectionState} </text>
-		//   </svg>`);
-		// this.pc.onsignalingstatechange =
-		//   this.pc.onconnectionstatechange =
-		//   this.pc.oniceconnectionstatechange =
-		//   this.pc.onicegatheringstatechange =
-		//     setPoster;
-
 		this.pc.ondatachannel = (e) => {
 			this.setupDataChannel(e);
 		};
 	}
+
+  setupPeerConnection2() {
+    this.pc.close()
+    this.pc = new RTCPeerConnection({
+      sdpSemantics: 'unified-plan',
+      bundlePolicy: 'balanced',
+      iceServers:iceServers
+    })
+
+    this.pc.ontrack = (e) => {
+      console.log(`↓↓ ${e.track.kind} track:`, e)
+      if (e.track.kind === 'video') {
+        this.srcObject = e.streams[0]
+      } else if (e.track.kind === 'audio') {
+        this.audio = document.createElement('audio')
+        this.audio.autoplay = true
+        this.audio.srcObject = e.streams[0]
+      }
+    }
+    this.pc.onicecandidate = (e) => {
+      // firefox
+      if (e.candidate?.candidate) {
+        console.log('↑↑ candidate:', e.candidate)
+        this.ws.send(
+          JSON.stringify({ type: 'iceCandidate', candidate: e.candidate })
+        )
+      } else {
+        // Notice that the end of negotiation is detected here when the event"s candidate property is null.
+      }
+    }
+    this.pc.onnegotiationneeded = (e) => {
+      this.setupOffer()
+    }
+  }
+
+  async setupOffer() {
+    // this.pc.addTransceiver("video", { direction: "recvonly" });
+
+    const offer = await this.pc.createOffer({
+      offerToReceiveAudio: +this.hasAttribute('audio'),
+      offerToReceiveVideo: 1,
+      voiceActivityDetection: false,
+    })
+
+    // this indicate we support stereo (Chrome needs this)
+    offer.sdp = offer.sdp.replace(
+      'useinbandfec=1',
+      'useinbandfec=1;stereo=1;sprop-maxcapturerate=48000'
+    )
+
+    this.pc.setLocalDescription(offer)
+
+    this.ws.send(JSON.stringify(offer))
+    console.log('↓↓ sending offer:', offer)
+  }
 
 	registerKeyboardEvents() {
 		this.onkeydown = (e) => {
