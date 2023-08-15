@@ -223,8 +223,8 @@ class PeerStream extends HTMLVideoElement {
       console.log("↓↓ seticeServers:",msg);
     } else if (msg.type === 'playerConnected') {
       console.log('↓↓ playerConnected:', msg)
-      this.setupPeerConnection2()
-      this.setupDataChannel2()
+      this.setupPeerConnection_ue4()
+      this.setupDataChannel_ue4()
     } else if (msg.type === "ping"){
       console.log("↓↓ ping:",msg);
       msg.type = "pong"
@@ -365,7 +365,7 @@ class PeerStream extends HTMLVideoElement {
 		};
 	}
 
-  setupDataChannel2(label = 'hello') {
+  setupDataChannel_ue4(label = 'hello') {
     // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
     this.dc = this.pc.createDataChannel(label, { ordered: true })
     // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
@@ -421,7 +421,7 @@ class PeerStream extends HTMLVideoElement {
 		};
 	}
 
-  setupPeerConnection2() {
+  setupPeerConnection_ue4() {
     this.pc.close()
     this.pc = new RTCPeerConnection({
       sdpSemantics: 'unified-plan',
