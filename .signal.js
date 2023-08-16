@@ -22,7 +22,7 @@ process.env.UE5_GPU_0 =
 
 //启动UE实例的冷却时间
 //process.env.exeUeCoolTime = 60
-process.env.UEVersion = '4.27'
+//process.env.UEVersion = '4.27'
 
 //ice配置
 global.iceServers = [
