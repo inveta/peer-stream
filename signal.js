@@ -257,13 +257,7 @@ HTTP.on('upgrade', (req, socket, head) => {
         }, 500)
       }
     }
-    // players max count
-    if (process.env.limit) {
-      if (PLAYER.clients.size >= process.env.limit) {
-        socket.destroy()
-        return
-      }
-    }
+
     PLAYER.handleUpgrade(req, socket, head, (fe) => {
       PLAYER.emit('connection', fe, req)
     })
@@ -304,14 +298,25 @@ PLAYER.on('connection', (fe, req) => {
 
   if (fe.ue) {
     fe.ue.fe.add(fe)
-    fe.ue.send(
-      JSON.stringify({
-        type: 'playerConnected',
-        playerId: req.socket.remotePort,
-        dataChannel: true,
-        sfu: false,
-      })
-    )
+    if (process.env.UEVersion && process.env.UEVersion=='4.27'){
+      fe.send(
+        JSON.stringify({
+          type: 'playerConnected',
+          playerId: req.socket.remotePort,
+          dataChannel: true,
+          sfu: false,
+        })
+      ) 
+    } else{
+      fe.ue.send(
+        JSON.stringify({
+          type: 'playerConnected',
+          playerId: req.socket.remotePort,
+          dataChannel: true,
+          sfu: false,
+        })
+      )
+    }
   } else {
     StartExecUe()
   }
@@ -327,7 +332,7 @@ PLAYER.on('connection', (fe, req) => {
     msg = JSON.parse(msg.data)
 
     msg.playerId = req.socket.remotePort
-    if (['answer', 'iceCandidate'].includes(msg.type)) {
+    if (['offer','answer', 'iceCandidate'].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg))
     }else if(msg.type === "pong"){
       fe.isAlive = true

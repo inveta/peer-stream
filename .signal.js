@@ -1,4 +1,4 @@
-// require('child_process').exec(`start http://localhost:88/test.html`);
+require('child_process').exec(`start http://localhost:88/test.html`);
 
 // 设置环境变量
 
@@ -14,12 +14,7 @@ process.env.throttle = true
 
 // 自启动脚本池，以"UE5_"开头
 process.env.UE5_GPU_0 =
-  'start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=1920 -ResY=1080 -AllowPixelStreamingCommands'
-process.env.UE5_GPU_1 =
-  'start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_1 -AllowPixelStreamingCommands'
-process.env.UE5_GPU_2 =
-  'start C:/Users/admin/Desktop/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_2 -AllowPixelStreamingCommands'
-
+  'start C:/Users/41132/Documents/UnrealProjects/UE427/WindowsNoEditor/UE427.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -AllowPixelStreamingCommands'
 // 预加载1个空闲的UE5进程
 // process.env.preload = 1;
 
@@ -27,6 +22,7 @@ process.env.UE5_GPU_2 =
 
 //启动UE实例的冷却时间
 //process.env.exeUeCoolTime = 60
+process.env.UEVersion = '4.27'
 
 //ice配置
 global.iceServers = [
