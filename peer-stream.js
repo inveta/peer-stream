@@ -556,31 +556,37 @@ class PeerStream extends HTMLVideoElement {
 		};
 
 		this.ontouchend = (e) => {
-			for (const touch of e.changedTouches) {
-				if (touch.identifier === finger.id) {
-					const x = touch.clientX - left;
-					const y = touch.clientY - top;
-					this.emitMouseUp(MouseButton.MainButton, x, y);
-					// Hack: Manual mouse leave event.
-					this.onmouseleave(e);
-					finger = undefined;
-					break;
-				}
-			}
+      // filtering multi finger touch events temporarily
+      if (finger) {
+        for (const touch of e.changedTouches) {
+          if (touch.identifier === finger.id) {
+            const x = touch.clientX - left;
+            const y = touch.clientY - top;
+            this.emitMouseUp(MouseButton.MainButton, x, y);
+            // Hack: Manual mouse leave event.
+            this.onmouseleave(e);
+            finger = undefined;
+            break;
+          }
+        }
+      }
 			e.preventDefault();
 		};
 
 		this.ontouchmove = (e) => {
-			for (const touch of e.touches) {
-				if (touch.identifier === finger.id) {
-					const x = touch.clientX - left;
-					const y = touch.clientY - top;
-					this.emitMouseMove(x, y, x - finger.x, y - finger.y);
-					finger.x = x;
-					finger.y = y;
-					break;
-				}
-			}
+      // filtering multi finger touch events temporarily
+      if (finger) {
+        for (const touch of e.touches) {
+          if (touch.identifier === finger.id) {
+            const x = touch.clientX - left;
+            const y = touch.clientY - top;
+            this.emitMouseMove(x, y, x - finger.x, y - finger.y);
+            finger.x = x;
+            finger.y = y;
+            break;
+          }
+        }
+      }
 			e.preventDefault();
 		};
 	}
