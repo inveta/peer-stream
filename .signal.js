@@ -6,7 +6,7 @@ require('child_process').exec(`start http://localhost:88/test.html`);
 process.env.PORT = 88
 
 // HTTP Basic认证
-process.env.auth = "admin:000000";
+// process.env.auth = "admin:000000";
 
 // process.env.limit = 4;
 process.env.throttle = true

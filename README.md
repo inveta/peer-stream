@@ -25,16 +25,16 @@ start http://localhost:88/test.html
 
 ## Env Variables for signal.js
 
-| env      | type     | default   | usage                                              |
-| -------- | -------- | --------- | -------------------------------------------------- |
-| PORT     | number   | 88        | WebSocket/HTTP port for player & UE5               |
-| UE5_*    | string[] | []        | run command when player connected (UE5 auto start) |
-| one2one  | bool     | false     | one-to-one mapping for player & UE5                |
-| token    | string   | ''        | WebSocket password                                 |
-| limit    | number   | +Infinity | limit max number of players connected              |
-| throttle | bool     | false     | WebSocket throttle, prevent frequent reconnection  |
-| exeUeCoolTime | number  | 60      |Time interval between starting the same UE instance again next time|
-| preload | number        | 1       | Number of pre started UE instances  |
+| env           | type     | default   | usage                                                               |
+| ------------- | -------- | --------- | ------------------------------------------------------------------- |
+| PORT          | number   | 88        | WebSocket/HTTP port for player & UE5                                |
+| UE5_*         | string[] | []        | run command when player connected (UE5 auto start)                  |
+| one2one       | bool     | false     | one-to-one mapping for player & UE5                                 |
+| auth          | string   | ''        | HTTP Basic Auth username:password                                   |
+| limit         | number   | +Infinity | limit max number of players connected                               |
+| throttle      | bool     | false     | WebSocket throttle, prevent frequent reconnection                   |
+| exeUeCoolTime | number   | 60        | Time interval between starting the same UE instance again next time |
+| preload       | number   | 1         | Number of pre started UE instances                                  |
 
 ### Load Balance
 
