@@ -5,7 +5,9 @@ require('child_process').exec(`start http://localhost:88/test.html`);
 // 唯一端口号
 process.env.PORT = 88
 
-// process.env.token = "/test.html";
+// HTTP Basic认证
+process.env.auth = "admin:000000";
+
 // process.env.limit = 4;
 process.env.throttle = true
 

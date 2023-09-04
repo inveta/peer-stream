@@ -216,6 +216,17 @@ HTTP.on('request', (req, res) => {
   // websocket请求时不触发
   // serve HTTP static files
 
+  // HTTP Basic Authentication
+  if(process.env.auth){
+    let auth = req.headers.authorization?.replace('Basic ', '');
+    auth = Buffer.from(auth || '', 'base64').toString('utf-8');
+    if(process.env.auth !== auth){
+      res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Authorization required"' });
+      res.end('Auth failed !');
+      return;
+    }
+  }
+
   const read = require('fs').createReadStream(path.join(__dirname, path.normalize(req.url)))
   const types = {
     '.html': 'text/html',
@@ -235,13 +246,6 @@ HTTP.on('request', (req, res) => {
 })
 
 HTTP.on('upgrade', (req, socket, head) => {
-  // password
-  if (process.env.token) {
-    if (req.url !== process.env.token) {
-      socket.destroy()
-      return
-    }
-  }
 
   // WS子协议
   if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
