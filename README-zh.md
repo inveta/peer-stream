@@ -118,9 +118,10 @@ start path/to/UE5.exe -{key}={value}
  -Unattended
  -GraphicsAdapter=0
  -ForceRes
- -Windowed
  -ResX=1280
  -ResY=720
+ -PixelStreamingWebRTCFps=30
+ -Windowed
  -AudioMixer
  -AllowPixelStreamingCommands
  -PixelStreamingEncoderRateControl=VBR
