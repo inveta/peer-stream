@@ -16,7 +16,7 @@ process.env.throttle = true
 
 // 自启动脚本池，以"UE5_"开头
 process.env.UE5_GPU_0 =
-  'start C:/Users/41132/Documents/UnrealProjects/UE427/WindowsNoEditor/UE427.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -AllowPixelStreamingCommands'
+  'start C:/Users/41132/Documents/UnrealProjects/UE427/WindowsNoEditor/UE427.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30'
 // 预加载1个空闲的UE5进程
 // process.env.preload = 1;
 
