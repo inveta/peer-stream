@@ -138,17 +138,10 @@ class PeerStream extends HTMLVideoElement {
 		};
 
 		this.ws.onclose = (e) => {
-			let timeout = 3000;
-			if (e.code === 3333) {
-				this.id = e.reason;
-				console.log("redirect =>", e.reason);
-				timeout = 500;
-			} else {
-				console.warn(e);
-			}
-      this.dispatchEvent(new CustomEvent("playerdisconnected",{}));
+			console.warn(e);
+      		this.dispatchEvent(new CustomEvent("playerdisconnected",{}));
 			clearTimeout(this.reconnect);
-			this.reconnect = setTimeout(() => this.connectedCallback(), timeout);
+			this.reconnect = setTimeout(() => this.connectedCallback(), 3000);
 		};
 	}
 
