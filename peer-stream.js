@@ -1,4 +1,4 @@
-"5.1.1";
+"5.1.2";
 
 // Must be kept in sync with JavaScriptKeyCodeToFKey C++ array.
 // special keycodes different from KeyboardEvent.keyCode
