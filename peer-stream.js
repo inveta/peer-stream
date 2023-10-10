@@ -122,7 +122,11 @@ class PeerStream extends HTMLVideoElement {
 	async connectedCallback() {
 		// This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
 		if (!this.isConnected) return;
-    	this.pc.close()
+		if (this.pc.connectionState === "connected" && this.dc.readyState === "open" && this.ws.readyState === 1) {
+			// this.pc.restartIce();
+			this.play();
+			return;
+		}
 		// await new Promise((res) => setTimeout(res, 1000));
 		this.ws.onclose = null
 		this.ws.close(1000);
