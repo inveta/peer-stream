@@ -1,14 +1,14 @@
 '5.1.1'
 
+// require('child_process').exec(`start http://localhost:88/test.html`);
+
+Object.assign(global, require('./signal.json'));
+
 const { Server } = require('ws')
 
 G_StartUe5Pool = []
 function InitUe5Pool() {
-  execUe5Pool = Object.entries(process.env)
-    .filter(([key]) => key.startsWith('UE5_'))
-    .map(([key, value]) => {
-      return [key, value]
-    })
+  execUe5Pool = Object.entries(global.UE5 || []);
 
   for (const item of execUe5Pool) {
     const [key, value] = item
@@ -74,8 +74,8 @@ function GetFreeUe5() {
     let now = new Date()
     let difSecond = (now - lastDate) / 1000
     let coolTime = 60
-    if (process.env.exeUeCoolTime) {
-      coolTime = parseInt(process.env.exeUeCoolTime)
+    if (global.exeUeCoolTime) {
+      coolTime = global.exeUeCoolTime
     }
     if (difSecond < coolTime) {
       continue
@@ -131,20 +131,20 @@ InitUe5Pool()
 
 function InitExecUe() {
   //exec-ue的websocket连接管理
-  global.EXECUE = new Server({ noServer: true, clientTracking: true }, () => {})
+  global.EXECUE = new Server({ noServer: true, clientTracking: true }, () => { })
   EXECUE.on('connection', (socket, req) => {
     socket.req = req
 
     socket.isAlive = true
     socket.on('pong', heartbeat)
   })
-  EXECUE.on('onclose', () => {})
-  EXECUE.on('error', () => {})
+  EXECUE.on('onclose', () => { })
+  EXECUE.on('error', () => { })
 }
 
 InitExecUe()
 
-global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => {})
+global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => { })
 
 ENGINE.on('connection', (ue, req) => {
   ue.req = req
@@ -209,7 +209,7 @@ ENGINE.on('connection', (ue, req) => {
 
 const HTTP = require('http')
   .createServer()
-  .listen(+process.env.PORT || 88)
+  .listen(global.PORT || 88)
 
 const path = require('path')
 HTTP.on('request', (req, res) => {
@@ -217,10 +217,10 @@ HTTP.on('request', (req, res) => {
   // serve HTTP static files
 
   // HTTP Basic Authentication
-  if(process.env.auth){
+  if (global.auth) {
     let auth = req.headers.authorization?.replace('Basic ', '');
     auth = Buffer.from(auth || '', 'base64').toString('utf-8');
-    if(process.env.auth !== auth){
+    if (global.auth !== auth) {
       res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Authorization required"' });
       res.end('Auth failed !');
       return;
@@ -238,7 +238,7 @@ HTTP.on('request', (req, res) => {
 
   read
     .on('error', (err) => {
-        require('./.js')(req, res);
+      require('./.js')(req, res);
     })
     .on('ready', () => {
       read.pipe(res)
@@ -250,7 +250,7 @@ HTTP.on('upgrade', (req, socket, head) => {
   // WS子协议
   if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
     // throttle 防止前端频繁刷新
-    if (process.env.throttle) {
+    if (global.throttle) {
       if (global.throttle) {
         socket.destroy()
         return
@@ -287,7 +287,7 @@ PLAYER.on('connection', (fe, req) => {
 
   fe.isAlive = true
 
-  if (process.env.one2one) {
+  if (global.one2one) {
     // 选择空闲的ue
     fe.ue = [...ENGINE.clients].find((ue) => ue.fe.size === 0)
   } else {
@@ -297,12 +297,12 @@ PLAYER.on('connection', (fe, req) => {
 
   fe.send(JSON.stringify({
     type: 'seticeServers',
-    iceServers:global.iceServers
+    iceServers: global.iceServers
   }))
 
   if (fe.ue) {
     fe.ue.fe.add(fe)
-    if (process.env.UEVersion && process.env.UEVersion=='4.27'){
+    if (global.UEVersion && global.UEVersion === 4.27) {
       fe.send(
         JSON.stringify({
           type: 'playerConnected',
@@ -310,8 +310,8 @@ PLAYER.on('connection', (fe, req) => {
           dataChannel: true,
           sfu: false,
         })
-      ) 
-    } else{
+      )
+    } else {
       fe.ue.send(
         JSON.stringify({
           type: 'playerConnected',
@@ -336,11 +336,11 @@ PLAYER.on('connection', (fe, req) => {
     msg = JSON.parse(msg.data)
 
     msg.playerId = req.socket.remotePort
-    if (['offer','answer', 'iceCandidate'].includes(msg.type)) {
+    if (['offer', 'answer', 'iceCandidate'].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg))
-    }else if(msg.type === "pong"){
+    } else if (msg.type === "pong") {
       fe.isAlive = true
-    } 
+    }
     else {
       fe.send('? ' + msg.type)
     }
@@ -436,22 +436,22 @@ function print() {
 let lastPreStart = new Date(0)
 function Preload() {
   //只在one2one模型下载进行预加载，共享模式，加载不太频繁，不考虑
-  if (!process.env.one2one) {
+  if (!global.one2one) {
     return
   }
-  if (!process.env.preload) {
+  if (!global.preload) {
     return
   }
   let ueNumber = ENGINE.clients.size
   let playerNumber = PLAYER.clients.size
-  if (ueNumber < playerNumber + parseInt(process.env.preload)) {
+  if (ueNumber < playerNumber + global.preload) {
     //预加载的时间间隔需要和实例的冷却时间匹配
     //https://github.com/inveta/peer-stream/issues/80
     let now = new Date()
     let difSecond = (now - lastPreStart) / 1000
     let coolTime = 60
-    if (process.env.exeUeCoolTime) {
-      coolTime = parseInt(process.env.exeUeCoolTime)
+    if (global.exeUeCoolTime) {
+      coolTime = global.exeUeCoolTime
     }
     if (difSecond < coolTime) {
       return
@@ -494,7 +494,7 @@ function PlayerQueue() {
 }
 
 function PlayerQueueKeepAlive() {
-  if (!process.env.one2one) {
+  if (!global.one2one) {
     return
   }
   setInterval(() => {
@@ -514,3 +514,13 @@ require('readline')
   })
 
 process.title = __filename
+
+if (global.boot) {
+  if (process.platform === "win32") {
+    const signal_bat = require('path').join(global.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'signal.bat');
+    const _signal_js = require('path').join(__dirname, '.signal.js');
+    const node_exe = process.argv[0];
+    const bat = `start "${node_exe}" "${_signal_js}"`;
+    require('fs').writeFile(signal_bat, bat, () => { });
+  }
+}
