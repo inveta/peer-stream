@@ -55,7 +55,6 @@ signal.js在官方库的基础上做了大量优化
 | UE5_*    | 命令行列表 | []        | UE5自启动脚本池                |
 | one2one  | 布尔       | false     | 限制UE5和前端一一映射          |
 | auth     | 字符串     | ''        | HTTP Basic 认证的 "用户名:密码" |
-| limit    | 正整数     | +Infinity | 限制前端最大连接数             |
 | throttle | 布尔       | false     | WebSocket 节流，避免频繁的重连 |
 | exeUeCoolTime | 正整数  | 60      | 下次再启动同一个UE实例的时间间隔  |
 | preload | 正整数        | 1       | 预启动UE实例的个数  |

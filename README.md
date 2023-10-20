@@ -31,7 +31,6 @@ start http://localhost:88/test.html
 | UE5_*         | string[] | []        | run command when player connected (UE5 auto start)                  |
 | one2one       | bool     | false     | one-to-one mapping for player & UE5                                 |
 | auth          | string   | ''        | HTTP Basic Auth username:password                                   |
-| limit         | number   | +Infinity | limit max number of players connected                               |
 | throttle      | bool     | false     | WebSocket throttle, prevent frequent reconnection                   |
 | exeUeCoolTime | number   | 60        | Time interval between starting the same UE instance again next time |
 | preload       | number   | 1         | Number of pre started UE instances                                  |
