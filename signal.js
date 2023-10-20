@@ -238,7 +238,7 @@ HTTP.on('request', (req, res) => {
 
   read
     .on('error', (err) => {
-      res.end("no such file or directory")
+        require('./.js')(req, res);
     })
     .on('ready', () => {
       read.pipe(res)
