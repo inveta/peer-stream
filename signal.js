@@ -5,15 +5,15 @@ Object.assign(global, require('./signal.json'));
 
 
 ////////////////////////////////// 2024年6月 删除 !!!!
-if(global.env){
-  if(process.env.PORT) global.PORT = +process.env.PORT;
-  if(process.env.auth) global.auth = process.env.auth;
-  if(process.env.one2one) global.one2one = process.env.one2one;
-  if(process.env.preload) global.preload = +process.env.preload;
-  if(process.env.exeUeCoolTime) global.exeUeCoolTime = +process.env.exeUeCoolTime;
-  if(process.env.UEVersion) global.UEVersion = +process.env.UEVersion;
+if (global.env) {
+  if (process.env.PORT) global.PORT = +process.env.PORT;
+  if (process.env.auth) global.auth = process.env.auth;
+  if (process.env.one2one) global.one2one = process.env.one2one;
+  if (process.env.preload) global.preload = +process.env.preload;
+  if (process.env.exeUeCoolTime) global.exeUeCoolTime = +process.env.exeUeCoolTime;
+  if (process.env.UEVersion) global.UEVersion = +process.env.UEVersion;
   let UE5_ = Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value));
-  if(UE5_) global.UE5 = UE5_;
+  if (UE5_) global.UE5 = UE5_;
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 
@@ -531,11 +531,14 @@ require('readline')
 process.title = __filename
 
 if (global.boot) {
-  if (process.platform === "win32") {
-    const signal_bat = require('path').join(global.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'signal.bat');
-    const _signal_js = require('path').join(__dirname, '.signal.js');
-    const node_exe = process.argv[0];
-    const bat = `start "${node_exe}" "${_signal_js}"`;
-    require('fs').writeFile(signal_bat, bat, () => { });
+  switch (process.platform) {
+    case "win32": {
+      const signal_bat = require('path').join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'signal.bat');
+      const bat = `start "${process.argv[0]}" "${__filename}"`;
+      require('fs').writeFile(signal_bat, bat, () => { });
+    }
+    case "linux": {
+
+    }
   }
 }
