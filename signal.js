@@ -1,8 +1,23 @@
-'5.1.1'
-
+'5.1.2';
 // require('child_process').exec(`start http://localhost:88/test.html`);
 
 Object.assign(global, require('./signal.json'));
+
+
+////////////////////////////////// 2024年6月 删除 !!!!
+if(global.env){
+  if(process.env.PORT) global.PORT = +process.env.PORT;
+  if(process.env.auth) global.auth = process.env.auth;
+  if(process.env.one2one) global.one2one = process.env.one2one;
+  if(process.env.preload) global.preload = +process.env.preload;
+  if(process.env.exeUeCoolTime) global.exeUeCoolTime = +process.env.exeUeCoolTime;
+  if(process.env.UEVersion) global.UEVersion = +process.env.UEVersion;
+  let UE5_ = Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value));
+  if(UE5_) global.UE5 = UE5_;
+}
+////////////////////////////////// 2024年6月 删除 !!!!
+
+
 
 const { Server } = require('ws')
 

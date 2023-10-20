@@ -1,4 +1,5 @@
 {
+  "env": false,
   "PORT": 88,
   "throttle": false,
   "auth": "admin:000000",
