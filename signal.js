@@ -6,14 +6,19 @@ Object.assign(global, require('./signal.json'));
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
-  if (process.env.PORT) global.PORT = +process.env.PORT;
-  if (process.env.auth) global.auth = process.env.auth;
-  if (process.env.one2one) global.one2one = process.env.one2one;
-  if (process.env.preload) global.preload = +process.env.preload;
-  if (process.env.exeUeCoolTime) global.exeUeCoolTime = +process.env.exeUeCoolTime;
-  if (process.env.UEVersion) global.UEVersion = +process.env.UEVersion;
-  let UE5_ = Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value));
-  if (UE5_) global.UE5 = UE5_;
+  const signal = {
+    //  env: false,
+     PORT: +process.env.PORT,
+     auth: process.env.auth,
+     one2one: process.env.one2one,
+     preload: +process.env.preload,
+     exeUeCoolTime: +process.env.exeUeCoolTime,
+     UEVersion: +process.env.UEVersion,
+     UE5: Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value)),
+    }
+    require('fs').promises.writeFile('./signal.json', JSON.stringify(signal));
+    Object.assign(global, signal);
+    // require('fs').promises.rm('./.signal.js');
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 

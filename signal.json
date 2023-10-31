@@ -10,7 +10,7 @@
   ],
   "preload": 0,
   "exeUeCoolTime": 60,
-  "UEVersion": 4.27,
+  "UEVersion": 5,
   "iceServers": [
     {
       "urls": [
