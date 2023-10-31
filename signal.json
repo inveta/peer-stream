@@ -8,7 +8,7 @@
     "start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
     "start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=1 -ProjectID=GPU_1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
   ],
-  "preload": 1,
+  "preload": 0,
   "exeUeCoolTime": 60,
   "UEVersion": 4.27,
   "iceServers": [

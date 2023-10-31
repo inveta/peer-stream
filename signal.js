@@ -1,5 +1,5 @@
 '5.1.2';
-// require('child_process').exec(`start http://localhost:88/test.html`);
+require('child_process').exec(`start http://localhost:88/signal.html`);
 
 Object.assign(global, require('./signal.json'));
 

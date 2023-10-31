@@ -2,12 +2,12 @@
 
 和官方臃肿不堪的像素流SDK相比，我们在官方的基础上做了大量的优化和精简，开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
 
- | 文件名         | 大小 | 作用                         |
- | -------------- | ---- | ---------------------------- |
- | peer-stream.js | 18KB | 浏览器SDK，一键开启。        |
- | signal.js      | 5KB  | 信令服务器、负载均衡、认证。 |
- | .signal.js     | <1KB | 通过环境变量调节signal.js。  |
- | test.html      | 3KB  | 测试网页。                   |
+ | 文件名         | 大小  | 作用                         |
+ | -------------- | ----- | ---------------------------- |
+ | peer-stream.js | 22 KB | 浏览器SDK，一键开启。        |
+ | signal.js      | 14 KB | 信令服务器、负载均衡、认证。 |
+ | signal.json    | 1 KB  | signal.js 的启动参数。       |
+ | test.html      | 3 KB  | 测试网页。                   |
 
 ## 示例
 
@@ -16,7 +16,7 @@
 npm install ws@8.5.0
 
 # 启动信令服务器
-PORT=88 node signal.js
+node signal.js
 
 # 启动 UE5
 start path/to/UE5.exe -PixelStreamingURL="ws://localhost:88"
@@ -47,21 +47,21 @@ signal.js在官方库的基础上做了大量优化
 - 前端的端口号与ID绑定。
 - 窗口标题等于当前路径，方便查找文件。
 
-### .signal.js 环境变量
+### signal.json 启动参数
 
-| 环境变量 | 类型       | 默认值    | 功能                           |
-| -------- | ---------- | --------- | ------------------------------ |
-| PORT     | 正整数     | 88        | WebSocket/HTTP 全局统一端口号  |
-| UE5_*    | 命令行列表 | []        | UE5自启动脚本池                |
-| one2one  | 布尔       | false     | 限制UE5和前端一一映射          |
-| auth     | 字符串     | ''        | HTTP Basic 认证的 "用户名:密码" |
-| throttle | 布尔       | false     | WebSocket 节流，避免频繁的重连 |
-| exeUeCoolTime | 正整数  | 60      | 下次再启动同一个UE实例的时间间隔  |
-| preload | 正整数        | 1       | 预启动UE实例的个数  |
+| 环境变量      | 类型       | 默认值 | 功能                             |
+| ------------- | ---------- | ------ | -------------------------------- |
+| PORT          | 正整数     | 88     | WebSocket/HTTP 全局统一端口号    |
+| UE5           | 命令行列表 | []     | UE5自启动脚本池                  |
+| one2one       | 布尔       | false  | 限制UE5和前端一一映射            |
+| auth          | 字符串     | ''     | HTTP Basic 认证的 "用户名:密码"  |
+| throttle      | 布尔       | false  | WebSocket 节流，避免频繁的重连   |
+| exeUeCoolTime | 正整数     | 60     | 下次再启动同一个UE实例的时间间隔 |
+| preload       | 正整数     | 1      | 预启动UE实例的个数               |
 
 ### 负载均衡与UE5自启动
 
-`signal.js` 既支持多个前端连接，也支持多个UE5连接，此时前端和UE5的多对多映射关系是均衡负载的：前端会被引向最空闲的UE5进程。若想要限制一一映射关系，开启`one2one` 环境变量。最好提供 `UE5_*` 自启动命令行，更多实例参考 `.signal.js`。流程图如下：
+`signal.js` 既支持多个前端连接，也支持多个UE5连接，此时前端和UE5的多对多映射关系是均衡负载的：前端会被引向最空闲的UE5进程。若想要限制一一映射关系，开启`one2one` 环境变量。最好提供 `UE5_*` 自启动命令行，更多实例参考 `signal.json`。流程图如下：
 
 ```mermaid
 flowchart TD;
