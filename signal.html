@@ -6,13 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+        html {
+            font-size: calc(14px + (100vw - 480px) * (3/720));
+
+            @media (max-width: 480px) {
+                font-size: 14px;
+            }
+
+            @media (min-width: 1200px) {
+                font-size: 17px;
+            }
+        }
+
         body {
             height: 100vh;
             width: 100vw;
-            font-size: 16px;
             margin: 0;
             background-color: #2e303e;
         }
+
         input[type="checkbox"] {
             appearance: none;
             width: 4rem;
@@ -23,6 +35,7 @@
             background-color: white;
             border: 0.125rem solid #dddddd;
         }
+
         input[type="checkbox"]:before {
             content: "";
             position: absolute;
@@ -34,6 +47,7 @@
             border-radius: 50%;
             transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
         }
+
         input[type="checkbox"]:after {
             content: "";
             text-indent: 0.75px;
@@ -42,231 +56,279 @@
             white-space: nowrap;
             color: white;
         }
+
         input[type="checkbox"]:checked {
             border-color: #8ce196;
         }
+
         input[type="checkbox"]:checked:before {
-            left: 32px;
+            left: 2rem;
             background: #8ce196;
         }
-        .main {
-            width: 100%;
-            height: 100%;
-        }        
-        .header {
-            width: 100%;
-            height: 5vh;
-            position: sticky;
-            top: 0;
-            left: 0;
-            z-index: 2;
-            background-color: black;
-            box-shadow: 0 0 0.2rem #0000001a, 0 0.2rem 0.4rem #0003;        
-            display: flex;
-            color: white;
-            @media screen and (min-width: 768px) and (orientation: landscape){
-                display: none;
-            }
-        }
-        #toggleSidebar {
-            height: 100%;
-            aspect-ratio: 1;
-            font-size: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .title {
-            width: 50%;
-            font-size: 1rem;
-            margin: 0 6vw;
-            display: flex;
-            justify-content: left;
-            align-items: center;
-        }
+
         #config-form {
-            margin: 3vh auto 0;
+            margin: 0 0 0 18%;
+            height: 98%;
             color: white;
             font-size: 1rem;
             display: flex;
             flex-wrap: wrap;
-            width: 100%;
-            @media screen and (min-width: 768px) and (orientation: landscape) {
-                width: 77%;
-                margin: 5vh 0 0 16.5%;
-                height: 98%;
-            }
-        }        
+        }
+
         .item {
-            margin: 2vh 0;
+            margin: 0.5rem 0;
             display: flex;
-            align-items: center;
-            height: 2rem;
+            flex-direction: column;
             width: 100%;
-        }
-        .item label {
-            width: 7rem;
-            @media screen and (min-width: 768px) {
-                text-align: right;
-            }
-        }
-        .common-input,.auth-input {
             position: relative;
-            @media screen and (min-width: 1200px) {
-                width: 33%;
-            }
         }
-        .common-input input,.auth-input input {
-            margin-left: 0.5rem;
-            width: calc(100% - 7rem);
-            height: 60%;
-        }
-        .common-input {
-            flex: 33.3%;
-        }
+
+        .common-input,
         .auth-input {
-            flex: 50%;
+            margin: 0.5rem 3%;
+
+            @media screen and (min-width: 1200px) {
+                margin: 0.5rem 1%;
+                width: 48%;
+            }
+
         }
+
+        .common-input input,
+        .auth-input input {
+            width: calc(100% - 9rem);
+            width: auto;
+            margin: 0.4rem 0;
+            height: 1.6rem;
+            font-size: 1.2rem;
+        }
+
+
+
         #password-icon {
             position: absolute;
+            height: 1.2rem;
             right: 2%;
+            bottom: 0.8rem;
             color: black;
         }
+
         .switch-input {
-            @media screen and (min-width: 768px) {
-                flex: 33.3%;
-            }
+            align-items: center;
+            width: calc(100%/4);
+
             @media screen and (min-width: 1200px) {
-                flex: none;
-                width: auto;
+                margin: 0.5rem 0.75%;
+                width: 11%;
             }
         }
+
         .switch-input input {
-            margin-left: 0.5rem;
+            margin: 0.5rem 0 0 0;
         }
+
+        #exec-container {
+            width: 100%;
+        }
+
         .exec-title {
             display: flex;
+            flex-direction: rows;
             align-items: center;
-            height: 2rem;
-            margin: 2vh 0;
+            margin: 0.5rem 3% 0;
+
+            @media screen and (min-width: 1200px) {
+                height: 2rem;
+                margin: 0.5rem 1% 0;
+            }
+
         }
-        .exec-title span {
-            @media screen and (min-width: 768px) {
-                width: 7rem;
-                text-align: right;
+
+
+
+        .exec span {
+            display: flex;
+            margin: 0.5rem 3%;
+
+            @media screen and (min-width: 1200px) {
+                margin: 0.5rem 1%;
             }
         }
-        .form-btn {
-            border-radius: 0.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #9496b1;
+
+        .exec input {
+            margin: 0.5rem 3%;
+            height: 1.6rem;
+
+            @media screen and (min-width: 1200px) {
+                margin: 0.5rem 1%;
+            }
+
         }
+
         .exec-btn {
             width: 1.5rem;
             height: 1.5rem;
             margin-left: 0.5rem;
         }
-        #exec-container {
-            flex: 100%;
-        }
-        .exec span {
-            width: 7rem;
-            @media screen and (min-width: 768px) {
-                text-align: right;
-            }
-        }
-        .exec input {
-            height: 60%;
-            margin-left: 0.5rem;
-            width: calc(100% - 9rem)
-        }
+
         #iceServers-container {
-            display: flex;
-            flex-direction: row;
-            margin: 0.5rem 0;
-            flex: 100%;
-        }
-        #iceServers-container span {
-            width: 7rem;
-            margin: 1vh 0;
-            @media screen and (min-width: 768px){
-                text-align: right;
-            }
-        }
-        #iceServers-container textarea {
             width: 100%;
-            height: 5rem;
-            margin-left: 0.5rem;
-            @media screen and (min-width: 768px) {
-                height: 10rem;
-                width: calc(100% - 6rem);
-            }
+            display: flex;
+            flex-direction: column;
         }
-        #submitBtn {
-            height: 2rem;
-            width: 8rem;
-            margin: auto;
-            margin-top: 1rem;
-        }
-        .sidebar {
-            position: absolute;
-            top: 5vh;
-            left: -60%;
-            width: 60%;
-            height: 95vh;
-            z-index: 4;
-            background-color: black;
-            color: white;
-            font-size: 1rem;
-            /* transition: left cubic-bezier(0.3, 1, 0.7, 1) 0.3s; */
-            @media screen and (min-width: 768px) and (orientation: landscape){
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100%;
-                width: 15%;
-                font-size: 1rem;
+
+        #iceServers-container span {
+            margin: 0.5rem 3%;
+
+            @media screen and (min-width: 1200px) {
+                margin: 0.5rem 1%;
             }
         }
 
-        .sidebarBtn-container {
-            margin-top: 5vh;
+        #iceServers-container textarea {
+            height: 10rem;
+            margin: 0.5rem 3%;
+
+            @media screen and (min-width: 1200px) {
+                margin: 0.5rem 1%;
+            }
         }
-        .sidebarBtn {
-            height: 6vh;
+
+        .form-btn {
+            border-radius: 0.5rem;
             display: flex;
             justify-content: center;
             align-items: center;
-            /* border-bottom: 0.125rem solid white; */
+            background-color: #8ce196;
         }
-        .btn:hover {
-            cursor: pointer;
+
+        .form-btn:hover {
+            background-color: #dddddd;
         }
-        #runningServers-container {
-            overflow: hidden;
-            display: flex;
-            width: 100%;
+
+        #submitBtn {
+            height: 2rem;
+            width: 8rem;
+            margin: 1rem auto;
+            color: black;
+        }
+
+        .btnDisabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
             height: 100%;
-            @media screen and (min-width: 768px) and (orientation: landscape) {
-                width: 82%;
-                margin-left: 16.5%;
+            width: 18%;
+            font-size: 1rem;
+            z-index: 4;
+            background-color: black;
+            color: white;
+        }
+
+        .sidebarBtn {
+            height: 4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebarBtn::before {
+            content: "";
+            display: none;
+        }
+
+        @media (orientation: portrait) {
+
+            .sidebarBtn {
+                font-size: 0;
+            }
+
+            #restartSignal::before {
+                content: "🔁";
+                display: inline;
+                font-size: initial;
+            }
+
+            #downloadSignal::before {
+                content: "⬇️";
+                display: inline;
+                font-size: initial;
+            }
+
+            #rebootWindow::before {
+                content: "🔄";
+                display: inline;
+                font-size: initial;
+            }
+
+            #linkToUpdateConfig::before {
+                content: "⚙️";
+                display: inline;
+                font-size: initial;
+            }
+
+            #linkToRunningServer::before {
+                content: "🎥";
+                display: inline;
+                font-size: initial;
+            }
+
+            #linktoPS::before {
+                content: "📦";
+                display: inline;
+                font-size: initial;
             }
         }
 
-        video {
-			width: 100%;
-            height: 100%;
-            margin-top: 1.5rem;
-		}
+        .highlighted {
+            background-color: #2e303e;
+        }
 
-		#stats {
+        :has(+ .highlighted) {
+            background-image:
+                conic-gradient(black 0deg 90deg, transparent 90deg 180deg, black 180deg),
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, #2e303e 100%);
+
+        }
+
+        .highlighted+* {
+            background-image:
+                conic-gradient(transparent 0deg 90deg, black 90deg),
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, #2e303e 100%);
+        }
+
+        .btn:hover {
+            cursor: pointer;
+        }
+
+
+
+
+
+        #runningServers-container {
+            display: flex;
+            height: 100%;
+            width: 80%;
+            margin-left: 19%;
+        }
+
+        video {
+            overflow: hidden;
+            height: 95vh;
+            margin: 2.5vh auto;
+        }
+
+        #stats {
             position: absolute;
-			pointer-events: none;
-			text-shadow: black 0 0 0.3em;
-            font-size: 0.8rem;
-		}
+            pointer-events: none;
+            text-shadow: black 0 0 0.3em;
+            font-size: 1rem;
+        }
     </style>
 </head>
 
@@ -274,23 +336,17 @@
     <script type="text/javascript" src="./peer-stream.js"></script>
 
     <div class="sidebar">
-        <div class="sidebarBtn-container">
-            <div class="sidebarBtn btn" id="restartSignal">重启 signal.js</div>
-            <div class="sidebarBtn btn" id="downloadSignal">下载 signal.json</div>
-            <div class="sidebarBtn btn" id="rebootWindow">重启电脑</div>
-            <div class="sidebarBtn btn" id="linktoPS">访问仓库</div>
-            <div class="sidebarBtn btn" id="linkToUpdateConfig">服务配置</div>
-            <div class="sidebarBtn btn" id="linkToRunningServer">视频监控</div>
-        </div>
-    </div>
-    <div class="header">
-            <div id="toggleSidebar">▶️</div>
-            <div class="title">服务配置</div>
+        <div class="sidebarBtn btn" id="restartSignal">⏳ 重启 signal.js</div>
+        <div class="sidebarBtn btn" id="downloadSignal">⬇️ 下载 signal.json</div>
+        <div class="sidebarBtn btn" id="rebootWindow">🔄 重启电脑</div>
+        <div class="sidebarBtn btn" id="linkToUpdateConfig">⚙️ 服务配置</div>
+        <div class="sidebarBtn btn" id="linkToRunningServer">🎥 视频监控</div>
+        <div class="sidebarBtn btn" id="linktoPS">📦 访问仓库</div>
     </div>
     <div class="content router-view">router-view</div>
 
     <script type="text/javascript">
-        function template(strings, ...keys) {
+        const template = (strings, ...keys) => {
             return (...values) => {
                 const dict = values[values.length - 1] || {};
                 const result = [strings[0]];
@@ -303,130 +359,142 @@
         }
         const execTemp = template`
             <div class="exec item">
-                <span>启动项</span>
+                <span>
+                    启动项
+                    <div class="form-btn exec-btn btn" name="deleteBtn">✖️</div>
+                </span>
                 <input id="exec_${"execNum"}" name="UE5" value="${"value"}"/>
-                <div class="form-btn exec-btn btn" name="deleteBtn">✖️</div>
             </div>
         `;
-        const updateConfig = `<div id="config-form">
-                            <div class="item common-input">
-                                <label for="PORT">
-                                    <span>端口</span>
-                                </label>
-                                <input type="number" id="PORT" name="PORT" required />
-                            </div>
-                            <div class="item common-input">
-                                <label for="preload">
-                                    <span>预加载个数</span>
-                                </label>
-                                <input type="number" name="preload" id="preload" required/>
-                            </div>
-                            <div class="item common-input">
-                                <label for="exeUeCoolTime">
-                                    <span>冷却时间 (s) </span>
-                                </label>
-                                <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
-                            </div>
-
-                            <div class="item auth-input">
-                                <label for="username">
-                                    <span>用户名</span>
-                                </label>
-                                <input type="text" id="username" name="username" required />
-                            </div>
-                            <div class="item auth-input">
-                                <label for="password">
-                                    <span>密码</span>
-                                </label>
-                                <input type="password" name="password" id="password" required />
-                                <div id="password-icon">👁</div>
-                            </div>
-                            <div class="item switch-input">
-                                <label for="one2one">
-                                    <span>一对一模式</span>
-                                </label>
-                                <input type="checkbox" id="one2one" name="one2one" />
-                            </div>
-                            <div class="item switch-input">
-                                <label for="boot">
-                                    <span>开机自启动</span>
-                                </label>
-                                <input type="checkbox" id="boot" name="boot" />
-                            </div>
-                            <div class="item switch-input">
-                                <label for="UEVersion">
-                                    <span>兼容 UE4</span>
-                                </label>
-                                <input type="checkbox" id="UEVersion" name="UEVersion" />
-                            </div>
-                        <div id="exec-container">
-                            <div class="exec-title">
-                                <span>UE5</span>
-                                <div id="addExec" class="form-btn exec-btn btn">+</div>
-                            </div>
-                        </div>
-                        <div id="iceServers-container">
-                            <span>iceServers</span>
-                            <textarea id="iceServers" name="iceServers"></textarea>                  
-                        </div> 
-                        <div id="submitBtn" class="form-btn btn">更新 signal.json</div>
-                </div>`;
+        const updateConfig = `
+            <div id="config-form">
+                <div class="item auth-input">
+                    <label for="username">
+                        <span>用户名</span>
+                    </label>
+                    <input type="text" id="username" name="username" />
+                </div>
+                <div class="item auth-input">
+                    <label for="password">
+                        <span>密码</span>
+                    </label>
+                    <input type="password" name="password" id="password" />
+                    <div id="password-icon">👁</div>
+                </div>
+                <div class="item common-input">
+                    <label for="PORT">
+                        <span>端口</span>
+                    </label>
+                    <input type="number" id="PORT" name="PORT" required />
+                </div>
+                <div class="item common-input">
+                    <label for="preload">
+                        <span>预加载个数</span>
+                    </label>
+                    <input type="number" name="preload" id="preload" required/>
+                </div>
+                <div class="item common-input">
+                    <label for="exeUeCoolTime">
+                        <span>冷却时间 (s) </span>
+                    </label>
+                    <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
+                </div>  
+                <div class="item switch-input">
+                    <label for="auth">
+                        <span>开启验证</span>
+                    </label>
+                    <input type="checkbox" id="auth" name="auth" />
+                </div>
+                <div class="item switch-input">
+                    <label for="one2one">
+                        <span>一对一模式</span>
+                    </label>
+                    <input type="checkbox" id="one2one" name="one2one" />
+                </div>
+                <div class="item switch-input">
+                    <label for="boot">
+                        <span>开机自启动</span>
+                    </label>
+                    <input type="checkbox" id="boot" name="boot" />
+                </div>
+                <div class="item switch-input">
+                    <label for="UEVersion">
+                        <span>兼容 UE4</span>
+                    </label>
+                    <input type="checkbox" id="UEVersion" name="UEVersion" />
+                </div>
+                <div id="exec-container">
+                    <div class="exec-title">
+                        <span>UE5</span>
+                        <div id="addExec" class="form-btn exec-btn btn">➕</div>
+                    </div>
+                </div>
+                <div id="iceServers-container">
+                    <span>iceServers</span>
+                    <textarea id="iceServers" name="iceServers"></textarea>                  
+                </div> 
+                <div id="submitBtn" class="form-btn btn">更新 signal.json</div>
+            </div>
+        `;
         const runningServer = `
             <div id="runningServers-container">
-                <video is="peer-stream" id="ws://10.0.42.16:88" audio> </video>
+                <video is="peer-stream" audio> </video>
 
 	            <!-- WebRTC monitor -->
 	            <pre id="stats">Not connected</pre>    
             </div>
         `;
-        //页面初始化   
-        document
-            .querySelector("#restartSignal")
-            .addEventListener("click", async () => {
-                try {
-                    const res = await fetch("./restartSignal");
-                } catch (error) {
-                    console.log("restartSignal failed", error);
-                }
-            });
-        document
-            .querySelector("#downloadSignal")
-            .addEventListener("click", () => {
-                window.open("./signal.json");
-            });
-        document
-            .querySelector("#rebootWindow")
-            .addEventListener("click", async () => {
-                try {
-                    const res = await fetch("./rebootWindow");
-                } catch (error) {
-                    console.log("rebootWindow failed", error);
-                }
-            });
-        document
-            .querySelector("#linktoPS")
-            .addEventListener("click", () => {
-                window.open("https://github.com/inveta/peer-stream")
-            })
-        document
-            .querySelector("#toggleSidebar")
-            .addEventListener("click", () => {
-                toggleSidebar();
-            })
-        document
-            .querySelector("#linkToUpdateConfig")
-            .addEventListener("click", () => {
-                window.open("#/updateConfig", "_self");
-            })
-        document
-            .querySelector("#linkToRunningServer")
-            .addEventListener("click", () => {
-                window.open("#/runningServer", "_self");
-            })
+        // DOM查询缓存
+        const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
+        // 事件监听函数
+        const handleRestartSignal = async () => {
+            try {
+                await fetch("./restartSignal");
+            } catch (error) {
+                console.log("restartSignal failed", error);
+            }
+        }
+        const handleDownloadSignal = () => {
+            window.open("./signal.json");
+        }
+        const handleRebootWindow = async () => {
+            try {
+                await fetch("./rebootWindow");
+            } catch (error) {
+                console.log("rebootWindow failed", error);
+            }
+        }
+        const handleLinkClick = (url, target = "_blank") => {
+            window.open(url, target);
+        }
+        // 事件监听
+        $("#restartSignal").addEventListener("click", handleRestartSignal);
+        $("#downloadSignal").addEventListener("click", handleDownloadSignal);
+        $("#rebootWindow").addEventListener("click", handleRebootWindow);
+        $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
+        $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
+        $("#linkToRunningServer").addEventListener("click", () => handleLinkClick("#/runningServer", "_self"));
 
+        const highlightActiveLink = (hash) => {
+            // 移除所有高亮
+            $$("[id^='linkTo']").forEach(el => {
+                el.classList.remove("highlighted");
+            });
+            // 根据哈希值高亮相应的链接
+            switch (hash) {
+                case "/updateConfig":
+                    $("#linkToUpdateConfig").classList.add("highlighted");
+                    break;
+                case "/runningServer":
+                    $("#linkToRunningServer").classList.add("highlighted");
+                    break;
+            }
+        }
         //渲染页面主内容
         const renderPageContent = (pageHash) => {
             const rv = document.querySelector(".router-view");
+            highlightActiveLink(pageHash);
             switch (pageHash) {
                 case "/updateConfig": {
                     fetch("./signal.json")
@@ -436,24 +504,18 @@
                         })
                         .then((data) => {
                             initConfig(data);
-                            document
-                                .querySelector("#addExec")
-                                .addEventListener("click", addExec);
-                            document.querySelectorAll("[name = deleteBtn]").forEach((obj) => {
+                            $("#addExec").addEventListener("click", addExec);
+                            $$("[name = deleteBtn]").forEach((obj) => {
                                 obj.addEventListener("click", () => {
                                     deleteExec(obj);
                                 });
                             });
-                            document
-                                .querySelector("#submitBtn")
-                                .addEventListener("click", () => {
-                                    submitConfig(event);
-                                });
-                            document
-                                .querySelector("#password-icon")
-                                .addEventListener("click", togglePassword);
-                            if(typeof ps !== "undefined")
-                                window.clearTimeout(ps.timeout)                           
+                            submitBtn.addEventListener("click", () => { submitConfig(event); });
+                            $("#password-icon").addEventListener("mousedown", togglePassword);
+                            $("#password-icon").addEventListener("mouseup", togglePassword);
+                            $("#auth").addEventListener("click", toggleAuth)
+                            if (typeof ps !== "undefined")
+                                window.clearTimeout(ps.timeout)
                         });
                     break;
                 }
@@ -467,43 +529,35 @@
                     });
                     break;
                 }
-                if(window.screen.orientation.type ===  "portrait-primary"){
-                    toggleSidebar();
-                }
             }
         };
-        const toggleSidebar = () => {
-            const sidebar = document.querySelector(".sidebar")
-            sidebar.style.left = (sidebar.style.left === "0px"? "-60%" : "0px")
-        }
+
         //增加一个启动项
         const addExec = () => {
-            const exec_container = document.querySelector("#exec-container");
-            const execNum = document.querySelectorAll(".exec").length;
+            const execNum = $$(".exec").length;
             const exec = str2dom(execTemp({ execNum: execNum, value: "" })).querySelector(".exec")
             exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
-                exec_container.removeChild(exec)
+                $("#exec-container").removeChild(exec)
             });
-            exec_container.appendChild(exec);
+            $("#exec-container").appendChild(exec);
         };
         //启动项删除
         const deleteExec = (obj) => {
-            const exec_container = document.querySelector("#exec-container");
-            console.log(obj);
-            console.log(obj.parentNode)
-            exec_container.removeChild(obj.parentNode);
+            $("#exec-container").removeChild(obj.parentNode);
         };
+        const toggleAuth = () => {
+            $$(".auth-input").forEach((element) => {
+                element.style.display = ($("#auth").checked ? "flex" : "none");
+            })
+        }
         //密码显示或者隐藏
         const togglePassword = () => {
-            if (document.querySelector("#password").type === "password") {
-                document.querySelector("#password-icon").style.textDecoration =
-                    "line-through";
-                document.querySelector("#password").type = "text";
-            } else {
-                document.querySelector("#password-icon").style.textDecoration =
-                    "none";
-                document.querySelector("#password").type = "password";
-            }
+            const passwordField = $("#password");
+            const passwordIcon = $("#password-icon");
+
+            const isPasswordHidden = passwordField.type === "password";
+            passwordField.type = isPasswordHidden ? "text" : "password";
+            passwordIcon.style.textDecoration = isPasswordHidden ? "line-through" : "none";
         };
         //字符串转dom
         const str2dom = (obj) => {
@@ -521,26 +575,30 @@
                         break;
                     case "UE5":
                         let execNum = 0;
-                        const execContainer = document.querySelector("#exec-container")
                         data[key].forEach((exec) => {
                             const execItem = str2dom(execTemp({ execNum: execNum++, value: exec })).querySelector(".exec")
-                            execContainer.appendChild(execItem);
+                            $("#exec-container").appendChild(execItem);
                         })
                         break;
                     case "iceServers":
-                        const iceServers = document.querySelector("[name = iceServers]");
-                        iceServers.value = JSON.stringify(data[key], null, '\t');
+                        $("[name = iceServers]").value = JSON.stringify(data[key], null, '\t');
                         break;
                     case "auth":
-                        const [username, password] = data[key].split(":");
-                        document.querySelector("[name=username]").value = username;
-                        document.querySelector("[name=password]").value = password;
+                        if (typeof data[key] === "string") {
+                            const [username, password] = data[key].split(":");
+                            $("[name=username]").value = username;
+                            $("[name=password]").value = password;
+                        }
+                        else if (typeof data[key] === "boolean") {
+                            $("#auth").checked = data[key];
+                            toggleAuth();
+                        }
                         break;
                     case "UEVersion":
                         document.querySelector("[name = UEVersion]").checked = (data[key] === 4.27 ? true : false);
                         break;
                     default:
-                        const item = document.querySelector("[name=" + key + "]");
+                        const item = $("[name=" + key + "]");
                         if (item.type === "checkbox") {
                             item.checked = data[key];
                             break;
@@ -552,8 +610,14 @@
         }
         //处理获取到的配置并提交
         const submitConfig = async () => {
+            const resetSubmitBtn = () => {
+                submitBtn.innerText = "更新 signal.json"
+                submitBtn.classList.remove("btnDisabled");
+            }
             try {
-                event.preventDefault();
+                const submitBtn = $("#submitBtn")
+                submitBtn.classList.add("btnDisabled");
+                submitBtn.innerText = "正在提交";
                 const config = {
                     PORT: null,
                     username: null,
@@ -567,7 +631,7 @@
                     iceServers: null,
                 };
                 for (key in config) {
-                    const item = document.querySelectorAll("[name=" + key + "]");
+                    const item = $$("[name=" + key + "]");
                     item.forEach((element) => {
                         switch (element.type) {
                             case "number":
@@ -580,7 +644,7 @@
                                 if (element.name === "UE5") {
                                     config[key].push(element.value);
                                     break;
-                                } 
+                                }
                                 config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
                         }
                     });
@@ -595,6 +659,17 @@
                     },
                     body: JSON.stringify(config),
                 });
+                if (res.ok) {
+                    submitBtn.innerText = "✅ 更新成功"
+                    setTimeout(() => {
+                        resetSubmitBtn();
+                    }, 2000);
+                }
+                else {
+                    alert("更新失败！！！");
+                    resetSubmitBtn();
+                }
+
             } catch (error) {
                 console.log("updateConfig failed", error);
             }
@@ -670,14 +745,14 @@
 
             ps.timeout = setTimeout(aggregateStats, 1000);
         }
-        function navigateBasedOnHash() {
+
+        const navigateBasedOnHash = () => {
             const pageHash = window.location.hash.slice(1) || "/";
-            pageHash === '/'? window.location.hash = "/updateConfig" : renderPageContent(pageHash)   
+            pageHash === '/' ? window.location.hash = "/updateConfig" : renderPageContent(pageHash)
         }
         // 页面加载和变化事件
         window.onload = navigateBasedOnHash;
         window.onhashchange = navigateBasedOnHash;
-
     </script>
 </body>
 
