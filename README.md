@@ -2,10 +2,10 @@
 
 Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js is a lightweight WebRTC library with 0 dependency, containing a frontend component (using WebComponents API), along with a signaling server (using NodeJS).
 
-- peer-stream.js: browser SDK for player.
-- signal.js: node.js signaling server.
-- .signal.js: signal.js with env variables.
-- test.html: browser web page.
+- peer-stream.js: browser SDK for player
+- signal.js: node.js signaling server
+- signal.json: configure signal.js
+- signal.html: GUI for signal.js and example for peer-stream.js
 
 ## Demo
 
@@ -14,30 +14,30 @@ Compared to EpicGame's heavily-designed SDK for Pixel Streaming, peer-stream.js 
 npm install ws@8.5.0
 
 # start Signaling Server
-node .signal.js
+node signal.js
 
 # start packaged UE5
 start path/to/UE5.exe -PixelStreamingURL="ws://localhost:88"
 
 # visit webpage
-start http://localhost:88/test.html
+start http://localhost:88/signal.html
 ```
 
-## Env Variables for signal.js
+## signal.json
 
-| env           | type     | default   | usage                                                               |
-| ------------- | -------- | --------- | ------------------------------------------------------------------- |
-| PORT          | number   | 88        | WebSocket/HTTP port for player & UE5                                |
-| UE5_*         | string[] | []        | run command when player connected (UE5 auto start)                  |
-| one2one       | bool     | false     | one-to-one mapping for player & UE5                                 |
-| auth          | string   | ''        | HTTP Basic Auth username:password                                   |
-| throttle      | bool     | false     | WebSocket throttle, prevent frequent reconnection                   |
-| exeUeCoolTime | number   | 60        | Time interval between starting the same UE instance again next time |
-| preload       | number   | 1         | Number of pre started UE instances                                  |
+| env           | type     | default | usage                                                               |
+| ------------- | -------- | ------- | ------------------------------------------------------------------- |
+| PORT          | number   | 88      | WebSocket/HTTP port for player & UE5                                |
+| UE5           | string[] | []      | run command when player connected (UE5 auto start)                  |
+| one2one       | bool     | false   | one-to-one mapping for player & UE5                                 |
+| auth          | string   | ''      | HTTP Basic Auth username:password                                   |
+| boot          | bool     | false   | node signal.js on system boot                                       |
+| exeUeCoolTime | number   | 60      | Time interval between starting the same UE instance again next time |
+| preload       | number   | 1       | Number of pre started UE instances                                  |
 
 ### Load Balance
 
-`signal.js` accept multi UE5 & player connections, where each UE5 maps to multi-players with load-balancing. Turn `one2one` on to keep one-to-one mapping. Provide `UE5_*` to start UE5 automatically. More detailed example in `.signal.js`.
+`signal.js` accept multi UE5 & player connections, where each UE5 maps to multi-players with load-balancing. Turn `one2one` on to keep one-to-one mapping. Provide `UE5` to start UE5 automatically. All configs in `signal.json`.
 
 ## Unreal Engine
 
