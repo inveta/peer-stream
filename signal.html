@@ -9,7 +9,7 @@
         :root {
             --main-bg-color-dark: #000000;
             --font-color-dark: #ffffff;
-            --sidabar-bg-color-dark: #808080;
+            --sidabar-bg-color-dark: #d3d3d3;
             --btn-color-dark: #8ce196;
             --btn-hover-bg-color-dark: #dddddd;
             --btn-font-color-dark: #000000;
@@ -76,14 +76,22 @@
         }
 
         #config-form {
-            margin: 0 0 0 18%;
+            margin: 0 0 0 3rem;
             height: 98%;
             color: var(--font-color-dark);
             font-size: 1rem;
             display: flex;
             flex-wrap: wrap;
+            @media screen and (min-width: 768px) {
+                margin-left: 10rem;
+            }
         }
 
+        input,
+        textarea {
+            background-color: var(--sidabar-bg-color-dark);
+            border-radius: 0.5rem;
+        }
         .item {
             margin: 0.5rem 0;
             display: flex;
@@ -220,11 +228,14 @@
             top: 0;
             left: 0;
             height: 100%;
-            width: 18%;
+            width: 3rem;
             font-size: 1rem;
             z-index: 4;
             background-color: var(--sidabar-bg-color-dark);
-            color: var(--font-color-dark);
+            color: var(--btn-font-color-dark);
+            @media screen and (min-width: 768px) {
+                width: 10rem;
+            }
         }
 
         .sidebarBtn {
@@ -232,10 +243,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            @media screen and (min-width: 768px) {
+                padding-left: 1rem;
+                justify-content: left;
+            }
         }
 
         .highlighted {
             background-color: var(--main-bg-color-dark);
+            color: var(--font-color-dark);
         }
 
         :has(+ .highlighted) {
@@ -281,15 +297,15 @@
 <body>
     <script type="text/javascript" src="./peer-stream.js"></script>
 
-    <div class="sidebar">
+    <aside class="sidebar">
         <div class="sidebarBtn btn" id="restartSignal"></div>
         <div class="sidebarBtn btn" id="downloadSignal"></div>
         <div class="sidebarBtn btn" id="rebootWindow"></div>
         <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
         <div class="sidebarBtn btn" id="linkToRunningServer"></div>
         <div class="sidebarBtn btn" id="linktoPS"></div>
-    </div>
-    <div class="content router-view">router-view</div>
+    </aside>
+    <main class="content router-view">router-view</main>
 
     <script type="text/javascript">
         const template = (strings, ...keys) => {
@@ -346,7 +362,7 @@
                 </div>  
                 <div class="item switch-input">
                     <label for="auth">
-                        <span>开启认证</span>
+                        <span>http 认证</span>
                     </label>
                     <input type="checkbox" id="auth" name="auth" />
                 </div>
@@ -364,7 +380,7 @@
                 </div>
                 <div class="item switch-input">
                     <label for="UEVersion">
-                        <span>兼容 UE4</span>
+                        <span>旧版 UE4</span>
                     </label>
                     <input type="checkbox" id="UEVersion" name="UEVersion" />
                 </div>
@@ -398,14 +414,14 @@
             "🔄 重启电脑",
             "⚙️ 服务配置",
             "🎥 视频监控",
-            "📦 访问仓库"
+            "📦 Github 源码"
         ];
         const sidebarContentMini = [
             "⏳",
             "⬇️",
             "🔄",
             "⚙️",
-            ">🎥",
+            "🎥",
             "📦"
         ]
         // 事件监听函数
@@ -452,7 +468,7 @@
             }
         }
         const renderSidebarContent = () => {
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth < 768) {
                 $$(".sidebarBtn").forEach((btn, index) => {
                     btn.innerText = sidebarContentMini[index]
                 })
