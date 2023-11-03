@@ -474,7 +474,7 @@
         $("#rebootWindow").addEventListener("click", handleRebootWindow);
         $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
         $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
-        $("#linkToRunningServer").addEventListener("click", () => handleLinkClick("#/runningServer", "_self"));
+        $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
         const highlightActiveLink = (hash) => {
             // 移除所有高亮
@@ -486,9 +486,8 @@
                 case "/updateConfig":
                     $("#linkToUpdateConfig").classList.add("highlighted");
                     break;
-                case "/runningServer":
-                    $("#linkToRunningServer").classList.add("highlighted");
-                    break;
+                default:
+                    $("#linkToRunningServer").classList.add("highlighted");  
             }
         }
         //渲染页面主内容
@@ -519,7 +518,7 @@
                         });
                     break;
                 }
-                case "/runningServer": {
+                default: {
                     rv.innerHTML = runningServer;
                     ps.addEventListener("playing", aggregateStats, { once: true });
                     ps.addEventListener("message", (e) => { });
@@ -620,8 +619,7 @@
                 submitBtn.innerText = "正在提交";
                 const config = {
                     PORT: null,
-                    username: null,
-                    password: null,
+                    auth: null,
                     one2one: null,
                     preload: null,
                     exeUeCoolTime: null,
@@ -649,9 +647,8 @@
                         }
                     });
                 }
-                config.auth = `${config.username}:${config.password}`;
-                delete config.username;
-                delete config.password;
+                if(config.auth)
+                    config.auth = `${$("#username").value}:${$('#password').value}`;
                 const res = await fetch("./updateConfig", {
                     method: "POST",
                     headers: {
@@ -747,10 +744,10 @@
         }
 
         const navigateBasedOnHash = () => {
-            const pageHash = window.location.hash.slice(1) || "/";
-            pageHash === '/' ? window.location.hash = "/updateConfig" : renderPageContent(pageHash)
+            const pageHash = window.location.hash.slice(1)
+            renderPageContent(pageHash)
         }
-        // 页面加载和变化事件
+        // // 页面加载和变化事件
         window.onload = navigateBasedOnHash;
         window.onhashchange = navigateBasedOnHash;
     </script>
