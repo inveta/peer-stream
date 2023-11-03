@@ -20,8 +20,7 @@ function updateConfig(request, response) {
     body += chunk;
   });
 
-  request.on('end', () => {
-    console.log('111---' + body);
+  request.on('end', async () => {
     //获取页面提交的json串
     var obj = JSON.parse(body);
     //TODO 校验
@@ -31,7 +30,7 @@ function updateConfig(request, response) {
     let PORT = obj['PORT'];
     Object.assign(signalDb, obj);
     //写入文件
-    fs.writeFile('./signal.json', JSON.stringify(signalDb));
+    await fs.writeFile('./signal.json', JSON.stringify(signalDb, null, '\t'));
     //配置全局生效  除PORT|UE5未生效、  env暂时不管
     Object.assign(global, signalDb);
 
