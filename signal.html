@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+        :root {
+            --main-bg-color-dark: #000000;
+            --font-color-dark: #ffffff;
+            --sidabar-bg-color-dark: #808080;
+            --btn-color-dark: #8ce196;
+            --btn-hover-bg-color-dark: #dddddd;
+            --btn-font-color-dark: #000000;
+        }
+
         html {
             font-size: calc(14px + (100vw - 480px) * (3/720));
 
@@ -22,7 +31,7 @@
             height: 100vh;
             width: 100vw;
             margin: 0;
-            background-color: #2e303e;
+            background-color: var(--main-bg-color-dark);
         }
 
         input[type="checkbox"] {
@@ -69,7 +78,7 @@
         #config-form {
             margin: 0 0 0 18%;
             height: 98%;
-            color: white;
+            color: var(--font-color-dark);
             font-size: 1rem;
             display: flex;
             flex-wrap: wrap;
@@ -103,16 +112,6 @@
             font-size: 1.2rem;
         }
 
-
-
-        #password-icon {
-            position: absolute;
-            height: 1.2rem;
-            right: 2%;
-            bottom: 0.8rem;
-            color: black;
-        }
-
         .switch-input {
             align-items: center;
             width: calc(100%/4);
@@ -143,8 +142,6 @@
             }
 
         }
-
-
 
         .exec span {
             display: flex;
@@ -199,18 +196,18 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #8ce196;
+            background-color: var(--btn-color-dark);
         }
 
         .form-btn:hover {
-            background-color: #dddddd;
+            background-color: var(--btn-hover-bg-color-dark);
         }
 
         #submitBtn {
             height: 2rem;
             width: 8rem;
             margin: 1rem auto;
-            color: black;
+            color: var(--btn-font-color-dark);
         }
 
         .btnDisabled {
@@ -226,8 +223,8 @@
             width: 18%;
             font-size: 1rem;
             z-index: 4;
-            background-color: black;
-            color: white;
+            background-color: var(--sidabar-bg-color-dark);
+            color: var(--font-color-dark);
         }
 
         .sidebarBtn {
@@ -237,78 +234,26 @@
             align-items: center;
         }
 
-        .sidebarBtn::before {
-            content: "";
-            display: none;
-        }
-
-        @media (orientation: portrait) {
-
-            .sidebarBtn {
-                font-size: 0;
-            }
-
-            #restartSignal::before {
-                content: "🔁";
-                display: inline;
-                font-size: initial;
-            }
-
-            #downloadSignal::before {
-                content: "⬇️";
-                display: inline;
-                font-size: initial;
-            }
-
-            #rebootWindow::before {
-                content: "🔄";
-                display: inline;
-                font-size: initial;
-            }
-
-            #linkToUpdateConfig::before {
-                content: "⚙️";
-                display: inline;
-                font-size: initial;
-            }
-
-            #linkToRunningServer::before {
-                content: "🎥";
-                display: inline;
-                font-size: initial;
-            }
-
-            #linktoPS::before {
-                content: "📦";
-                display: inline;
-                font-size: initial;
-            }
-        }
-
         .highlighted {
-            background-color: #2e303e;
+            background-color: var(--main-bg-color-dark);
         }
 
         :has(+ .highlighted) {
             background-image:
-                conic-gradient(black 0deg 90deg, transparent 90deg 180deg, black 180deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, #2e303e 100%);
+                conic-gradient(var(--sidabar-bg-color-dark) 0deg 90deg, transparent 90deg 180deg, var(--sidabar-bg-color-dark) 180deg),
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%);
 
         }
 
         .highlighted+* {
             background-image:
-                conic-gradient(transparent 0deg 90deg, black 90deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, #2e303e 100%);
+                conic-gradient(transparent 0deg 90deg, var(--sidabar-bg-color-dark) 90deg),
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%);
         }
 
         .btn:hover {
             cursor: pointer;
         }
-
-
-
-
 
         #runningServers-container {
             display: flex;
@@ -326,8 +271,9 @@
         #stats {
             position: absolute;
             pointer-events: none;
-            text-shadow: black 0 0 0.3em;
+            text-shadow: var(--btn-color-dark) 0 0 0.3em;
             font-size: 1rem;
+            color: var(--font-color-dark);
         }
     </style>
 </head>
@@ -336,12 +282,12 @@
     <script type="text/javascript" src="./peer-stream.js"></script>
 
     <div class="sidebar">
-        <div class="sidebarBtn btn" id="restartSignal">⏳ 重启 signal.js</div>
-        <div class="sidebarBtn btn" id="downloadSignal">⬇️ 下载 signal.json</div>
-        <div class="sidebarBtn btn" id="rebootWindow">🔄 重启电脑</div>
-        <div class="sidebarBtn btn" id="linkToUpdateConfig">⚙️ 服务配置</div>
-        <div class="sidebarBtn btn" id="linkToRunningServer">🎥 视频监控</div>
-        <div class="sidebarBtn btn" id="linktoPS">📦 访问仓库</div>
+        <div class="sidebarBtn btn" id="restartSignal"></div>
+        <div class="sidebarBtn btn" id="downloadSignal"></div>
+        <div class="sidebarBtn btn" id="rebootWindow"></div>
+        <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
+        <div class="sidebarBtn btn" id="linkToRunningServer"></div>
+        <div class="sidebarBtn btn" id="linktoPS"></div>
     </div>
     <div class="content router-view">router-view</div>
 
@@ -379,7 +325,6 @@
                         <span>密码</span>
                     </label>
                     <input type="password" name="password" id="password" />
-                    <div id="password-icon">👁</div>
                 </div>
                 <div class="item common-input">
                     <label for="PORT">
@@ -401,7 +346,7 @@
                 </div>  
                 <div class="item switch-input">
                     <label for="auth">
-                        <span>开启验证</span>
+                        <span>开启认证</span>
                     </label>
                     <input type="checkbox" id="auth" name="auth" />
                 </div>
@@ -447,6 +392,22 @@
         // DOM查询缓存
         const $ = selector => document.querySelector(selector);
         const $$ = selector => document.querySelectorAll(selector);
+        const sidebarContent = [
+            "⏳ 重启 signal.js",
+            "⬇️ 下载 signal.json",
+            "🔄 重启电脑",
+            "⚙️ 服务配置",
+            "🎥 视频监控",
+            "📦 访问仓库"
+        ];
+        const sidebarContentMini = [
+            "⏳",
+            "⬇️",
+            "🔄",
+            "⚙️",
+            ">🎥",
+            "📦"
+        ]
         // 事件监听函数
         const handleRestartSignal = async () => {
             try {
@@ -487,7 +448,19 @@
                     $("#linkToUpdateConfig").classList.add("highlighted");
                     break;
                 default:
-                    $("#linkToRunningServer").classList.add("highlighted");  
+                    $("#linkToRunningServer").classList.add("highlighted");
+            }
+        }
+        const renderSidebarContent = () => {
+            if (window.innerWidth <= 768) {
+                $$(".sidebarBtn").forEach((btn, index) => {
+                    btn.innerText = sidebarContentMini[index]
+                })
+            }
+            else {
+                $$(".sidebarBtn").forEach((btn, index) => {
+                    btn.innerText = sidebarContent[index];
+                })
             }
         }
         //渲染页面主内容
@@ -510,8 +483,10 @@
                                 });
                             });
                             submitBtn.addEventListener("click", () => { submitConfig(event); });
-                            $("#password-icon").addEventListener("mousedown", togglePassword);
-                            $("#password-icon").addEventListener("mouseup", togglePassword);
+                            // $("#password-icon").addEventListener("mousedown", togglePassword);
+                            // $("#password-icon").addEventListener("mouseup", togglePassword);
+                            $("#password").addEventListener("focus", togglePassword);
+                            $("#password").addEventListener("blur", togglePassword)
                             $("#auth").addEventListener("click", toggleAuth)
                             if (typeof ps !== "undefined")
                                 window.clearTimeout(ps.timeout)
@@ -556,7 +531,6 @@
 
             const isPasswordHidden = passwordField.type === "password";
             passwordField.type = isPasswordHidden ? "text" : "password";
-            passwordIcon.style.textDecoration = isPasswordHidden ? "line-through" : "none";
         };
         //字符串转dom
         const str2dom = (obj) => {
@@ -647,7 +621,7 @@
                         }
                     });
                 }
-                if(config.auth)
+                if (config.auth)
                     config.auth = `${$("#username").value}:${$('#password').value}`;
                 const res = await fetch("./updateConfig", {
                     method: "POST",
@@ -748,8 +722,16 @@
             renderPageContent(pageHash)
         }
         // // 页面加载和变化事件
-        window.onload = navigateBasedOnHash;
-        window.onhashchange = navigateBasedOnHash;
+        window.onload = () => {
+            renderSidebarContent();
+            navigateBasedOnHash();
+        }
+        window.onhashchange = () => {
+            navigateBasedOnHash();
+        };
+        window.onresize = () => {
+            renderSidebarContent();
+        }
     </script>
 </body>
 
