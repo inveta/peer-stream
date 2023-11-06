@@ -330,7 +330,7 @@
                     启动项
                     <div class="form-btn exec-btn btn" name="deleteBtn">✖️</div>
                 </span>
-                <input id="exec_${"execNum"}" name="UE5" value="${"value"}"/>
+                <input name="UE5" value="${"value"}"/>
             </div>
         `;
         const updateConfig = `
@@ -528,8 +528,8 @@
 
         //增加一个启动项
         const addExec = () => {
-            const execNum = $$(".exec").length;
-            const exec = str2dom(execTemp({ execNum: execNum, value: "" })).querySelector(".exec")
+            // const execNum = $$(".exec").length;
+            const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
             exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
                 $("#exec-container").removeChild(exec)
             });
@@ -572,9 +572,8 @@
                     case "throttle":
                         break;
                     case "UE5":
-                        let execNum = 0;
                         data[key].forEach((exec) => {
-                            const execItem = str2dom(execTemp({ execNum: execNum++, value: exec })).querySelector(".exec")
+                            const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec")
                             $("#exec-container").appendChild(execItem);
                         })
                         break;
