@@ -82,6 +82,7 @@
             font-size: 1rem;
             display: flex;
             flex-wrap: wrap;
+
             @media screen and (min-width: 768px) {
                 margin-left: 10rem;
             }
@@ -92,6 +93,7 @@
             background-color: var(--sidabar-bg-color-dark);
             border-radius: 0.5rem;
         }
+
         .item {
             margin: 0.5rem 0;
             display: flex;
@@ -216,6 +218,7 @@
             width: 8rem;
             margin: 1rem auto;
             color: var(--btn-font-color-dark);
+            display: none;
         }
 
         .btnDisabled {
@@ -233,6 +236,7 @@
             z-index: 4;
             background-color: var(--sidabar-bg-color-dark);
             color: var(--btn-font-color-dark);
+
             @media screen and (min-width: 768px) {
                 width: 10rem;
             }
@@ -243,6 +247,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+
             @media screen and (min-width: 768px) {
                 padding-left: 1rem;
                 justify-content: left;
@@ -329,7 +334,7 @@
             </div>
         `;
         const updateConfig = `
-            <div id="config-form">
+            <form id="config-form">
                 <div class="item auth-input">
                     <label for="username">
                         <span>用户名</span>
@@ -395,7 +400,7 @@
                     <textarea id="iceServers" name="iceServers"></textarea>                  
                 </div> 
                 <div id="submitBtn" class="form-btn btn">更新 signal.json</div>
-            </div>
+            </form>
         `;
         const runningServer = `
             <div id="runningServers-container">
@@ -499,11 +504,10 @@
                                 });
                             });
                             submitBtn.addEventListener("click", () => { submitConfig(event); });
-                            // $("#password-icon").addEventListener("mousedown", togglePassword);
-                            // $("#password-icon").addEventListener("mouseup", togglePassword);
                             $("#password").addEventListener("focus", togglePassword);
                             $("#password").addEventListener("blur", togglePassword)
                             $("#auth").addEventListener("click", toggleAuth)
+                            $("#config-form").addEventListener("input", toggleSubmitBtn)
                             if (typeof ps !== "undefined")
                                 window.clearTimeout(ps.timeout)
                         });
@@ -533,11 +537,13 @@
         };
         //启动项删除
         const deleteExec = (obj) => {
-            $("#exec-container").removeChild(obj.parentNode);
+            const exec = obj.parentNode.parentNode;
+            $("#exec-container").removeChild(exec);
         };
         const toggleAuth = () => {
             $$(".auth-input").forEach((element) => {
-                element.style.display = ($("#auth").checked ? "flex" : "none");
+                // element.style.display = ($("#auth").checked ? "flex" : "none");
+                element.style.display = ($("#auth")?.checked ? "flex" : "none")
             })
         }
         //密码显示或者隐藏
@@ -548,6 +554,9 @@
             const isPasswordHidden = passwordField.type === "password";
             passwordField.type = isPasswordHidden ? "text" : "password";
         };
+        const toggleSubmitBtn = () => {
+            $("#submitBtn").style.display = "flex"
+        }
         //字符串转dom
         const str2dom = (obj) => {
             return new DOMParser().parseFromString(obj, 'text/html')
@@ -577,6 +586,7 @@
                             const [username, password] = data[key].split(":");
                             $("[name=username]").value = username;
                             $("[name=password]").value = password;
+                            $("#auth").checked = true;
                         }
                         else if (typeof data[key] === "boolean") {
                             $("#auth").checked = data[key];
@@ -595,6 +605,7 @@
                         item.value = data[key];
                         break;
                 }
+
             }
         }
         //处理获取到的配置并提交
