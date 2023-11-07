@@ -234,7 +234,7 @@
             width: 3rem;
             font-size: 1rem;
             z-index: 4;
-            background-color: var(--sidabar-bg-color-dark);
+            /* background-color: var(--sidabar-bg-color-dark); */
             color: var(--btn-font-color-dark);
 
             @media screen and (min-width: 768px) {
@@ -247,6 +247,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background-color: var(--sidabar-bg-color-dark);
 
             @media screen and (min-width: 768px) {
                 padding-left: 1rem;
@@ -259,17 +260,26 @@
             color: var(--font-color-dark);
         }
 
+        .fill {
+            background-color: var(--sidabar-bg-color-dark);
+            flex: 100%;
+            height: 100%;
+        }
+
         :has(+ .highlighted) {
-            background-image:
+            border-bottom-right-radius: 1rem;
+            /* background-image:
                 conic-gradient(var(--sidabar-bg-color-dark) 0deg 90deg, transparent 90deg 180deg, var(--sidabar-bg-color-dark) 180deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%);
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
 
         }
 
         .highlighted+* {
-            background-image:
+            border-top-right-radius: 1rem;
+            /* background-image:
                 conic-gradient(transparent 0deg 90deg, var(--sidabar-bg-color-dark) 90deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%);
+                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
+
         }
 
         .btn:hover {
@@ -309,6 +319,7 @@
         <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
         <div class="sidebarBtn btn" id="linkToRunningServer"></div>
         <div class="sidebarBtn btn" id="linktoPS"></div>
+        <div class="fill"></div>
     </aside>
     <main class="content router-view">router-view</main>
 
@@ -399,7 +410,6 @@
                     <span>iceServers</span>
                     <textarea id="iceServers" name="iceServers"></textarea>                  
                 </div> 
-                <div id="submitBtn" class="form-btn btn">更新 signal.json</div>
             </form>
         `;
         const runningServer = `
@@ -503,11 +513,12 @@
                                     deleteExec(obj);
                                 });
                             });
-                            submitBtn.addEventListener("click", () => { submitConfig(event); });
                             $("#password").addEventListener("focus", togglePassword);
                             $("#password").addEventListener("blur", togglePassword)
                             $("#auth").addEventListener("click", toggleAuth)
-                            $("#config-form").addEventListener("input", toggleSubmitBtn)
+                            $("#config-form").addEventListener("change", (event) => {
+                                submitConfig(event);
+                            })
                             if (typeof ps !== "undefined")
                                 window.clearTimeout(ps.timeout)
                         });
@@ -531,7 +542,7 @@
             // const execNum = $$(".exec").length;
             const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
             exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
-                $("#exec-container").removeChild(exec)
+                deleteExec(exec.querySelector("[name = deleteBtn]"))
             });
             $("#exec-container").appendChild(exec);
         };
@@ -539,6 +550,14 @@
         const deleteExec = (obj) => {
             const exec = obj.parentNode.parentNode;
             $("#exec-container").removeChild(exec);
+            const config = new Object();
+            config["UE5"] = new Array();
+            $$("[name = UE5]").forEach((exec) => {
+                if (exec.value) {
+                    config["UE5"].push(exec.value);
+                }
+            })
+            console.log(config)
         };
         const toggleAuth = () => {
             $$(".auth-input").forEach((element) => {
@@ -564,6 +583,14 @@
         //字符串转布尔
         const str2Boolean = (obj) => {
             return obj.toLowerCase() === "true" ? true : false;
+        };
+        const canBeParsed = (str) => {
+            try {
+                JSON.parse(str)
+                return true
+            } catch (error) {
+                return false;
+            }
         };
         const initConfig = (data) => {
             for (key in data) {
@@ -608,47 +635,34 @@
             }
         }
         //处理获取到的配置并提交
-        const submitConfig = async () => {
-            const resetSubmitBtn = () => {
-                submitBtn.innerText = "更新 signal.json"
-                submitBtn.classList.remove("btnDisabled");
-            }
+        const submitConfig = async (event) => {
             try {
-                const submitBtn = $("#submitBtn")
-                submitBtn.classList.add("btnDisabled");
-                submitBtn.innerText = "正在提交";
-                const config = {
-                    PORT: null,
-                    auth: null,
-                    one2one: null,
-                    preload: null,
-                    exeUeCoolTime: null,
-                    UEVersion: null,
-                    boot: null,
-                    UE5: [],
-                    iceServers: null,
-                };
-                for (key in config) {
-                    const item = $$("[name=" + key + "]");
-                    item.forEach((element) => {
-                        switch (element.type) {
-                            case "number":
-                                config[key] = parseFloat(element.value);
-                                break;
-                            case "checkbox":
-                                config[key] = key === "UEVersion" ? (element.checked ? 4.27 : 5) : element.checked;
-                                break;
-                            default:
-                                if (element.name === "UE5") {
-                                    config[key].push(element.value);
-                                    break;
-                                }
-                                config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
+                const config = new Object();
+                const element = event.target;
+                const key = element.id;
+                if ((key === "auth" && element.checked === true)|| (key === "iceServers" && !canBeParsed(element.value))) return;
+                switch (element.type) {
+                    case "number":
+                        config[key] = parseFloat(element.value);
+                        break;
+                    case "checkbox":
+                        config[key] = (key === "UEVersion" ? (element.checked ? 4.27 : 5) : element.checked);
+                        break;
+                    default:
+                        if (element.name === "UE5") {
+                            config["UE5"] = new Array();
+                            $$("[name = UE5]").forEach((exec) => {
+                                if (exec.value)
+                                    config["UE5"].push(exec.value)
+                            })
+                            break;
                         }
-                    });
+                        if (element.name === "username" || element.name === "password") {
+                            config.auth = `${$("#username").value}:${$('#password').value}`;
+                            break;
+                        }
+                        config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
                 }
-                if (config.auth)
-                    config.auth = `${$("#username").value}:${$('#password').value}`;
                 const res = await fetch("./updateConfig", {
                     method: "POST",
                     headers: {
@@ -657,16 +671,14 @@
                     body: JSON.stringify(config),
                 });
                 if (res.ok) {
-                    submitBtn.innerText = "✅ 更新成功"
+                    $("#linkToUpdateConfig").innerText = "✅ 更新成功"
                     setTimeout(() => {
-                        resetSubmitBtn();
-                    }, 2000);
+                        $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ 服务配置"
+                    }, 2000)
                 }
                 else {
-                    alert("更新失败！！！");
-                    resetSubmitBtn();
+                    alert("更新失败")
                 }
-
             } catch (error) {
                 console.log("updateConfig failed", error);
             }
