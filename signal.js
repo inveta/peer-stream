@@ -227,7 +227,7 @@ ENGINE.on('connection', (ue, req) => {
   ue.onerror
 })
 
-const HTTP = require('http')
+global.HTTP = require('http')
   .createServer()
   .listen(global.PORT || 88)
 
