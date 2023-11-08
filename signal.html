@@ -574,13 +574,13 @@
     }
     const toggleAuthInfo = (event) => {
       const auth = $("#auth")
-      switch(event.type) {
-        case "focus": 
+      switch (event.type) {
+        case "focus":
           auth.type = "text";
           break;
         case "blur":
           auth.type = "password";
-          break; 
+          break;
       }
     }
     //字符串转dom
@@ -664,13 +664,13 @@
               })
               break;
             }
-            if(element.name === "auth"){
+            if (element.name === "auth") {
               const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
-              if(!authRule.test(value)){
+              if (!authRule.test(value)) {
                 alert("请输入正确的用户名和密码格式，例如：username:password。")
                 return;
               }
-            }          
+            }
             config[key] = (element.name === "iceServers" ? JSON.parse(value) : value)
         }
         const res = await fetch("./updateConfig", {
