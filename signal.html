@@ -2,332 +2,335 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-        :root {
-            --main-bg-color-dark: #000000;
-            --font-color-dark: #ffffff;
-            --sidabar-bg-color-dark: #d3d3d3;
-            --btn-color-dark: #8ce196;
-            --btn-hover-bg-color-dark: #dddddd;
-            --btn-font-color-dark: #000000;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    :root {
+      --main-bg-color-dark: #000000;
+      --font-color-dark: #ffffff;
+      --sidabar-bg-color-dark: #d3d3d3;
+      --btn-color-dark: #8ce196;
+      --btn-hover-bg-color-dark: #dddddd;
+      --btn-font-color-dark: #000000;
+    }
 
-        html {
-            font-size: calc(14px + (100vw - 480px) * (3/720));
+    html {
+      font-size: calc(14px + (100vw - 480px) * (3/720));
 
-            @media (max-width: 480px) {
-                font-size: 14px;
-            }
+      @media (max-width: 480px) {
+        font-size: 14px;
+      }
 
-            @media (min-width: 1200px) {
-                font-size: 17px;
-            }
-        }
+      @media (min-width: 1200px) {
+        font-size: 17px;
+      }
+    }
 
-        body {
-            height: 100vh;
-            width: 100vw;
-            margin: 0;
-            background-color: var(--main-bg-color-dark);
-        }
+    body {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      background-color: var(--main-bg-color-dark);
+    }
 
-        input[type="checkbox"] {
-            appearance: none;
-            width: 4rem;
-            height: 2rem;
-            position: relative;
-            border-radius: 1.25rem;
-            cursor: pointer;
-            background-color: white;
-            border: 0.125rem solid #dddddd;
-        }
+    input[type="checkbox"] {
+      appearance: none;
+      width: 4rem;
+      height: 2rem;
+      position: relative;
+      border-radius: 1.25rem;
+      cursor: pointer;
+      background-color: white;
+      border: 0.125rem solid #dddddd;
+    }
 
-        input[type="checkbox"]:before {
-            content: "";
-            position: absolute;
-            width: 1.625rem;
-            height: 1.625rem;
-            background: #dddddd;
-            left: 0.125rem;
-            top: 0.0625rem;
-            border-radius: 50%;
-            transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
-        }
+    input[type="checkbox"]:before {
+      content: "";
+      position: absolute;
+      width: 1.625rem;
+      height: 1.625rem;
+      background: #dddddd;
+      left: 0.125rem;
+      top: 0.0625rem;
+      border-radius: 50%;
+      transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+    }
 
-        input[type="checkbox"]:after {
-            content: "";
-            text-indent: 0.75px;
-            word-spacing: 0.25px;
-            display: inline-block;
-            white-space: nowrap;
-            color: white;
-        }
+    input[type="checkbox"]:after {
+      content: "";
+      text-indent: 0.75px;
+      word-spacing: 0.25px;
+      display: inline-block;
+      white-space: nowrap;
+      color: white;
+    }
 
-        input[type="checkbox"]:checked {
-            border-color: #8ce196;
-        }
+    input[type="checkbox"]:checked {
+      border-color: #8ce196;
+    }
 
-        input[type="checkbox"]:checked:before {
-            left: 2rem;
-            background: #8ce196;
-        }
+    input[type="checkbox"]:checked:before {
+      left: 2rem;
+      background: #8ce196;
+    }
 
-        #config-form {
-            margin: 0 0 0 3rem;
-            height: 98%;
-            color: var(--font-color-dark);
-            font-size: 1rem;
-            display: flex;
-            flex-wrap: wrap;
+    #config-form {
+      margin: 0 0 0 3rem;
+      height: 98%;
+      color: var(--font-color-dark);
+      font-size: 1rem;
+      display: flex;
+      flex-wrap: wrap;
 
-            @media screen and (min-width: 768px) {
-                margin-left: 10rem;
-            }
-        }
+      @media screen and (min-width: 768px) {
+        margin-left: 10rem;
+      }
+    }
 
-        input,
-        textarea {
-            background-color: var(--sidabar-bg-color-dark);
-            border-radius: 0.5rem;
-        }
+    input,
+    textarea {
+      background-color: var(--sidabar-bg-color-dark);
+      border-radius: 0.5rem;
+    }
 
-        .item {
-            margin: 0.5rem 0;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            position: relative;
-        }
+    .item {
+      margin: 0.5rem 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      position: relative;
+    }
 
-        .common-input,
-        .auth-input {
-            margin: 0.5rem 3%;
+    .common-input,
+    .auth-input {
+      margin: 0.5rem 3%;
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 1%;
-                width: 48%;
-            }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 1%;
+        width: 48%;
+      }
 
-        }
+    }
 
-        .common-input input,
-        .auth-input input {
-            width: calc(100% - 9rem);
-            width: auto;
-            margin: 0.4rem 0;
-            height: 1.6rem;
-            font-size: 1.2rem;
-        }
+    .common-input input,
+    .auth-input input {
+      width: calc(100% - 9rem);
+      width: auto;
+      margin: 0.4rem 0;
+      height: 1.6rem;
+      font-size: 1.2rem;
+    }
 
-        .switch-input {
-            align-items: center;
-            width: calc(100%/4);
+    /* .auth-input input:invalid {
+      border: 2px solid red;
+    } */
+    .switch-input {
+      align-items: center;
+      width: calc(100%/4);
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 0.75%;
-                width: 11%;
-            }
-        }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 0.75%;
+        width: 11%;
+      }
+    }
 
-        .switch-input input {
-            margin: 0.5rem 0 0 0;
-        }
+    .switch-input input {
+      margin: 0.5rem 0 0 0;
+    }
 
-        #exec-container {
-            width: 100%;
-        }
+    #exec-container {
+      width: 100%;
+    }
 
-        .exec-title {
-            display: flex;
-            flex-direction: rows;
-            align-items: center;
-            margin: 0.5rem 3% 0;
+    .exec-title {
+      display: flex;
+      flex-direction: rows;
+      align-items: center;
+      margin: 0.5rem 3% 0;
 
-            @media screen and (min-width: 1200px) {
-                height: 2rem;
-                margin: 0.5rem 1% 0;
-            }
+      @media screen and (min-width: 1200px) {
+        height: 2rem;
+        margin: 0.5rem 1% 0;
+      }
 
-        }
+    }
 
-        .exec span {
-            display: flex;
-            margin: 0.5rem 3%;
+    .exec span {
+      display: flex;
+      margin: 0.5rem 3%;
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 1%;
-            }
-        }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 1%;
+      }
+    }
 
-        .exec input {
-            margin: 0.5rem 3%;
-            height: 1.6rem;
+    .exec input {
+      margin: 0.5rem 3%;
+      height: 1.6rem;
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 1%;
-            }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 1%;
+      }
 
-        }
+    }
 
-        .exec-btn {
-            width: 1.5rem;
-            height: 1.5rem;
-            margin-left: 0.5rem;
-        }
+    .exec-btn {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-left: 0.5rem;
+    }
 
-        #iceServers-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+    #iceServers-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
 
-        #iceServers-container span {
-            margin: 0.5rem 3%;
+    #iceServers-container span {
+      margin: 0.5rem 3%;
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 1%;
-            }
-        }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 1%;
+      }
+    }
 
-        #iceServers-container textarea {
-            height: 10rem;
-            margin: 0.5rem 3%;
+    #iceServers-container textarea {
+      height: 10rem;
+      margin: 0.5rem 3%;
 
-            @media screen and (min-width: 1200px) {
-                margin: 0.5rem 1%;
-            }
-        }
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 1%;
+      }
+    }
 
-        .form-btn {
-            border-radius: 0.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--btn-color-dark);
-        }
+    .form-btn {
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--btn-color-dark);
+    }
 
-        .form-btn:hover {
-            background-color: var(--btn-hover-bg-color-dark);
-        }
+    .form-btn:hover {
+      background-color: var(--btn-hover-bg-color-dark);
+    }
 
-        .btnDisabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
+    .btnDisabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
 
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 3rem;
-            font-size: 1rem;
-            z-index: 4;
-            /* background-color: var(--sidabar-bg-color-dark); */
-            color: var(--btn-font-color-dark);
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 3rem;
+      font-size: 1rem;
+      z-index: 4;
+      /* background-color: var(--sidabar-bg-color-dark); */
+      color: var(--btn-font-color-dark);
 
-            @media screen and (min-width: 768px) {
-                width: 10rem;
-            }
-        }
+      @media screen and (min-width: 768px) {
+        width: 10rem;
+      }
+    }
 
-        .sidebarBtn {
-            height: 4rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--sidabar-bg-color-dark);
+    .sidebarBtn {
+      height: 4rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--sidabar-bg-color-dark);
 
-            @media screen and (min-width: 768px) {
-                padding-left: 1rem;
-                justify-content: left;
-            }
-        }
+      @media screen and (min-width: 768px) {
+        padding-left: 1rem;
+        justify-content: left;
+      }
+    }
 
-        .highlighted {
-            background-color: var(--main-bg-color-dark);
-            color: var(--font-color-dark);
-        }
+    .highlighted {
+      background-color: var(--main-bg-color-dark);
+      color: var(--font-color-dark);
+    }
 
-        .fill {
-            background-color: var(--sidabar-bg-color-dark);
-            flex: 100%;
-            height: 100%;
-        }
+    .fill {
+      background-color: var(--sidabar-bg-color-dark);
+      flex: 100%;
+      height: 100%;
+    }
 
-        :has(+ .highlighted) {
-            border-bottom-right-radius: 1rem;
-            /* background-image:
+    :has(+ .highlighted) {
+      border-bottom-right-radius: 1rem;
+      /* background-image:
                 conic-gradient(var(--sidabar-bg-color-dark) 0deg 90deg, transparent 90deg 180deg, var(--sidabar-bg-color-dark) 180deg),
                 radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
 
-        }
+    }
 
-        .highlighted+* {
-            border-top-right-radius: 1rem;
-            /* background-image:
+    .highlighted+* {
+      border-top-right-radius: 1rem;
+      /* background-image:
                 conic-gradient(transparent 0deg 90deg, var(--sidabar-bg-color-dark) 90deg),
                 radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
 
-        }
+    }
 
-        .btn:hover {
-            cursor: pointer;
-        }
+    .btn:hover {
+      cursor: pointer;
+    }
 
-        #runningServers-container {
-            display: flex;
-            height: 100%;
-            width: 80%;
-            margin-left: 19%;
-        }
+    #runningServers-container {
+      display: flex;
+      height: 100%;
+      width: 80%;
+      margin-left: 19%;
+    }
 
-        video {
-            overflow: hidden;
-            height: 95vh;
-            margin: 2.5vh auto;
-        }
+    video {
+      overflow: hidden;
+      height: 95vh;
+      margin: 2.5vh auto;
+    }
 
-        #stats {
-            position: absolute;
-            pointer-events: none;
-            text-shadow: var(--btn-color-dark) 0 0 0.3em;
-            font-size: 1rem;
-            color: var(--font-color-dark);
-        }
-    </style>
+    #stats {
+      position: absolute;
+      pointer-events: none;
+      text-shadow: var(--btn-color-dark) 0 0 0.3em;
+      font-size: 1rem;
+      color: var(--font-color-dark);
+    }
+  </style>
 </head>
 
 <body>
-    <script type="text/javascript" src="./peer-stream.js"></script>
+  <script type="text/javascript" src="./peer-stream.js"></script>
 
-    <aside class="sidebar">
-        <div class="sidebarBtn btn" id="restartSignal"></div>
-        <div class="sidebarBtn btn" id="downloadSignal"></div>
-        <div class="sidebarBtn btn" id="rebootWindow"></div>
-        <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
-        <div class="sidebarBtn btn" id="linkToRunningServer"></div>
-        <div class="sidebarBtn btn" id="linktoPS"></div>
-        <div class="fill"></div>
-    </aside>
-    <main class="content router-view">router-view</main>
+  <aside class="sidebar">
+    <div class="sidebarBtn btn" id="restartSignal"></div>
+    <div class="sidebarBtn btn" id="downloadSignal"></div>
+    <div class="sidebarBtn btn" id="rebootWindow"></div>
+    <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
+    <div class="sidebarBtn btn" id="linkToRunningServer"></div>
+    <div class="sidebarBtn btn" id="linktoPS"></div>
+    <div class="fill"></div>
+  </aside>
+  <main class="content router-view">router-view</main>
 
-    <script type="text/javascript">
-        const template = (strings, ...keys) => {
-            return (...values) => {
-                const dict = values[values.length - 1] || {};
-                const result = [strings[0]];
-                keys.forEach((key, i) => {
-                    const value = Number.isInteger(key) ? values[key] : dict[key];
-                    result.push(value, strings[i + 1]);
-                });
-                return result.join("");
-            };
-        }
-        const execTemp = template`
+  <script type="text/javascript">
+    const template = (strings, ...keys) => {
+      return (...values) => {
+        const dict = values[values.length - 1] || {};
+        const result = [strings[0]];
+        keys.forEach((key, i) => {
+          const value = Number.isInteger(key) ? values[key] : dict[key];
+          result.push(value, strings[i + 1]);
+        });
+        return result.join("");
+      };
+    }
+    const execTemp = template`
             <div class="exec item">
                 <span>
                     启动项
@@ -336,9 +339,9 @@
                 <input name="UE5" value="${"value"}"/>
             </div>
         `;
-        const updateConfig = `
+    const updateConfig = `
             <form id="config-form">
-                <div class="item auth-input">
+               <!-- <div class="item auth-input">
                     <label for="username">
                         <span>用户名</span>
                     </label>
@@ -349,6 +352,13 @@
                         <span>密码</span>
                     </label>
                     <input type="password" name="password" id="password" />
+                </div> -->
+
+                <div class="item auth-input">
+                    <label for="auth">
+                        <span>用户验证</span>
+                    </label>
+                    <input type="text" id="auth" name="auth" pattern="^[a-zA-Z0-9]*:[a-zA-Z0-9]*$"/>
                 </div>
                 <div class="item common-input">
                     <label for="PORT">
@@ -372,7 +382,7 @@
                     <label for="auth">
                         <span>http 认证</span>
                     </label>
-                    <input type="checkbox" id="auth" name="auth" />
+                    <input type="checkbox" id="http-auth" name="http-auth" />
                 </div>
                 <div class="item switch-input">
                     <label for="one2one">
@@ -404,7 +414,7 @@
                 </div> 
             </form>
         `;
-        const runningServer = `
+    const runningServer = `
             <div id="runningServers-container">
                 <video is="peer-stream" audio> </video>
 
@@ -412,359 +422,367 @@
 	            <pre id="stats">Not connected</pre>    
             </div>
         `;
-        // DOM查询缓存
-        const $ = selector => document.querySelector(selector);
-        const $$ = selector => document.querySelectorAll(selector);
-        const sidebarContent = [
-            "⏳ 重启 signal.js",
-            "⬇️ 下载 signal.json",
-            "🔄 重启电脑",
-            "⚙️ 服务配置",
-            "🎥 视频监控",
-            "📦 Github 源码"
-        ];
-        const sidebarContentMini = [
-            "⏳",
-            "⬇️",
-            "🔄",
-            "⚙️",
-            "🎥",
-            "📦"
-        ]
-        // 事件监听函数
-        const handleRestartSignal = async () => {
-            try {
-                await fetch("./restartSignal");
-            } catch (error) {
-                console.log("restartSignal failed", error);
-            }
-        }
-        const handleDownloadSignal = () => {
-            window.open("./signal.json");
-        }
-        const handleRebootWindow = async () => {
-            try {
-                await fetch("./rebootWindow");
-            } catch (error) {
-                console.log("rebootWindow failed", error);
-            }
-        }
-        const handleLinkClick = (url, target = "_blank") => {
-            window.open(url, target);
-        }
-        // 事件监听
-        $("#restartSignal").addEventListener("click", handleRestartSignal);
-        $("#downloadSignal").addEventListener("click", handleDownloadSignal);
-        $("#rebootWindow").addEventListener("click", handleRebootWindow);
-        $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
-        $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
-        $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
+    // DOM查询缓存
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => document.querySelectorAll(selector);
+    const sidebarContent = [
+      "⏳ 重启 signal.js",
+      "⬇️ 下载 signal.json",
+      "🔄 重启电脑",
+      "⚙️ signal.json",
+      "🎥 视频监控",
+      "📦 Github 源码"
+    ];
+    const sidebarContentMini = [
+      "⏳",
+      "⬇️",
+      "🔄",
+      "⚙️",
+      "🎥",
+      "📦"
+    ]
+    // 事件监听函数
+    const handleRestartSignal = async () => {
+      try {
+        await fetch("./restartSignal");
+      } catch (error) {
+        console.log("restartSignal failed", error);
+      }
+    }
+    const handleDownloadSignal = () => {
+      window.open("./signal.json");
+    }
+    const handleRebootWindow = async () => {
+      try {
+        await fetch("./rebootWindow");
+      } catch (error) {
+        console.log("rebootWindow failed", error);
+      }
+    }
+    const handleLinkClick = (url, target = "_blank") => {
+      window.open(url, target);
+    }
+    // 事件监听
+    $("#restartSignal").addEventListener("click", handleRestartSignal);
+    $("#downloadSignal").addEventListener("click", handleDownloadSignal);
+    $("#rebootWindow").addEventListener("click", handleRebootWindow);
+    $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
+    $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
+    $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
-        const highlightActiveLink = (hash) => {
-            // 移除所有高亮
-            $$("[id^='linkTo']").forEach(el => {
-                el.classList.remove("highlighted");
-            });
-            // 根据哈希值高亮相应的链接
-            switch (hash) {
-                case "/updateConfig":
-                    $("#linkToUpdateConfig").classList.add("highlighted");
-                    break;
-                default:
-                    $("#linkToRunningServer").classList.add("highlighted");
-            }
-        }
-        const renderSidebarContent = () => {
-            if (window.innerWidth < 768) {
-                $$(".sidebarBtn").forEach((btn, index) => {
-                    btn.innerText = sidebarContentMini[index]
-                })
-            }
-            else {
-                $$(".sidebarBtn").forEach((btn, index) => {
-                    btn.innerText = sidebarContent[index];
-                })
-            }
-        }
-        //渲染页面主内容
-        const renderPageContent = (pageHash) => {
-            const rv = document.querySelector(".router-view");
-            highlightActiveLink(pageHash);
-            switch (pageHash) {
-                case "/updateConfig": {
-                    fetch("./signal.json")
-                        .then((res) => {
-                            rv.innerHTML = updateConfig;
-                            return res.json();
-                        })
-                        .then((data) => {
-                            initConfig(data);
-                            $("#addExec").addEventListener("click", addExec);
-                            $$("[name = deleteBtn]").forEach((obj) => {
-                                obj.addEventListener("click", () => {
-                                    deleteExec(obj);
-                                });
-                            });
-                            $("#password").addEventListener("focus", togglePassword);
-                            $("#password").addEventListener("blur", togglePassword)
-                            $("#auth").addEventListener("click", toggleAuth)
-                            $("#config-form").addEventListener("change", (event) => {
-                                submitConfig(event);
-                            })
-                            if (typeof ps !== "undefined")
-                                window.clearTimeout(ps.timeout)
-                        });
-                    break;
-                }
-                default: {
-                    rv.innerHTML = runningServer;
-                    ps.addEventListener("playing", aggregateStats, { once: true });
-                    ps.addEventListener("message", (e) => { });
-                    ps.addEventListener("suspend", (e) => { });
-                    ps.addEventListener("playerdisconnected", (e) => {
-                        console.log("playerdisconnected");
-                    });
-                    break;
-                }
-            }
-        };
-
-        //增加一个启动项
-        const addExec = () => {
-            // const execNum = $$(".exec").length;
-            const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
-            exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
-                deleteExec(exec.querySelector("[name = deleteBtn]"))
-            });
-            $("#exec-container").appendChild(exec);
-        };
-        //启动项删除
-        const deleteExec = (obj) => {
-            const exec = obj.parentNode.parentNode;
-            $("#exec-container").removeChild(exec);
-            const config = new Object();
-            config["UE5"] = new Array();
-            $$("[name = UE5]").forEach((exec) => {
-                if (exec.value) {
-                    config["UE5"].push(exec.value);
-                }
+    const highlightActiveLink = (hash) => {
+      // 移除所有高亮
+      $$("[id^='linkTo']").forEach(el => {
+        el.classList.remove("highlighted");
+      });
+      // 根据哈希值高亮相应的链接
+      switch (hash) {
+        case "/updateConfig":
+          $("#linkToUpdateConfig").classList.add("highlighted");
+          break;
+        default:
+          $("#linkToRunningServer").classList.add("highlighted");
+      }
+    }
+    const renderSidebarContent = () => {
+      if (window.innerWidth < 768) {
+        $$(".sidebarBtn").forEach((btn, index) => {
+          btn.innerText = sidebarContentMini[index]
+        })
+      }
+      else {
+        $$(".sidebarBtn").forEach((btn, index) => {
+          btn.innerText = sidebarContent[index];
+        })
+      }
+    }
+    //渲染页面主内容
+    const renderPageContent = (pageHash) => {
+      const rv = document.querySelector(".router-view");
+      highlightActiveLink(pageHash);
+      switch (pageHash) {
+        case "/updateConfig": {
+          fetch("./signal.json")
+            .then((res) => {
+              rv.innerHTML = updateConfig;
+              return res.json();
             })
-            console.log(config)
-        };
-        const toggleAuth = () => {
-            $$(".auth-input").forEach((element) => {
-                // element.style.display = ($("#auth").checked ? "flex" : "none");
-                element.style.display = ($("#auth")?.checked ? "flex" : "none")
-            })
-        }
-        //密码显示或者隐藏
-        const togglePassword = () => {
-            const passwordField = $("#password");
-            const passwordIcon = $("#password-icon");
-
-            const isPasswordHidden = passwordField.type === "password";
-            passwordField.type = isPasswordHidden ? "text" : "password";
-        };
-        //字符串转dom
-        const str2dom = (obj) => {
-            return new DOMParser().parseFromString(obj, 'text/html')
-        }
-        //字符串转布尔
-        const str2Boolean = (obj) => {
-            return obj.toLowerCase() === "true" ? true : false;
-        };
-        const canBeParsed = (str) => {
-            try {
-                JSON.parse(str)
-                return true
-            } catch (error) {
-                return false;
-            }
-        };
-        const initConfig = (data) => {
-            for (key in data) {
-                switch (key) {
-                    case "env":
-                    case "throttle":
-                        break;
-                    case "UE5":
-                        data[key].forEach((exec) => {
-                            const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec")
-                            $("#exec-container").appendChild(execItem);
-                        })
-                        break;
-                    case "iceServers":
-                        $("[name = iceServers]").value = JSON.stringify(data[key], null, '\t');
-                        break;
-                    case "auth":
-                        if (typeof data[key] === "string") {
-                            const [username, password] = data[key].split(":");
-                            $("[name=username]").value = username.trim();
-                            $("[name=password]").value = password.trim();
-                            $("#auth").checked = true;
-                        }
-                        else if (typeof data[key] === "boolean") {
-                            $("#auth").checked = data[key];
-                            toggleAuth();
-                        }
-                        break;
-                    case "UEVersion":
-                        document.querySelector("[name = UEVersion]").checked = (data[key] === 4.27 ? true : false);
-                        break;
-                    default:
-                        const item = $("[name=" + key + "]");
-                        if (item.type === "checkbox") {
-                            item.checked = data[key];
-                            break;
-                        }
-                        item.value = data[key];
-                        break;
-                }
-
-            }
-        }
-        //处理获取到的配置并提交
-        const submitConfig = async (event) => {
-            try {
-                const config = new Object();
-                const element = event.target;
-                const key = element.id;
-                if ((key === "auth" && element.checked === true)|| (key === "iceServers" && !canBeParsed(element.value))) return;
-                switch (element.type) {
-                    case "number":
-                        config[key] = parseFloat(element.value);
-                        break;
-                    case "checkbox":
-                        config[key] = (key === "UEVersion" ? (element.checked ? 4.27 : 5) : element.checked);
-                        break;
-                    default:
-                        if (element.name === "UE5") {
-                            config["UE5"] = new Array();
-                            $$("[name = UE5]").forEach((exec) => {
-                                if (exec.value)
-                                    config["UE5"].push(exec.value)
-                            })
-                            break;
-                        }
-                        if (element.name === "username" || element.name === "password") {
-                            config.auth = `${$("#username").value.trim()}:${$('#password').value.trim()}`;
-                            break;
-                        }
-                        config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
-                }
-                const res = await fetch("./updateConfig", {
-                    method: "POST",
-                    headers: {
-                        "Content-type": "application/json",
-                    },
-                    body: JSON.stringify(config),
+            .then((data) => {
+              initConfig(data);
+              $("#addExec").addEventListener("click", addExec);
+              $$("[name = deleteBtn]").forEach((obj) => {
+                obj.addEventListener("click", () => {
+                  deleteExec(obj);
                 });
-                console.log(res)
-                if (res.ok) {
-                    $("#linkToUpdateConfig").innerText = "✅ 更新成功"
-                    setTimeout(() => {
-                        $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ 服务配置"
-                    }, 2000)
-                    if( element.name === "password"){
-                        location.reload()
-                    }
-                }
-                else {
-                    alert("❌ 更新失败")
-                }
-            } catch (error) {
-                alert("❌ 更新失败")
-                console.log("updateConfig failed", error);
-            }
-        };
-
-        const aggregateStats = async () => {
-            const statsReport = await ps.pc.getStats(null);
-            stats.innerText = "";
-
-            // most < 27
-            if (ps.VideoEncoderQP < 27) {
-                stats.style.color = "lime";
-            } else if (ps.VideoEncoderQP < 36) {
-                stats.style.color = "orange";
-                stats.innerText += `\n Spotty Network !`;
-            } else {
-                stats.style.color = "red";
-                stats.innerText += `\n Bad Network !!`;
-            }
-
-            stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
-            statsReport.forEach((stat) => {
-                switch (stat.type) {
-                    case "data-channel": {
-                        stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
-                        stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
-                        break;
-                    }
-                    case "inbound-rtp": {
-                        if (stat.mediaType === "video")
-                            stats.innerText += [
-                                ``,
-                                `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
-                                `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
-                                `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
-                                `	FPS: ${stat.framesPerSecond} Hz`,
-                                `	Frames Dropped: ${stat.framesDropped}`,
-                                `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
-                            ].join("\n");
-                        else if (stat.mediaType === "audio")
-                            stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
-                        break;
-                    }
-                    case "candidate-pair": {
-                        if (stat.state === "succeeded")
-                            stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
-                        break;
-                    }
-                    case "remote-candidate": {
-                        stats.innerText +=
-                            `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
-                        break;
-                    }
-                    case "transport": {
-                        const bitrate = ~~(
-                            ((stat.bytesReceived - this.bytesReceived) /
-                                (stat.timestamp - this.timestamp)) *
-                            (1000 * 8)
-                        );
-
-                        stats.innerText += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
-
-                        this.bytesReceived = stat.bytesReceived;
-                        this.timestamp = stat.timestamp;
-                        break;
-                    }
-                    default: {
-                    }
-                }
+              });
+              // $("#password").addEventListener("focus", togglePassword);
+              // $("#password").addEventListener("blur", togglePassword)
+              $("#http-auth").addEventListener("click", toggleAuth)
+              $("#config-form").addEventListener("change", (event) => {
+                submitConfig(event);
+              })
+              if (typeof ps !== "undefined")
+                window.clearTimeout(ps.timeout)
             });
+          break;
+        }
+        default: {
+          rv.innerHTML = runningServer;
+          ps.addEventListener("playing", aggregateStats, { once: true });
+          ps.addEventListener("message", (e) => { });
+          ps.addEventListener("suspend", (e) => { });
+          ps.addEventListener("playerdisconnected", (e) => {
+            console.log("playerdisconnected");
+          });
+          break;
+        }
+      }
+    };
 
-            stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
+    //增加一个启动项
+    const addExec = () => {
+      // const execNum = $$(".exec").length;
+      const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
+      exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
+        deleteExec(exec.querySelector("[name = deleteBtn]"))
+      });
+      $("#exec-container").appendChild(exec);
+    };
+    //启动项删除
+    const deleteExec = (obj) => {
+      const exec = obj.parentNode.parentNode;
+      $("#exec-container").removeChild(exec);
+      const config = new Object();
+      config["UE5"] = new Array();
+      $$("[name = UE5]").forEach((exec) => {
+        if (exec.value) {
+          config["UE5"].push(exec.value);
+        }
+      })
+      console.log(config)
+    };
+    const toggleAuth = () => {
+      $$(".auth-input").forEach((element) => {
+        element.style.display = ($("#http-auth")?.checked ? "flex" : "none");
+        element.querySelector("input").value = ""
+      })
+    }
+    //密码显示或者隐藏
+    // const togglePassword = () => {
+    //   const passwordField = $("#password");
+    //   const passwordIcon = $("#password-icon");
 
-            ps.timeout = setTimeout(aggregateStats, 1000);
+    //   const isPasswordHidden = passwordField.type === "password";
+    //   passwordField.type = isPasswordHidden ? "text" : "password";
+    // };
+    //字符串转dom
+    const str2dom = (obj) => {
+      return new DOMParser().parseFromString(obj, 'text/html')
+    }
+    //字符串转布尔
+    const str2Boolean = (obj) => {
+      return obj.toLowerCase() === "true" ? true : false;
+    };
+    const canBeParsed = (str) => {
+      try {
+        JSON.parse(str)
+        return true
+      } catch (error) {
+        return false;
+      }
+    };
+    const initConfig = (data) => {
+      for (key in data) {
+        switch (key) {
+          case "env":
+          case "throttle":
+            break;
+          case "UE5":
+            data[key].forEach((exec) => {
+              const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec")
+              $("#exec-container").appendChild(execItem);
+            })
+            break;
+          case "iceServers":
+            $("[name = iceServers]").value = JSON.stringify(data[key], null, '\t');
+            break;
+          case "auth":
+            if (typeof data[key] === "string") {
+              // const [username, password] = data[key].split(":");
+              // $("[name=username]").value = username.trim();
+              // $("[name=password]").value = password.trim();
+              $("#auth").value = data[key];
+              $("#http-auth").checked = true;
+            }
+            else if (typeof data[key] === "boolean") {
+              $("#http-auth").checked = data[key];
+              toggleAuth();
+            }
+            break;
+          case "UEVersion":
+            document.querySelector("[name = UEVersion]").checked = (data[key] === 4.27 ? true : false);
+            break;
+          default:
+            const item = $("[name=" + key + "]");
+            if (item.type === "checkbox") {
+              item.checked = data[key];
+              break;
+            }
+            item.value = data[key];
+            break;
         }
 
-        const navigateBasedOnHash = () => {
-            const pageHash = window.location.hash.slice(1)
-            renderPageContent(pageHash)
+      }
+    }
+    //处理获取到的配置并提交
+    const submitConfig = async (event) => {
+      try {
+        const config = new Object();
+        const element = event.target;
+        let key = element.id;
+        if ((key === "http-auth" && element.checked === true) || (key === "iceServers" && !canBeParsed(element.value))) return;
+        switch (element.type) {
+          case "number":
+            config[key] = parseFloat(element.value);
+            break;
+          case "checkbox":
+            key = key === "http-auth" ? "auth" : key;
+            config[key] = (key === "UEVersion" ? (element.checked ? 4.27 : 5) : element.checked);
+            break;
+          default:
+            if (element.name === "UE5") {
+              config["UE5"] = new Array();
+              $$("[name = UE5]").forEach((exec) => {
+                if (exec.value)
+                  config["UE5"].push(exec.value)
+              })
+              break;
+            }
+            if(element.name === "auth"){
+              const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
+              if(!authRule.test(element.value)){
+                alert("请输入正确的用户名和密码格式，例如：username:password。")
+                return;
+              }
+            }            // if (element.name === "username" || element.name === "password") {
+            //   config.auth = `${$("#username").value.trim()}:${$('#password').value.trim()}`;
+            //   break;
+            // }
+            config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
         }
-        // // 页面加载和变化事件
-        window.onload = () => {
-            renderSidebarContent();
-            navigateBasedOnHash();
+        const res = await fetch("./updateConfig", {
+          method: "POST",
+          headers: {
+            "Content-type": "application/json",
+          },
+          body: JSON.stringify(config),
+        });
+        console.log(res)
+        if (res.ok) {
+          $("#linkToUpdateConfig").innerText = "✅ 更新成功"
+          setTimeout(() => {
+            $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ 服务配置"
+          }, 2000)
+          // if( element.name === "password"){
+          //     location.reload()
+          // }
         }
-        window.onhashchange = () => {
-            navigateBasedOnHash();
-        };
-        window.onresize = () => {
-            renderSidebarContent();
+        else {
+          alert("❌ 更新失败")
         }
-    </script>
+      } catch (error) {
+        alert("❌ 更新失败")
+        console.log("updateConfig failed", error);
+      }
+    };
+
+    const aggregateStats = async () => {
+      const statsReport = await ps.pc.getStats(null);
+      stats.innerText = "";
+
+      // most < 27
+      if (ps.VideoEncoderQP < 27) {
+        stats.style.color = "lime";
+      } else if (ps.VideoEncoderQP < 36) {
+        stats.style.color = "orange";
+        stats.innerText += `\n Spotty Network !`;
+      } else {
+        stats.style.color = "red";
+        stats.innerText += `\n Bad Network !!`;
+      }
+
+      stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
+      statsReport.forEach((stat) => {
+        switch (stat.type) {
+          case "data-channel": {
+            stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
+            stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+            break;
+          }
+          case "inbound-rtp": {
+            if (stat.mediaType === "video")
+              stats.innerText += [
+                ``,
+                `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
+                `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
+                `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
+                `	FPS: ${stat.framesPerSecond} Hz`,
+                `	Frames Dropped: ${stat.framesDropped}`,
+                `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
+              ].join("\n");
+            else if (stat.mediaType === "audio")
+              stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+            break;
+          }
+          case "candidate-pair": {
+            if (stat.state === "succeeded")
+              stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
+            break;
+          }
+          case "remote-candidate": {
+            stats.innerText +=
+              `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+            break;
+          }
+          case "transport": {
+            const bitrate = ~~(
+              ((stat.bytesReceived - this.bytesReceived) /
+                (stat.timestamp - this.timestamp)) *
+              (1000 * 8)
+            );
+
+            stats.innerText += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
+
+            this.bytesReceived = stat.bytesReceived;
+            this.timestamp = stat.timestamp;
+            break;
+          }
+          default: {
+          }
+        }
+      });
+
+      stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
+
+      ps.timeout = setTimeout(aggregateStats, 1000);
+    }
+
+    const navigateBasedOnHash = () => {
+      const pageHash = window.location.hash.slice(1)
+      renderPageContent(pageHash)
+    }
+    // // 页面加载和变化事件
+    window.onload = () => {
+      renderSidebarContent();
+      navigateBasedOnHash();
+    }
+    window.onhashchange = () => {
+      navigateBasedOnHash();
+    };
+    window.onresize = () => {
+      renderSidebarContent();
+    }
+  </script>
 </body>
 
 </html>
