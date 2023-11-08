@@ -213,14 +213,6 @@
             background-color: var(--btn-hover-bg-color-dark);
         }
 
-        #submitBtn {
-            height: 2rem;
-            width: 8rem;
-            margin: 1rem auto;
-            color: var(--btn-font-color-dark);
-            display: none;
-        }
-
         .btnDisabled {
             opacity: 0.5;
             pointer-events: none;
@@ -573,9 +565,6 @@
             const isPasswordHidden = passwordField.type === "password";
             passwordField.type = isPasswordHidden ? "text" : "password";
         };
-        const toggleSubmitBtn = () => {
-            $("#submitBtn").style.display = "flex"
-        }
         //字符串转dom
         const str2dom = (obj) => {
             return new DOMParser().parseFromString(obj, 'text/html')
