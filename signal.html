@@ -358,7 +358,7 @@
                     <label for="auth">
                         <span>用户验证</span>
                     </label>
-                    <input type="text" id="auth" name="auth" pattern="^[a-zA-Z0-9]*:[a-zA-Z0-9]*$"/>
+                    <input type="password" id="auth" name="auth" pattern="^[a-zA-Z0-9]*:[a-zA-Z0-9]*$"/>
                 </div>
                 <div class="item common-input">
                     <label for="PORT">
@@ -515,9 +515,13 @@
                   deleteExec(obj);
                 });
               });
-              // $("#password").addEventListener("focus", togglePassword);
-              // $("#password").addEventListener("blur", togglePassword)
-              $("#http-auth").addEventListener("click", toggleAuth)
+              $("#auth").addEventListener("focus", () => {
+                toggleAuthInfo(event)
+              })
+              $("#auth").addEventListener("blur", () => {
+                toggleAuthInfo(event)
+              })
+              $("#http-auth").addEventListener("click", toggleAuthInput)
               $("#config-form").addEventListener("change", (event) => {
                 submitConfig(event);
               })
@@ -561,20 +565,24 @@
       })
       console.log(config)
     };
-    const toggleAuth = () => {
+    const toggleAuthInput = () => {
+      const displayAuth = $("#http-auth").checked;
       $$(".auth-input").forEach((element) => {
-        element.style.display = ($("#http-auth")?.checked ? "flex" : "none");
+        element.style.display = (displayAuth ? "flex" : "none");
         element.querySelector("input").value = ""
       })
     }
-    //密码显示或者隐藏
-    // const togglePassword = () => {
-    //   const passwordField = $("#password");
-    //   const passwordIcon = $("#password-icon");
-
-    //   const isPasswordHidden = passwordField.type === "password";
-    //   passwordField.type = isPasswordHidden ? "text" : "password";
-    // };
+    const toggleAuthInfo = (event) => {
+      const auth = $("#auth")
+      switch(event.type) {
+        case "focus": 
+          auth.type = "text";
+          break;
+        case "blur":
+          auth.type = "password";
+          break; 
+      }
+    }
     //字符串转dom
     const str2dom = (obj) => {
       return new DOMParser().parseFromString(obj, 'text/html')
@@ -608,15 +616,12 @@
             break;
           case "auth":
             if (typeof data[key] === "string") {
-              // const [username, password] = data[key].split(":");
-              // $("[name=username]").value = username.trim();
-              // $("[name=password]").value = password.trim();
               $("#auth").value = data[key];
               $("#http-auth").checked = true;
             }
             else if (typeof data[key] === "boolean") {
               $("#http-auth").checked = data[key];
-              toggleAuth();
+              toggleAuthInput();
             }
             break;
           case "UEVersion":
@@ -637,17 +642,18 @@
     //处理获取到的配置并提交
     const submitConfig = async (event) => {
       try {
-        const config = new Object();
+        const config = {};
         const element = event.target;
+        let value = element.type === "checkbox" ? element.checked : element.value;
         let key = element.id;
-        if ((key === "http-auth" && element.checked === true) || (key === "iceServers" && !canBeParsed(element.value))) return;
+        if ((key === "http-auth" && value === true) || (key === "iceServers" && !canBeParsed(value))) return;
         switch (element.type) {
           case "number":
-            config[key] = parseFloat(element.value);
+            config[key] = parseFloat(value);
             break;
           case "checkbox":
             key = key === "http-auth" ? "auth" : key;
-            config[key] = (key === "UEVersion" ? (element.checked ? 4.27 : 5) : element.checked);
+            config[key] = (key === "UEVersion" ? (value ? 4.27 : 5) : value);
             break;
           default:
             if (element.name === "UE5") {
@@ -660,15 +666,12 @@
             }
             if(element.name === "auth"){
               const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
-              if(!authRule.test(element.value)){
+              if(!authRule.test(value)){
                 alert("请输入正确的用户名和密码格式，例如：username:password。")
                 return;
               }
-            }            // if (element.name === "username" || element.name === "password") {
-            //   config.auth = `${$("#username").value.trim()}:${$('#password').value.trim()}`;
-            //   break;
-            // }
-            config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
+            }          
+            config[key] = (element.name === "iceServers" ? JSON.parse(value) : value)
         }
         const res = await fetch("./updateConfig", {
           method: "POST",
