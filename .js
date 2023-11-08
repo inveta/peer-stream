@@ -22,25 +22,24 @@ function updateConfig(request, response) {
 
   request.on('end', async () => {
     //获取页面提交的json串
-    var obj = JSON.parse(body);
+    body = JSON.parse(body);
     //TODO 校验
 
     var signalDb = require('./signal.json');
-    let PORTDB = signalDb['PORT'];
-    let PORT = obj['PORT'];
-    Object.assign(signalDb, obj);
+
+    Object.assign(signalDb, body);
     //写入文件
     await fs.writeFile('./signal.json', JSON.stringify(signalDb, null, '\t'));
     //配置全局生效  除PORT|UE5未生效、  env暂时不管
-    Object.assign(global, signalDb);
+    Object.assign(global, body);
 
     response.end(JSON.stringify(signalDb));
 
     //修改了端口，执行下列方法使其生效
-    if (PORTDB !== PORT) {
+    if (body.PORT) {
       HTTP.closeAllConnections();
       HTTP.close(() => {
-        HTTP.listen(PORT);
+        HTTP.listen(body.PORT);
       });
     }
   });
