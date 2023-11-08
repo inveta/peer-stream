@@ -610,8 +610,8 @@
                     case "auth":
                         if (typeof data[key] === "string") {
                             const [username, password] = data[key].split(":");
-                            $("[name=username]").value = username;
-                            $("[name=password]").value = password;
+                            $("[name=username]").value = username.trim();
+                            $("[name=password]").value = password.trim();
                             $("#auth").checked = true;
                         }
                         else if (typeof data[key] === "boolean") {
@@ -658,7 +658,7 @@
                             break;
                         }
                         if (element.name === "username" || element.name === "password") {
-                            config.auth = `${$("#username").value}:${$('#password').value}`;
+                            config.auth = `${$("#username").value.trim()}:${$('#password').value.trim()}`;
                             break;
                         }
                         config[key] = (element.name === "iceServers" ? JSON.parse(element.value) : element.value)
@@ -670,16 +670,21 @@
                     },
                     body: JSON.stringify(config),
                 });
+                console.log(res)
                 if (res.ok) {
                     $("#linkToUpdateConfig").innerText = "✅ 更新成功"
                     setTimeout(() => {
                         $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ 服务配置"
                     }, 2000)
+                    if( element.name === "password"){
+                        location.reload()
+                    }
                 }
                 else {
-                    alert("更新失败")
+                    alert("❌ 更新失败")
                 }
             } catch (error) {
+                alert("❌ 更新失败")
                 console.log("updateConfig failed", error);
             }
         };
