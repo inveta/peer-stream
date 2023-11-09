@@ -33,7 +33,6 @@ function updateConfig(request, response) {
     //配置全局生效  除PORT|UE5未生效、  env暂时不管
     Object.assign(global, body);
 
-    response.end(JSON.stringify(signalDb));
 
     //修改了端口，执行下列方法使其生效
     if (body.PORT) {
@@ -42,19 +41,12 @@ function updateConfig(request, response) {
         HTTP.listen(body.PORT);
       });
     }
+
+    if (body.UE5) {
+      global.InitUe5Pool();
+    }
+
+    response.end(JSON.stringify(signalDb));
   });
 }
 
-//重启信令服务
-function restartSignal(request, response) {
-  HTTP.closeAllConnections();
-  HTTP.close(() => {
-    process.on('exit', function () {
-      require('child_process').spawn(process.argv.shift(), process.argv, {
-        cwd: process.cwd(),
-        detached: true,
-      });
-    });
-    process.exit();
-  });
-}

@@ -27,11 +27,10 @@ if (global.env) {
 const { Server } = require('ws')
 
 G_StartUe5Pool = []
-function InitUe5Pool() {
-  execUe5Pool = Object.entries(global.UE5 || []);
+global.InitUe5Pool = function () {
 
-  for (const item of execUe5Pool) {
-    const [key, value] = item
+  for (const key in (global.UE5 || [])) {
+    const value = UE5[key];
     // 将命令行字符串转换为数组
     const args = value.split(' ')
 
@@ -234,9 +233,8 @@ global.HTTP = require('http')
 const path = require('path')
 HTTP.on('request', (req, res) => {
   // websocket请求时不触发
-  // serve HTTP static files
-
-  // HTTP Basic Authentication
+  
+  // Basic Authentication
   if (global.auth) {
     let auth = req.headers.authorization?.replace('Basic ', '');
     auth = Buffer.from(auth || '', 'base64').toString('utf-8');
@@ -246,7 +244,8 @@ HTTP.on('request', (req, res) => {
       return;
     }
   }
-
+  
+  // serve static files
   const read = require('fs').createReadStream(path.join(__dirname, path.normalize(req.url)))
   const types = {
     '.html': 'text/html',
