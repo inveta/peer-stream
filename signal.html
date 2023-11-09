@@ -551,8 +551,9 @@
     const addExec = () => {
       // const execNum = $$(".exec").length;
       const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
-      exec.querySelector("[name=deleteExecBtn]").addEventListener("click", function () {
-        deleteExec(exec.querySelector("[name = deleteBtn]"))
+      exec.querySelector("[name = deleteExecBtn]").addEventListener("click", function () {
+        deleteExec(exec.querySelector("[name = deleteExecBtn]"));
+        submitConfig(event);
       });
       $("#exec-container").appendChild(exec);
     };
