@@ -334,7 +334,7 @@
             <div class="exec item">
                 <span>
                     启动项
-                    <div class="form-btn exec-btn btn" name="deleteBtn">✖️</div>
+                    <div class="form-btn exec-btn btn" name="deleteExecBtn">✖️</div>
                 </span>
                 <input name="UE5" value="${"value"}"/>
             </div>
@@ -405,7 +405,7 @@
                 <div id="exec-container">
                     <div class="exec-title">
                         <span>UE5</span>
-                        <div id="addExec" class="form-btn exec-btn btn">➕</div>
+                        <div id="addExec" class="form-btn exec-btn btn" name="addExecBtn">➕</div>
                     </div>
                 </div>
                 <div id="iceServers-container">
@@ -509,10 +509,14 @@
             })
             .then((data) => {
               initConfig(data);
-              $("#addExec").addEventListener("click", addExec);
-              $$("[name = deleteBtn]").forEach((obj) => {
+              $("#addExec").addEventListener("click", () => {
+                addExec();
+                // submitConfig(event);
+              });
+              $$("[name = deleteExecBtn]").forEach((obj) => {
                 obj.addEventListener("click", () => {
                   deleteExec(obj);
+                  submitConfig(event);
                 });
               });
               $("#auth").addEventListener("focus", () => {
@@ -547,7 +551,7 @@
     const addExec = () => {
       // const execNum = $$(".exec").length;
       const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
-      exec.querySelector("[name=deleteBtn]").addEventListener("click", function () {
+      exec.querySelector("[name=deleteExecBtn]").addEventListener("click", function () {
         deleteExec(exec.querySelector("[name = deleteBtn]"))
       });
       $("#exec-container").appendChild(exec);
@@ -644,34 +648,45 @@
       try {
         const config = {};
         const element = event.target;
-        let value = element.type === "checkbox" ? element.checked : element.value;
-        let key = element.id;
-        if ((key === "http-auth" && value === true) || (key === "iceServers" && !canBeParsed(value))) return;
-        switch (element.type) {
-          case "number":
-            config[key] = parseFloat(value);
-            break;
-          case "checkbox":
-            key = key === "http-auth" ? "auth" : key;
-            config[key] = (key === "UEVersion" ? (value ? 4.27 : 5) : value);
-            break;
-          default:
-            if (element.name === "UE5") {
-              config["UE5"] = new Array();
-              $$("[name = UE5]").forEach((exec) => {
-                if (exec.value)
-                  config["UE5"].push(exec.value)
-              })
+        if (element.classList.contains("exec-btn")) {
+          config["UE5"] = [];
+          $$("[name = UE5]").forEach((exec) => {
+            if (exec.value)
+              config["UE5"].push(exec.value)
+          })
+        }
+        else {
+          let value = element.type === "checkbox" ? element.checked : element.value;
+          let key = element.id;
+
+          if ((key === "http-auth" && value === true) || (key === "iceServers" && !canBeParsed(value))) return;
+
+          switch (element.type) {
+            case "number":
+              config[key] = parseFloat(value);
               break;
-            }
-            if (element.name === "auth") {
-              const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
-              if (!authRule.test(value)) {
-                alert("请输入正确的用户名和密码格式，例如：username:password。")
-                return;
+            case "checkbox":
+              key = key === "http-auth" ? "auth" : key;
+              config[key] = (key === "UEVersion" ? (value ? 4.27 : 5) : value);
+              break;
+            default:
+              if (element.name === "UE5") {
+                config["UE5"] = [];
+                $$("[name = UE5]").forEach((exec) => {
+                  if (exec.value)
+                    config["UE5"].push(exec.value)
+                })
+                break;
               }
-            }
-            config[key] = (element.name === "iceServers" ? JSON.parse(value) : value)
+              if (element.name === "auth") {
+                const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
+                if (!authRule.test(value)) {
+                  alert("请输入正确的用户名和密码格式，例如：username:password。")
+                  return;
+                }
+              }
+              config[key] = (element.name === "iceServers" ? JSON.parse(value) : value)
+          }
         }
         const res = await fetch("./updateConfig", {
           method: "POST",
@@ -680,7 +695,6 @@
           },
           body: JSON.stringify(config),
         });
-        console.log(res)
         if (res.ok) {
           $("#linkToUpdateConfig").innerText = "✅ 更新成功"
           setTimeout(() => {
