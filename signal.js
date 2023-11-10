@@ -1,24 +1,24 @@
 '5.1.2';
-require('child_process').exec(`start http://localhost:88/signal.html#/updateConfig`);
 
 Object.assign(global, require('./signal.json'));
 
+require('child_process').exec(`start http://localhost:${PORT}/signal.html#/updateConfig`);
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
   const signal = {
     //  env: false,
-     PORT: +process.env.PORT,
-     auth: process.env.auth,
-     one2one: process.env.one2one,
-     preload: +process.env.preload,
-     exeUeCoolTime: +process.env.exeUeCoolTime,
-     UEVersion: +process.env.UEVersion,
-     UE5: Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value)),
-    }
-    require('fs').promises.writeFile('./signal.json', JSON.stringify(signal));
-    Object.assign(global, signal);
-    // require('fs').promises.rm('./.signal.js');
+    PORT: +process.env.PORT,
+    auth: process.env.auth,
+    one2one: process.env.one2one,
+    preload: +process.env.preload,
+    exeUeCoolTime: +process.env.exeUeCoolTime,
+    UEVersion: +process.env.UEVersion,
+    UE5: Object.entries(process.env).filter((([key]) => key.startsWith('UE5_')).map(([key, value]) => value)),
+  }
+  require('fs').promises.writeFile('./signal.json', JSON.stringify(signal));
+  Object.assign(global, signal);
+  // require('fs').promises.rm('./.signal.js');
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 
@@ -146,7 +146,7 @@ function StartExecUe() {
   }
 }
 
-InitUe5Pool()
+InitUe5Pool();
 
 function InitExecUe() {
   //exec-ue的websocket连接管理
@@ -226,74 +226,89 @@ ENGINE.on('connection', (ue, req) => {
   ue.onerror
 })
 
-global.HTTP = require('http')
-  .createServer()
-  .listen(global.PORT || 88)
-
 const path = require('path')
-HTTP.on('request', (req, res) => {
-  // websocket请求时不触发
-  
-  // Basic Authentication
-  if (global.auth) {
-    let auth = req.headers.authorization?.replace('Basic ', '');
-    auth = Buffer.from(auth || '', 'base64').toString('utf-8');
-    if (global.auth !== auth) {
-      res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Authorization required"' });
-      res.end('Auth failed !');
-      return;
-    }
-  }
-  
-  // serve static files
-  const read = require('fs').createReadStream(path.join(__dirname, path.normalize(req.url)))
-  const types = {
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'text/javascript',
-  }
-  const type = types[path.extname(req.url)]
-  if (type) res.setHeader('Content-Type', type)
 
-  read
-    .on('error', (err) => {
-      require('./.js')(req, res);
-    })
-    .on('ready', () => {
-      read.pipe(res)
-    })
-})
+global.serve = async ()=> {
 
-HTTP.on('upgrade', (req, socket, head) => {
 
-  // WS子协议
-  if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
-    // throttle 防止前端频繁刷新
-    if (global.throttle) {
-      if (global.throttle) {
-        socket.destroy()
-        return
-      } else {
-        global.throttle = true
-        setTimeout(() => {
-          global.throttle = false
-        }, 500)
+  const HTTP = require('http').createServer()
+
+
+
+  HTTP.on('request', (req, res) => {
+    // websocket请求时不触发
+
+    // Basic Authentication
+    if (global.auth) {
+      let auth = req.headers.authorization?.replace('Basic ', '');
+      auth = Buffer.from(auth || '', 'base64').toString('utf-8');
+      if (global.auth !== auth) {
+        res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Authorization required"' });
+        res.end('Auth failed !');
+        return;
       }
     }
 
-    PLAYER.handleUpgrade(req, socket, head, (fe) => {
-      PLAYER.emit('connection', fe, req)
-    })
-  } else if (req.headers['sec-websocket-protocol'] === 'exec-ue') {
-    EXECUE.handleUpgrade(req, socket, head, (fe) => {
-      EXECUE.emit('connection', fe, req)
-    })
-  } else {
-    ENGINE.handleUpgrade(req, socket, head, (fe) => {
-      ENGINE.emit('connection', fe, req)
-    })
-  }
-})
+    // serve static files
+    const read = require('fs').createReadStream(path.join(__dirname, path.normalize(req.url)))
+    const types = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
+    }
+    const type = types[path.extname(req.url)]
+    if (type) res.setHeader('Content-Type', type)
+
+    read
+      .on('error', (err) => {
+        require('./.js')(req, res, HTTP);
+      })
+      .on('ready', () => {
+        read.pipe(res)
+      })
+  })
+
+  HTTP.on('upgrade', (req, socket, head) => {
+
+    // WS子协议
+    if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
+      // throttle 防止前端频繁刷新
+      if (global.throttle) {
+        if (global.throttle) {
+          socket.destroy()
+          return
+        } else {
+          global.throttle = true
+          setTimeout(() => {
+            global.throttle = false
+          }, 500)
+        }
+      }
+
+      PLAYER.handleUpgrade(req, socket, head, (fe) => {
+        PLAYER.emit('connection', fe, req)
+      })
+    } else if (req.headers['sec-websocket-protocol'] === 'exec-ue') {
+      EXECUE.handleUpgrade(req, socket, head, (fe) => {
+        EXECUE.emit('connection', fe, req)
+      })
+    } else {
+      ENGINE.handleUpgrade(req, socket, head, (fe) => {
+        ENGINE.emit('connection', fe, req)
+      })
+    }
+  })
+
+  return new Promise((res,rej) => {
+    HTTP.listen(PORT ?? 88, res);
+    HTTP.once('error', err => {
+      rej(err)
+    });
+  })
+
+}
+
+serve();
 
 // front end
 global.PLAYER = new Server({
