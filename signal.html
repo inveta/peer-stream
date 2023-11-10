@@ -511,12 +511,10 @@
               initConfig(data);
               $("#addExec").addEventListener("click", () => {
                 addExec();
-                // submitConfig(event);
               });
               $$("[name = deleteExecBtn]").forEach((obj) => {
                 obj.addEventListener("click", () => {
-                  deleteExec(obj);
-                  submitConfig(event);
+                  deleteExec(obj, event);
                 });
               });
               $("#auth").addEventListener("focus", () => {
@@ -549,25 +547,17 @@
 
     //增加一个启动项
     const addExec = () => {
-      // const execNum = $$(".exec").length;
       const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
-      exec.querySelector("[name=deleteExecBtn]").addEventListener("click", function () {
-        deleteExec(exec.querySelector("[name = deleteBtn]"))
+      exec.querySelector("[name = deleteExecBtn]").addEventListener("click", function () {
+        deleteExec(exec.querySelector("[name = deleteExecBtn]"), event);
       });
       $("#exec-container").appendChild(exec);
     };
     //启动项删除
-    const deleteExec = (obj) => {
+    const deleteExec = (obj, event) => {
       const exec = obj.parentNode.parentNode;
       $("#exec-container").removeChild(exec);
-      const config = new Object();
-      config["UE5"] = new Array();
-      $$("[name = UE5]").forEach((exec) => {
-        if (exec.value) {
-          config["UE5"].push(exec.value);
-        }
-      })
-      console.log(config)
+      submitConfig(event);
     };
     const toggleAuthInput = () => {
       const displayAuth = $("#http-auth").checked;
