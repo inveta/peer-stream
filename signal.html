@@ -308,7 +308,6 @@
   <script type="text/javascript" src="./peer-stream.js"></script>
 
   <aside class="sidebar">
-    <div class="sidebarBtn btn" id="restartSignal"></div>
     <div class="sidebarBtn btn" id="downloadSignal"></div>
     <div class="sidebarBtn btn" id="rebootWindow"></div>
     <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
@@ -426,7 +425,6 @@
     const $ = selector => document.querySelector(selector);
     const $$ = selector => document.querySelectorAll(selector);
     const sidebarContent = [
-      "⏳ 重启 signal.js",
       "⬇️ 下载 signal.json",
       "🔄 重启电脑",
       "⚙️ signal.json",
@@ -434,24 +432,13 @@
       "📦 Github 源码"
     ];
     const sidebarContentMini = [
-      "⏳",
       "⬇️",
       "🔄",
       "⚙️",
       "🎥",
       "📦"
     ]
-    // 事件监听函数
-    const handleRestartSignal = async () => {
-      try {
-        await fetch("./restartSignal");
-      } catch (error) {
-        console.log("restartSignal failed", error);
-      }
-    }
-    const handleDownloadSignal = () => {
-      window.open("./signal.json");
-    }
+
     const handleRebootWindow = async () => {
       try {
         await fetch("./rebootWindow");
@@ -462,9 +449,8 @@
     const handleLinkClick = (url, target = "_blank") => {
       window.open(url, target);
     }
-    // 事件监听
-    $("#restartSignal").addEventListener("click", handleRestartSignal);
-    $("#downloadSignal").addEventListener("click", handleDownloadSignal);
+
+    $("#downloadSignal").addEventListener("click", () => handleLinkClick("./signal.json"));
     $("#rebootWindow").addEventListener("click", handleRebootWindow);
     $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
     $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
@@ -509,24 +495,16 @@
             })
             .then((data) => {
               initConfig(data);
-              $("#addExec").addEventListener("click", () => {
-                addExec();
-              });
+              $("#addExec").addEventListener("click", () => addExec());
+              $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
+              $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
+              $("#http-auth").addEventListener("click", () => toggleAuthInput)
+              $("#config-form").addEventListener("change", () => submitConfig(event));
               $$("[name = deleteExecBtn]").forEach((obj) => {
                 obj.addEventListener("click", () => {
                   deleteExec(obj, event);
                 });
               });
-              $("#auth").addEventListener("focus", () => {
-                toggleAuthInfo(event)
-              })
-              $("#auth").addEventListener("blur", () => {
-                toggleAuthInfo(event)
-              })
-              $("#http-auth").addEventListener("click", toggleAuthInput)
-              $("#config-form").addEventListener("change", (event) => {
-                submitConfig(event);
-              })
               if (typeof ps !== "undefined")
                 window.clearTimeout(ps.timeout)
             });
@@ -540,7 +518,6 @@
           ps.addEventListener("playerdisconnected", (e) => {
             console.log("playerdisconnected");
           });
-          break;
         }
       }
     };
@@ -559,12 +536,11 @@
       $("#exec-container").removeChild(exec);
       submitConfig(event);
     };
+    //开关http验证
     const toggleAuthInput = () => {
       const displayAuth = $("#http-auth").checked;
-      $$(".auth-input").forEach((element) => {
-        element.style.display = (displayAuth ? "flex" : "none");
-        element.querySelector("input").value = ""
-      })
+      $(".auth-input").style.display = (displayAuth ? "flex" : "none");
+      $(".auth-input").querySelector("input").value = ""
     }
     const toggleAuthInfo = (event) => {
       const auth = $("#auth")
@@ -638,6 +614,8 @@
       try {
         const config = {};
         const element = event.target;
+        let reload = false;
+        let PORT_new = null;
         if (element.classList.contains("exec-btn")) {
           config["UE5"] = [];
           $$("[name = UE5]").forEach((exec) => {
@@ -648,12 +626,18 @@
         else {
           let value = element.type === "checkbox" ? element.checked : element.value;
           let key = element.id;
-
-          if ((key === "http-auth" && value === true) || (key === "iceServers" && !canBeParsed(value))) return;
-
+          if (key === "http-auth" && value === true) return;
+          if(key === "iceServers" && !canBeParsed(value)) {
+            alert("iceServers格式有误！")
+            return;
+          }
           switch (element.type) {
             case "number":
               config[key] = parseFloat(value);
+              if(key === "PORT" && value !== window.location.port){
+                PORT_new = value
+                reload = true; 
+              }
               break;
             case "checkbox":
               key = key === "http-auth" ? "auth" : key;
@@ -690,6 +674,8 @@
           setTimeout(() => {
             $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ signal.json"
           }, 2000)
+          if(reload)
+            window.location.replace(`http://localhost:${PORT_new}/signal.html#/updateConfig`)
         }
         else {
           alert("❌ 更新失败")
