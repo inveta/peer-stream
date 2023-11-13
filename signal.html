@@ -318,6 +318,23 @@
   <main class="content router-view">router-view</main>
 
   <script type="text/javascript">
+    //字符串转dom
+    const str2dom = (obj) => {
+      return new DOMParser().parseFromString(obj, 'text/html')
+    }
+    //字符串转布尔
+    const str2Boolean = (obj) => {
+      return obj.toLowerCase() === "true" ? true : false;
+    };
+    const canBeParsed = (str) => {
+      try {
+        JSON.parse(str)
+        return true
+      } catch (error) {
+        return false;
+      }
+    };
+
     const template = (strings, ...keys) => {
       return (...values) => {
         const dict = values[values.length - 1] || {};
@@ -357,7 +374,7 @@
                     <label for="auth">
                         <span>用户验证</span>
                     </label>
-                    <input type="password" id="auth" name="auth" pattern="^[a-zA-Z0-9]*:[a-zA-Z0-9]*$"/>
+                    <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/"/>
                 </div>
                 <div class="item common-input">
                     <label for="PORT">
@@ -424,20 +441,29 @@
     // DOM查询缓存
     const $ = selector => document.querySelector(selector);
     const $$ = selector => document.querySelectorAll(selector);
-    const sidebarContent = [
-      "⬇️ 下载 signal.json",
-      "🔄 重启电脑",
-      "⚙️ signal.json",
-      "🎥 视频监控",
-      "📦 Github 源码"
-    ];
-    const sidebarContentMini = [
-      "⬇️",
-      "🔄",
-      "⚙️",
-      "🎥",
-      "📦"
-    ]
+    const sidebarContent = new Map([
+      [
+        "normal",
+        [
+          "⬇️ 下载 signal.json",
+          "🔄 重启电脑",
+          "⚙️ signal.json",
+          "🎥 视频监控",
+          "📦 Github 源码"
+        ]
+      ],
+      [
+        "mini",
+        [
+          "⬇️",
+          "🔄",
+          "⚙️",
+          "🎥",
+          "📦"
+        ]
+      ]
+    ])
+
 
     const handleRebootWindow = async () => {
       try {
@@ -454,6 +480,16 @@
     $("#rebootWindow").addEventListener("click", handleRebootWindow);
     $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
     $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
+    $("#linkToUpdateConfig").animate([
+      { opacity: 0 },
+      { opacity: 1 },
+    ],
+      {
+        duration: 200,
+        iterations: 3,
+        easing: "steps(2, jump-none)"
+      }
+    );
     $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
     const highlightActiveLink = (hash) => {
@@ -472,42 +508,37 @@
     }
     const renderSidebarContent = () => {
       if (window.innerWidth < 768) {
+        const btnContent = sidebarContent.get("mini")
         $$(".sidebarBtn").forEach((btn, index) => {
-          btn.innerText = sidebarContentMini[index]
+          btn.innerText = btnContent[index]
         })
       }
       else {
+        const btnContent = sidebarContent.get("normal")
         $$(".sidebarBtn").forEach((btn, index) => {
-          btn.innerText = sidebarContent[index];
+          btn.innerText = btnContent[index];
         })
       }
     }
     //渲染页面主内容
-    const renderPageContent = (pageHash) => {
+    const renderPageContent = async (pageHash) => {
       const rv = document.querySelector(".router-view");
-      highlightActiveLink(pageHash);
       switch (pageHash) {
         case "/updateConfig": {
-          fetch("./signal.json")
-            .then((res) => {
-              rv.innerHTML = updateConfig;
-              return res.json();
-            })
-            .then((data) => {
-              initConfig(data);
-              $("#addExec").addEventListener("click", () => addExec());
-              $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
-              $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
-              $("#http-auth").addEventListener("click", () => toggleAuthInput)
-              $("#config-form").addEventListener("change", () => submitConfig(event));
-              $$("[name = deleteExecBtn]").forEach((obj) => {
-                obj.addEventListener("click", () => {
-                  deleteExec(obj, event);
-                });
-              });
-              if (typeof ps !== "undefined")
-                window.clearTimeout(ps.timeout)
+          rv.innerHTML = updateConfig;
+          await renderConfigForm();
+          $("#addExec").addEventListener("click", () => addExec());
+          $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
+          $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
+          $("#http-auth").addEventListener("click", () => toggleAuthInput());
+          $("#config-form").addEventListener("change", () => submitConfig(event));
+          $$("[name = deleteExecBtn]").forEach((obj) => {
+            obj.addEventListener("click", () => {
+              deleteExec(obj, event);
             });
+          });
+          if (typeof ps !== "undefined")
+            window.clearTimeout(ps.timeout)
           break;
         }
         default: {
@@ -553,138 +584,143 @@
           break;
       }
     }
-    //字符串转dom
-    const str2dom = (obj) => {
-      return new DOMParser().parseFromString(obj, 'text/html')
-    }
-    //字符串转布尔
-    const str2Boolean = (obj) => {
-      return obj.toLowerCase() === "true" ? true : false;
-    };
-    const canBeParsed = (str) => {
-      try {
-        JSON.parse(str)
-        return true
-      } catch (error) {
-        return false;
-      }
-    };
-    const initConfig = (data) => {
-      for (key in data) {
-        switch (key) {
-          case "env":
-          case "throttle":
-            break;
-          case "UE5":
-            data[key].forEach((exec) => {
-              const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec")
-              $("#exec-container").appendChild(execItem);
-            })
-            break;
-          case "iceServers":
-            $("[name = iceServers]").value = JSON.stringify(data[key], null, '\t');
-            break;
-          case "auth":
-            if (typeof data[key] === "string") {
-              $("#auth").value = data[key];
-              $("#http-auth").checked = true;
-            }
-            else if (typeof data[key] === "boolean") {
-              $("#http-auth").checked = data[key];
-              toggleAuthInput();
-            }
-            break;
-          case "UEVersion":
-            document.querySelector("[name = UEVersion]").checked = (data[key] === 4.27 ? true : false);
-            break;
-          default:
-            const item = $("[name=" + key + "]");
-            if (item.type === "checkbox") {
-              item.checked = data[key];
-              break;
-            }
-            item.value = data[key];
-            break;
+    const processData = (data) => {
+      const handlers = {
+        "UE5": (value) => {
+          value.forEach((exec) => {
+            const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec");
+            $("#exec-container").appendChild(execItem);
+          });
+        },
+        "iceServers": (value) => {
+          $("[name=iceServers]").value = JSON.stringify(value, null, '\t');
+        },
+        "auth": (value) => {
+          if (typeof value === "string") {
+            $("#auth").value = value;
+            $("#http-auth").checked = true;
+          } else if (typeof value === "boolean") {
+            $("#http-auth").checked = value;
+            toggleAuthInput();
+          }
+        },
+        "UEVersion": (value) => {
+          document.querySelector("[name=UEVersion]").checked = (value === 4.27);
         }
+      };
 
+      for (const key in data) {
+        if (handlers[key]) {
+          handlers[key](data[key]);
+        } else if (key !== "env" && key !== "throttle") {
+          const item = $("[name=" + key + "]");
+          if (item.type === "checkbox") {
+            item.checked = data[key];
+          } else {
+            item.value = data[key];
+          }
+        }
       }
-    }
+    };
+
+    const renderConfigForm = () => {
+      return fetch("./signal.json")
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          processData(data);
+        })
+        .catch((error) => {
+          alert("获取signal.json失败！！！");
+          console.log("fetch signal.json failed ", error);
+        });
+    };
+
     //处理获取到的配置并提交
     const submitConfig = async (event) => {
       try {
         const config = {};
         const element = event.target;
-        let reload = false;
+        const key = element.id;
+        let value = element.type === "checkbox" ? element.checked : element.value;
         let PORT_new = null;
-        if (element.classList.contains("exec-btn")) {
+
+        const updateUE5Config = () => {
           config["UE5"] = [];
           $$("[name = UE5]").forEach((exec) => {
-            if (exec.value)
-              config["UE5"].push(exec.value)
-          })
+            if (exec.value) config["UE5"].push(exec.value);
+          });
+        };
+        if (element.getAttribute("name") === "deleteExecBtn") {
+          const ue5Input = element.closest('.exec').querySelector('[name="UE5"]');
+          if (ue5Input.value.trim() === '') return; 
+          updateUE5Config();
         }
         else {
-          let value = element.type === "checkbox" ? element.checked : element.value;
-          let key = element.id;
           if (key === "http-auth" && value === true) return;
-          if(key === "iceServers" && !canBeParsed(value)) {
-            alert("iceServers格式有误！")
+          if (key === "iceServers" && !canBeParsed(value)) {
+            alert("iceServers格式有误！");
+            renderPageContent(window.location.hash.slice(1))
             return;
           }
+
           switch (element.type) {
             case "number":
               config[key] = parseFloat(value);
-              if(key === "PORT" && value !== window.location.port){
-                PORT_new = value
-                reload = true; 
-              }
+              if (key === "PORT" && value !== window.location.port) PORT_new = value;
               break;
             case "checkbox":
-              key = key === "http-auth" ? "auth" : key;
-              config[key] = (key === "UEVersion" ? (value ? 4.27 : 5) : value);
+              config[key === "http-auth" ? "auth" : key] = key === "UEVersion" ? (value ? 4.27 : 5) : value;
               break;
             default:
               if (element.name === "UE5") {
-                config["UE5"] = [];
-                $$("[name = UE5]").forEach((exec) => {
-                  if (exec.value)
-                    config["UE5"].push(exec.value)
-                })
+                updateUE5Config();
                 break;
               }
-              if (element.name === "auth") {
-                const authRule = /[a-zA-Z0-9]*:[a-zA-Z0-9]*/;
+              else if (element.name === "auth") {
+                const authRule = /^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/;
                 if (!authRule.test(value)) {
-                  alert("请输入正确的用户名和密码格式，例如：username:password。")
+                  alert("请输入正确的用户名和密码格式，例如：username:password。");
+                  renderPageContent(window.location.hash.slice(1))
                   return;
                 }
               }
-              config[key] = (element.name === "iceServers" ? JSON.parse(value) : value)
+              config[key] = element.name === "iceServers" ? JSON.parse(value) : value;
           }
         }
-        const res = await fetch("./updateConfig", {
+
+        await fetch("./updateConfig", {
           method: "POST",
-          headers: {
-            "Content-type": "application/json",
-          },
+          headers: { "Content-type": "application/json" },
           body: JSON.stringify(config),
-        });
-        if (res.ok) {
-          $("#linkToUpdateConfig").innerText = "✅ 更新成功"
-          setTimeout(() => {
-            $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ signal.json"
-          }, 2000)
-          if(reload)
-            window.location.replace(`http://localhost:${PORT_new}/signal.html#/updateConfig`)
-        }
-        else {
-          alert("❌ 更新失败")
-        }
+        }).then((res) => {
+          if (res.ok) {
+            $("#linkToUpdateConfig").innerText = "✅ 更新成功";
+            setTimeout(() => {
+              $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ signal.json";
+            }, 2000);
+
+            if (PORT_new) {
+              const url = new URL(window.location);
+              url.port = PORT_new;
+              window.location.replace(url);
+            }
+          }
+          else {
+            alert("❌ 更新失败");
+            renderPageContent(window.location.hash.slice(1))
+          }
+        })
       } catch (error) {
-        alert("❌ 更新失败")
+        alert("❌ 更新失败");
         console.log("updateConfig failed", error);
       }
     };
+
 
     const aggregateStats = async () => {
       const statsReport = await ps.pc.getStats(null);
@@ -759,7 +795,8 @@
 
     const navigateBasedOnHash = () => {
       const pageHash = window.location.hash.slice(1)
-      renderPageContent(pageHash)
+      renderPageContent(pageHash);
+      highlightActiveLink(pageHash);
     }
     // // 页面加载和变化事件
     window.onload = () => {
