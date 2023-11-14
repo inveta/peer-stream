@@ -480,16 +480,6 @@
     $("#rebootWindow").addEventListener("click", handleRebootWindow);
     $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
     $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
-    $("#linkToUpdateConfig").animate([
-      { opacity: 0 },
-      { opacity: 1 },
-    ],
-      {
-        duration: 200,
-        iterations: 3,
-        easing: "steps(2, jump-none)"
-      }
-    );
     $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
     const highlightActiveLink = (hash) => {
@@ -657,7 +647,7 @@
         };
         if (element.getAttribute("name") === "deleteExecBtn") {
           const ue5Input = element.closest('.exec').querySelector('[name="UE5"]');
-          if (ue5Input.value.trim() === '') return; 
+          if (ue5Input.value.trim() === '') return;
           updateUE5Config();
         }
         else {
@@ -700,6 +690,16 @@
         }).then((res) => {
           if (res.ok) {
             $("#linkToUpdateConfig").innerText = "✅ 更新成功";
+            $("#linkToUpdateConfig").animate([
+              { opacity: 0 },
+              { opacity: 1 },
+            ],
+              {
+                duration: 200,
+                iterations: 3,
+                easing: "steps(2, jump-none)"
+              }
+            );
             setTimeout(() => {
               $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ signal.json";
             }, 2000);
