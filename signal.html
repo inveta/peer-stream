@@ -4,7 +4,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Document</title>
   <style>
     :root {
       --main-bg-color-dark: #000000;
@@ -23,7 +22,7 @@
       }
 
       @media (min-width: 1200px) {
-        font-size: 17px;
+        font-size: 16px;
       }
     }
 
@@ -39,7 +38,7 @@
       width: 4rem;
       height: 2rem;
       position: relative;
-      border-radius: 1.25rem;
+      border-radius: 1rem;
       cursor: pointer;
       background-color: white;
       border: 0.125rem solid #dddddd;
@@ -48,22 +47,13 @@
     input[type="checkbox"]:before {
       content: "";
       position: absolute;
-      width: 1.625rem;
-      height: 1.625rem;
+      width: 1.6rem;
+      height: 1.6rem;
       background: #dddddd;
-      left: 0.125rem;
-      top: 0.0625rem;
+      left: 0.15rem;
+      top: 0.075rem;
       border-radius: 50%;
       transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
-    }
-
-    input[type="checkbox"]:after {
-      content: "";
-      text-indent: 0.75px;
-      word-spacing: 0.25px;
-      display: inline-block;
-      white-space: nowrap;
-      color: white;
     }
 
     input[type="checkbox"]:checked {
@@ -122,12 +112,13 @@
       font-size: 1.2rem;
     }
 
-    /* .auth-input input:invalid {
-      border: 2px solid red;
-    } */
     .switch-input {
       align-items: center;
-      width: calc(100%/4);
+      width: calc(100%/2);
+
+      @media screen and (min-width: 425px) {
+        width: calc(100%/4);
+      }
 
       @media screen and (min-width: 1200px) {
         margin: 0.5rem 0.75%;
@@ -181,13 +172,13 @@
       margin-left: 0.5rem;
     }
 
-    #iceServers-container {
+    #textarea-container {
       width: 100%;
       display: flex;
       flex-direction: column;
     }
 
-    #iceServers-container span {
+    #textarea-container span {
       margin: 0.5rem 3%;
 
       @media screen and (min-width: 1200px) {
@@ -195,7 +186,7 @@
       }
     }
 
-    #iceServers-container textarea {
+    #textarea-container textarea {
       height: 10rem;
       margin: 0.5rem 3%;
 
@@ -229,7 +220,6 @@
       width: 3rem;
       font-size: 1rem;
       z-index: 4;
-      /* background-color: var(--sidabar-bg-color-dark); */
       color: var(--btn-font-color-dark);
 
       @media screen and (min-width: 768px) {
@@ -238,7 +228,7 @@
     }
 
     .sidebarBtn {
-      height: 4rem;
+      height: 64px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -247,6 +237,16 @@
       @media screen and (min-width: 768px) {
         padding-left: 1rem;
         justify-content: left;
+      }
+    }
+
+    .sidebarBtn::before {
+      content: attr(data-mini);
+    }
+
+    @media screen and (min-width: 768px) {
+      .sidebarBtn::before {
+        content: attr(data-normal);
       }
     }
 
@@ -263,18 +263,10 @@
 
     :has(+ .highlighted) {
       border-bottom-right-radius: 1rem;
-      /* background-image:
-                conic-gradient(var(--sidabar-bg-color-dark) 0deg 90deg, transparent 90deg 180deg, var(--sidabar-bg-color-dark) 180deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
-
     }
 
     .highlighted+* {
       border-top-right-radius: 1rem;
-      /* background-image:
-                conic-gradient(transparent 0deg 90deg, var(--sidabar-bg-color-dark) 90deg),
-                radial-gradient(50% 50%, transparent 0px, transparent 100%, var(--main-bg-color-dark) 100%); */
-
     }
 
     .btn:hover {
@@ -284,19 +276,23 @@
     #runningServers-container {
       display: flex;
       height: 100%;
-      width: 80%;
-      margin-left: 19%;
+      margin-left: 3rem;
+
+      @media screen and (min-width: 768px) {
+        margin-left: 10rem;
+      }
     }
 
     video {
       overflow: hidden;
-      height: 95vh;
-      margin: 2.5vh auto;
+      height: calc(100vh - 2rem);
+      margin: 1rem;
     }
 
     #stats {
       position: absolute;
       pointer-events: none;
+      margin: 1rem;
       text-shadow: var(--btn-color-dark) 0 0 0.3em;
       font-size: 1rem;
       color: var(--font-color-dark);
@@ -308,11 +304,11 @@
   <script type="text/javascript" src="./peer-stream.js"></script>
 
   <aside class="sidebar">
-    <div class="sidebarBtn btn" id="downloadSignal"></div>
-    <div class="sidebarBtn btn" id="rebootWindow"></div>
-    <div class="sidebarBtn btn" id="linkToUpdateConfig"></div>
-    <div class="sidebarBtn btn" id="linkToRunningServer"></div>
-    <div class="sidebarBtn btn" id="linktoPS"></div>
+    <downloadSignal class="sidebarBtn btn" data-normal="⬇️ 下载signal.json" data-mini="⬇️"></downloadSignal>
+    <rebootWindow class="sidebarBtn btn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow>
+    <linkToUpdateConfig class="sidebarBtn btn" data-normal="⚙️ signal.json" data-mini="⚙️"></linkToUpdateConfig>
+    <linkToRunningServer class="sidebarBtn btn" data-normal="🎥 视频监控" data-mini="🎥"></linkToRunningServer>
+    <linkToPS class="sidebarBtn btn" data-normal="📦 Github源码" data-mini="📦"></linkToPS>
     <div class="fill"></div>
   </aside>
   <main class="content router-view">router-view</main>
@@ -357,19 +353,6 @@
         `;
     const updateConfig = `
             <form id="config-form">
-               <!-- <div class="item auth-input">
-                    <label for="username">
-                        <span>用户名</span>
-                    </label>
-                    <input type="text" id="username" name="username" />
-                </div>
-                <div class="item auth-input">
-                    <label for="password">
-                        <span>密码</span>
-                    </label>
-                    <input type="password" name="password" id="password" />
-                </div> -->
-
                 <div class="item auth-input">
                     <label for="auth">
                         <span>用户验证</span>
@@ -424,10 +407,14 @@
                         <div id="addExec" class="form-btn exec-btn btn" name="addExecBtn">➕</div>
                     </div>
                 </div>
-                <div id="iceServers-container">
+                <div id="textarea-container">
                     <span>iceServers</span>
                     <textarea id="iceServers" name="iceServers"></textarea>                  
                 </div> 
+                <div id="textarea-container">
+                  <span>备注</span>
+                  <textarea id="comment" name="comment"></textarea>
+                </div>
             </form>
         `;
     const runningServer = `
@@ -441,30 +428,8 @@
     // DOM查询缓存
     const $ = selector => document.querySelector(selector);
     const $$ = selector => document.querySelectorAll(selector);
-    const sidebarContent = new Map([
-      [
-        "normal",
-        [
-          "⬇️ 下载 signal.json",
-          "🔄 重启电脑",
-          "⚙️ signal.json",
-          "🎥 视频监控",
-          "📦 Github 源码"
-        ]
-      ],
-      [
-        "mini",
-        [
-          "⬇️",
-          "🔄",
-          "⚙️",
-          "🎥",
-          "📦"
-        ]
-      ]
-    ])
 
-
+    let currentHighlightLink = null;
     const handleRebootWindow = async () => {
       try {
         await fetch("./rebootWindow");
@@ -476,38 +441,25 @@
       window.open(url, target);
     }
 
-    $("#downloadSignal").addEventListener("click", () => handleLinkClick("./signal.json"));
-    $("#rebootWindow").addEventListener("click", handleRebootWindow);
-    $("#linktoPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
-    $("#linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
-    $("#linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
+    $("downloadSignal").addEventListener("click", () => handleLinkClick("./signal.json"));
+    $("rebootWindow").addEventListener("click", handleRebootWindow);
+    $("linkToPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
+    $("linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
+    $("linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
     const highlightActiveLink = (hash) => {
       // 移除所有高亮
-      $$("[id^='linkTo']").forEach(el => {
-        el.classList.remove("highlighted");
-      });
+      if (currentHighlightLink)
+        $(`${currentHighlightLink}`).classList.remove("highlighted");
       // 根据哈希值高亮相应的链接
       switch (hash) {
         case "/updateConfig":
-          $("#linkToUpdateConfig").classList.add("highlighted");
+          $("linkToUpdateConfig").classList.add("highlighted");
+          currentHighlightLink = "linkToUpdateConfig";
           break;
         default:
-          $("#linkToRunningServer").classList.add("highlighted");
-      }
-    }
-    const renderSidebarContent = () => {
-      if (window.innerWidth < 768) {
-        const btnContent = sidebarContent.get("mini")
-        $$(".sidebarBtn").forEach((btn, index) => {
-          btn.innerText = btnContent[index]
-        })
-      }
-      else {
-        const btnContent = sidebarContent.get("normal")
-        $$(".sidebarBtn").forEach((btn, index) => {
-          btn.innerText = btnContent[index];
-        })
+          $("linkToRunningServer").classList.add("highlighted");
+          currentHighlightLink = "linkToRunningServer";
       }
     }
     //渲染页面主内容
@@ -575,6 +527,7 @@
       }
     }
     const processData = (data) => {
+      const params = ["PORT", "auth", "one2one", "UE5", "preload", "exeUeCoolTime", "UEVersion", "iceServers", "boot", "comment"]
       const handlers = {
         "UE5": (value) => {
           value.forEach((exec) => {
@@ -600,14 +553,19 @@
       };
 
       for (const key in data) {
+        if (!params.includes(key)) continue;
+
         if (handlers[key]) {
           handlers[key](data[key]);
-        } else if (key !== "env" && key !== "throttle") {
-          const item = $("[name=" + key + "]");
-          if (item.type === "checkbox") {
-            item.checked = data[key];
-          } else {
-            item.value = data[key];
+        } else {
+          const item = document.querySelector(`[name="${key}"]`);
+          console.log(params.length)
+          if (item) {
+            if (item.type === "checkbox") {
+              item.checked = data[key];
+            } else {
+              item.value = data[key];
+            }
           }
         }
       }
@@ -689,8 +647,9 @@
           body: JSON.stringify(config),
         }).then((res) => {
           if (res.ok) {
-            $("#linkToUpdateConfig").innerText = "✅ 更新成功";
-            $("#linkToUpdateConfig").animate([
+            $("linkToUpdateConfig").setAttribute("data-normal", "✅ 更新成功");
+            $("linkToUpdateConfig").setAttribute("data-mini", "✅");
+            $("linkToUpdateConfig").animate([
               { opacity: 0 },
               { opacity: 1 },
             ],
@@ -701,8 +660,9 @@
               }
             );
             setTimeout(() => {
-              $("#linkToUpdateConfig").innerText = window.innerWidth < 768 ? "⚙️" : "⚙️ signal.json";
-            }, 2000);
+              $("linkToUpdateConfig").setAttribute("data-normal", "⚙️ signal.json");
+              $("linkToUpdateConfig").setAttribute("data-mini", "⚙️");
+            }, 1000);
 
             if (PORT_new) {
               const url = new URL(window.location);
@@ -800,15 +760,12 @@
     }
     // // 页面加载和变化事件
     window.onload = () => {
-      renderSidebarContent();
+
       navigateBasedOnHash();
     }
     window.onhashchange = () => {
       navigateBasedOnHash();
     };
-    window.onresize = () => {
-      renderSidebarContent();
-    }
   </script>
 </body>
 
