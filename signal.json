@@ -22,5 +22,6 @@
 			]
 		}
 	],
-	"boot": true
+	"boot": true,
+	"comment": ""
 }
