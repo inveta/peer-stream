@@ -1,35 +1,33 @@
-# 虚幻引擎UE5 像素流 依赖 [中文](README-zh.md) [English](README.md)
+# 虚幻引擎 UE5 像素流 [中文](README-zh.md) [English](README.md)
 
 和官方臃肿不堪的像素流SDK相比，我们在官方的基础上做了大量的优化和精简，开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
 
- | 文件名         | 大小  | 作用                         |
- | -------------- | ----- | ---------------------------- |
- | peer-stream.js | 22 KB | 浏览器SDK，一键开启。        |
- | signal.js      | 14 KB | 信令服务器、负载均衡、认证。 |
- | signal.json    | 1 KB  | signal.js 的启动参数。       |
- | test.html      | 3 KB  | 测试网页。                   |
+ | 文件名         | 大小  | 作用                             |
+ | -------------- | ----- | -------------------------------- |
+ | signal.js      | 14 KB | 信令服务器入口文件，通过node启动 |
+ | peer-stream.js | 22 KB | 浏览器SDK，一键开启。            |
+ | signal.json    | 1 KB  | signal.js 的启动参数。           |
+ | signal.html    | 20+KB | 在线 GUI 配置页面。              |
 
 ## 示例
 
 ```s
-# 安装 WebSocket
-npm install ws@8.5.0
-
-# 启动信令服务器
+# 启动信令服务器，读取配置signal.json
 node signal.js
 
 # 启动 UE5
 start path/to/UE5.exe -PixelStreamingURL="ws://localhost:88"
 
 # 打开测试网页
-start http://localhost:88/test.html
+start http://localhost:88/signal.html
 ```
 
 ## signal.js 信令服务器
 
-signal.js在官方库的基础上做了大量优化
+signal.js 在官方库的基础上做了大量优化，并加入了许多新功能。
 
-- 文件只有5KB，Gzip压缩后只有3KB。
+- 文件体积 14KB。
+- 读取signal.json配置。
 - 提供http文件服务，和WebSocket共享端口号。
 - 面向前端和面向UE5的端口号绑定，通过WebSocket子协议区分。
 - 通过环境变量统一传参，支持命令行或配置文件。
@@ -49,7 +47,7 @@ signal.js在官方库的基础上做了大量优化
 
 ### signal.json 启动参数
 
-| 环境变量      | 类型       | 默认值 | 功能                             |
+| 参数          | 类型       | 默认值 | 功能                             |
 | ------------- | ---------- | ------ | -------------------------------- |
 | PORT          | 正整数     | 88     | WebSocket/HTTP 全局统一端口号    |
 | UE5           | 命令行列表 | []     | UE5自启动脚本池                  |
@@ -111,31 +109,25 @@ start path/to/UE5.exe -{key}={value}
 
 常用的启动选项:
 
-```s
- -PixelStreamingURL="ws://localhost:88"
- -RenderOffScreen
- -Unattended
- -GraphicsAdapter=0
- -ForceRes
- -ResX=1280
- -ResY=720
- -PixelStreamingWebRTCFps=30
- -Windowed
- -AudioMixer
- -AllowPixelStreamingCommands
- -PixelStreamingEncoderRateControl=VBR
-```
+| 参数                           | 类型 | 功能                         |
+| ------------------------------ | ---- | ---------------------------- |
+| -PixelStreamingURL=""          | URL* | 连接signal.js的WebSocket地址 |
+| -RenderOffScreen               | void | 后台渲染UE                   |
+| -Unattended                    | void | 忽略错误弹窗                 |
+| -GraphicsAdapter=0             | +int | 指定GPU                      |
+| -ForceRes -ResX=1280 -ResY=720 | px²  | 渲染分辨率                   |
+| -PixelStreamingWebRTCFps=30    | fps  | 渲染帧率                     |
+| -AudioMixer                    | void | 传输音频                     |
 
 ## peer-stream.js 前端开发包
 
-- 文件18KB，压缩后12KB。
+- 文件22KB。
 - 基于 Web Components API 组件化video标签。
 - 断线自动重连。
 - DOM生命周期绑定：挂载自动连接，卸载自动断开。
 - 支持stun公网穿透。
 - 全局挂载一份引用方便调试：window.ps。
 - 支持5种键盘/鼠标/触屏输入模式。
-- 支持3333端口重定向。
 - 支持视频自动播放。
 - video标签的id即信令服务器地址，默认指向网页的域名。
 - 支持异步请求。（不稳定）
@@ -146,7 +138,7 @@ start path/to/UE5.exe -{key}={value}
 
 ```html
 <script src="peer-stream.js"></script>
-<video is="peer-stream" id="ws://127.0.0.1:88/"></video>
+<video is="peer-stream" id="ws://127.0.0.1:88/" autoplay muted></video>
 ```
 
 或者使用JavaScript:
@@ -201,6 +193,16 @@ ps.addEventListener('事件名称', e => {
 - "playerqueue":	返回用户排队情况，seq表示当前排队序号  
 - "playerdisconnected":	signal不在线的回调事件 
 
+## signal.html 配置页面
+
+- 文件体积 20+KB。
+- 在线可视化编辑 signal.json。
+- 端口号与信令共享。
+- 在线预览peer-stream.js视频流。
+- 后台进程监控。
+- 命令行调试signal.js。
+
 ## IOS端Safari兼容
 
 由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器（小程序）禁止video自动播放，必须由用户行为（点击）触发调用ps.play()来播放视频流。
+

