@@ -8,14 +8,14 @@
     :root {
       --main-bg-color-dark: #000000;
       --font-color-dark: #ffffff;
-      --sidabar-bg-color-dark: #d3d3d3;
+      --sidabar-bg-color-dark: #708090;
       --btn-color-dark: #8ce196;
       --btn-hover-bg-color-dark: #dddddd;
       --btn-font-color-dark: #000000;
     }
 
     html {
-      font-size: calc(14px + (100vw - 480px) * (3/720));
+      font-size: calc(14px + (100vw - 480px) * (3 / 720));
 
       @media (max-width: 480px) {
         font-size: 14px;
@@ -24,6 +24,10 @@
       @media (min-width: 1200px) {
         font-size: 16px;
       }
+    }
+
+    html::-webkit-scrollbar {
+      display: none;
     }
 
     body {
@@ -65,7 +69,7 @@
       background: #8ce196;
     }
 
-    #config-form {
+    #configForm {
       margin: 0 0 0 3rem;
       height: 98%;
       color: var(--font-color-dark);
@@ -74,13 +78,15 @@
       flex-wrap: wrap;
 
       @media screen and (min-width: 768px) {
-        margin-left: 10rem;
+        margin-left: 11rem;
       }
     }
 
     input,
     textarea {
-      background-color: var(--sidabar-bg-color-dark);
+      color: var(--font-color-dark);
+      background-color: var(--main-bg-color-dark);
+      border: 1px solid var(--sidabar-bg-color-dark);
       border-radius: 0.5rem;
     }
 
@@ -95,17 +101,16 @@
     .common-input,
     .auth-input {
       margin: 0.5rem 3%;
+      width: 44%;
 
       @media screen and (min-width: 1200px) {
         margin: 0.5rem 1%;
         width: 48%;
       }
-
     }
 
     .common-input input,
     .auth-input input {
-      width: calc(100% - 9rem);
       width: auto;
       margin: 0.4rem 0;
       height: 1.6rem;
@@ -114,10 +119,12 @@
 
     .switch-input {
       align-items: center;
-      width: calc(100%/2);
+      width: calc(100% / 2);
+      display: flex;
+      flex-direction: column;
 
       @media screen and (min-width: 425px) {
-        width: calc(100%/4);
+        width: calc(100% / 4);
       }
 
       @media screen and (min-width: 1200px) {
@@ -135,8 +142,6 @@
     }
 
     .exec-title {
-      display: flex;
-      flex-direction: rows;
       align-items: center;
       margin: 0.5rem 3% 0;
 
@@ -144,41 +149,20 @@
         height: 2rem;
         margin: 0.5rem 1% 0;
       }
-
     }
 
-    .exec span {
+    #exec-input {
       display: flex;
-      margin: 0.5rem 3%;
-
-      @media screen and (min-width: 1200px) {
-        margin: 0.5rem 1%;
-      }
+      flex-wrap: wrap;
     }
 
-    .exec input {
-      margin: 0.5rem 3%;
-      height: 1.6rem;
-
-      @media screen and (min-width: 1200px) {
-        margin: 0.5rem 1%;
-      }
-
-    }
-
-    .exec-btn {
-      width: 1.5rem;
-      height: 1.5rem;
-      margin-left: 0.5rem;
-    }
-
-    #textarea-container {
+    .textarea-container {
       width: 100%;
       display: flex;
       flex-direction: column;
     }
 
-    #textarea-container span {
+    .textarea-container span {
       margin: 0.5rem 3%;
 
       @media screen and (min-width: 1200px) {
@@ -186,7 +170,7 @@
       }
     }
 
-    #textarea-container textarea {
+    .textarea-container textarea {
       height: 10rem;
       margin: 0.5rem 3%;
 
@@ -207,11 +191,6 @@
       background-color: var(--btn-hover-bg-color-dark);
     }
 
-    .btnDisabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
     .sidebar {
       position: fixed;
       top: 0;
@@ -223,7 +202,7 @@
       color: var(--btn-font-color-dark);
 
       @media screen and (min-width: 768px) {
-        width: 10rem;
+        width: 11rem;
       }
     }
 
@@ -233,6 +212,8 @@
       justify-content: center;
       align-items: center;
       background-color: var(--sidabar-bg-color-dark);
+      text-decoration: none;
+      color: black;
 
       @media screen and (min-width: 768px) {
         padding-left: 1rem;
@@ -241,6 +222,7 @@
     }
 
     .sidebarBtn::before {
+      filter: sepia(100%) hue-rotate(184deg) saturate(500%);
       content: attr(data-mini);
     }
 
@@ -279,13 +261,14 @@
       margin-left: 3rem;
 
       @media screen and (min-width: 768px) {
-        margin-left: 10rem;
+        margin-left: 11rem;
       }
     }
 
     video {
       overflow: hidden;
       height: calc(100vh - 2rem);
+      width: 100%;
       margin: 1rem;
     }
 
@@ -304,11 +287,14 @@
   <script type="text/javascript" src="./peer-stream.js"></script>
 
   <aside class="sidebar">
-    <downloadSignal class="sidebarBtn btn" data-normal="⬇️ 下载signal.json" data-mini="⬇️"></downloadSignal>
+    <a class="sidebarBtn btn" href="./signal.json" target="_blank" download="signal.json" data-normal="⬇️ 下载 signal.json" data-mini="⬇️"
+      aria-label="下载 signal.json"></a>
     <rebootWindow class="sidebarBtn btn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow>
-    <linkToUpdateConfig class="sidebarBtn btn" data-normal="⚙️ signal.json" data-mini="⚙️"></linkToUpdateConfig>
-    <linkToRunningServer class="sidebarBtn btn" data-normal="🎥 视频监控" data-mini="🎥"></linkToRunningServer>
-    <linkToPS class="sidebarBtn btn" data-normal="📦 Github源码" data-mini="📦"></linkToPS>
+    <a class="sidebarBtn btn" href="#/updateConfig" data-normal="⚙️ signal.json" data-mini="⚙️" aria-label="signal.json"
+      name="linkToConfig"></a>
+    <a class="sidebarBtn btn" href=" " data-normal="🎥 视频监控" data-mini="🎥" aria-label="视频监控" name="linkToServer"></a>
+    <a class="sidebarBtn btn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
+      data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
     <div class="fill"></div>
   </aside>
   <main class="content router-view">router-view</main>
@@ -316,16 +302,16 @@
   <script type="text/javascript">
     //字符串转dom
     const str2dom = (obj) => {
-      return new DOMParser().parseFromString(obj, 'text/html')
-    }
+      return new DOMParser().parseFromString(obj, "text/html");
+    };
     //字符串转布尔
     const str2Boolean = (obj) => {
       return obj.toLowerCase() === "true" ? true : false;
     };
     const canBeParsed = (str) => {
       try {
-        JSON.parse(str)
-        return true
+        JSON.parse(str);
+        return true;
       } catch (error) {
         return false;
       }
@@ -341,127 +327,146 @@
         });
         return result.join("");
       };
-    }
+    };
     const execTemp = template`
-            <div class="exec item">
-                <span>
-                    启动项
-                    <div class="form-btn exec-btn btn" name="deleteExecBtn">✖️</div>
-                </span>
-                <input name="UE5" value="${"value"}"/>
-            </div>
-        `;
+        <div class="common-input item exec">
+          <span>GPU ${"graphicsAdapter"} 进程个数</span>
+          <input name="processNumber" id="${"graphicsAdapter"}" type="number" value="${"GPUNumber"}" placeholder="请输入需要的进程个数"/>
+        </div>
+      `;
     const updateConfig = `
-            <form id="config-form">
-                <div class="item auth-input">
-                    <label for="auth">
-                        <span>用户验证</span>
-                    </label>
-                    <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/"/>
-                </div>
-                <div class="item common-input">
-                    <label for="PORT">
-                        <span>端口</span>
-                    </label>
-                    <input type="number" id="PORT" name="PORT" required />
-                </div>
-                <div class="item common-input">
-                    <label for="preload">
-                        <span>预加载个数</span>
-                    </label>
-                    <input type="number" name="preload" id="preload" required/>
-                </div>
-                <div class="item common-input">
-                    <label for="exeUeCoolTime">
-                        <span>冷却时间 (s) </span>
-                    </label>
-                    <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
-                </div>  
-                <div class="item switch-input">
-                    <label for="auth">
-                        <span>http 认证</span>
-                    </label>
-                    <input type="checkbox" id="http-auth" name="http-auth" />
-                </div>
-                <div class="item switch-input">
-                    <label for="one2one">
-                        <span>一对一模式</span>
-                    </label>
-                    <input type="checkbox" id="one2one" name="one2one" />
-                </div>
-                <div class="item switch-input">
-                    <label for="boot">
-                        <span>开机自启动</span>
-                    </label>
-                    <input type="checkbox" id="boot" name="boot" />
-                </div>
-                <div class="item switch-input">
-                    <label for="UEVersion">
-                        <span>旧版 UE4</span>
-                    </label>
-                    <input type="checkbox" id="UEVersion" name="UEVersion" />
-                </div>
-                <div id="exec-container">
-                    <div class="exec-title">
-                        <span>UE5</span>
-                        <div id="addExec" class="form-btn exec-btn btn" name="addExecBtn">➕</div>
-                    </div>
-                </div>
-                <div id="textarea-container">
-                    <span>iceServers</span>
-                    <textarea id="iceServers" name="iceServers"></textarea>                  
-                </div> 
-                <div id="textarea-container">
-                  <span>备注</span>
-                  <textarea id="comment" name="comment"></textarea>
-                </div>
-            </form>
-        `;
-    const runningServer = `
-            <div id="runningServers-container">
-                <video is="peer-stream" audio> </video>
-
-	            <!-- WebRTC monitor -->
-	            <pre id="stats">Not connected</pre>    
+        <form id="configForm">
+          <div class="item auth-input">
+            <label for="auth">用户验证</label>
+            <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" />
+          </div>
+          <div class="item common-input">
+            <label for="PORT">端口</label>
+            <input type="number" id="PORT" name="PORT" required />
+          </div>
+          <div class="item common-input">
+            <label for="preload">预加载个数</label>
+            <input type="number" name="preload" id="preload" required />
+          </div>
+          <div class="item common-input">
+            <label for="exeUeCoolTime">冷却时间 (s) </label>
+            <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
+          </div>
+          <div class="item switch-input">
+            <label for="auth">http 认证</label>
+            <input type="checkbox" id="http-auth" name="http-auth" />
+          </div>
+          <div class="item switch-input">
+            <label for="one2one">一对一模式</label>
+            <input type="checkbox" id="one2one" name="one2one" />
+          </div>
+          <div class="item switch-input">
+            <label for="boot">
+              <span>开机自启动</span>
+            </label>
+            <input type="checkbox" id="boot" name="boot" />
+          </div>
+          <div class="item switch-input">
+            <label for="UEVersion">
+              <span>旧版 UE4</span>
+            </label>
+            <input type="checkbox" id="UEVersion" name="UEVersion" />
+          </div>
+          <div id="exec-container">
+            <div class="exec-title">UE5</div>
+            <div id="exec-input">
+              <div class="item common-input">
+                <span>UE启动进程</span>
+                <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
+              </div>
+              <div class="item common-input">
+                <span>WebSocket地址</span>
+                <input type="text" name="pixelStreamingURL" id="pixelStreamingURL"
+                  placeholder="填入链接signal.js的WebSocket地址" />
+              </div>
+              <div class="item common-input">
+                <span>分辨率</span>
+                <input name="resolution" list="resolutionList" id="resolution"
+                  placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
+                <datalist id="resolutionList">
+                  <option value="1920*1080"></option>
+                  <option value="1600*900"></option>
+                  <option value="1366*768"></option>
+                  <option value="1280*720"></option>
+                  <option value="800*600"></option>
+                  <option value="640*480"></option>
+                </datalist>
+              </div>
+              <div class="item common-input">
+                <span>渲染帧率</span>
+                <input type="number" name="pixelStreamingWebRTCFps" id="pixelStreamingWebRTCFps"
+                  placeholder="填入所需渲染出的帧率(应为数字)" />
+              </div>
+              <div class="item common-input">
+                <span>GPU数量</span>
+                <input type="number" name="GPUNumber" id="GPUNumber"
+                  placeholder="请填入需要的GPU数量"/>
+              </div>
+              <div class="item switch-input">
+                <span>忽略错误弹窗</span>
+                <input type="checkbox" name="unattended" id="unattended" checked />
+              </div>
+              <div class="item switch-input">
+                <span>后台渲染UE</span>
+                <input type="checkbox" name="renderOffScreen" id="renderOffScreen" checked />
+              </div>
+              <div class="item switch-input">
+                <span>传输音频</span>
+                <input type="checkbox" name="audioMixer" />
+              </div>
             </div>
-        `;
-    // DOM查询缓存
-    const $ = selector => document.querySelector(selector);
-    const $$ = selector => document.querySelectorAll(selector);
+          </div>
+          <div class="textarea-container">
+            <span>iceServers</span>
+            <textarea id="iceServers" name="iceServers"></textarea>
+          </div>
+          <div class="textarea-container">
+            <span>备注</span>
+            <textarea id="comment" name="comment"></textarea>
+          </div>
+        </form> 
+      `;
+    const runningServer = `
+        <div id="runningServers-container">
+            <video is="peer-stream" id="ws://10.0.42.16:88" audio> </video>
 
-    let currentHighlightLink = null;
+          <!-- WebRTC monitor -->
+          <pre id="stats">Not connected</pre>    
+        </div>
+      `;
+    // DOM查询缓存
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => document.querySelectorAll(selector);
+
     const handleRebootWindow = async () => {
       try {
         await fetch("./rebootWindow");
       } catch (error) {
         console.log("rebootWindow failed", error);
       }
-    }
-    const handleLinkClick = (url, target = "_blank") => {
-      window.open(url, target);
-    }
+    };
 
-    $("downloadSignal").addEventListener("click", () => handleLinkClick("./signal.json"));
     $("rebootWindow").addEventListener("click", handleRebootWindow);
-    $("linkToPS").addEventListener("click", () => handleLinkClick("https://github.com/inveta/peer-stream"));
-    $("linkToUpdateConfig").addEventListener("click", () => handleLinkClick("#/updateConfig", "_self"));
-    $("linkToRunningServer").addEventListener("click", () => handleLinkClick(" ", "_self"));
 
     const highlightActiveLink = (hash) => {
       // 移除所有高亮
-      if (currentHighlightLink)
-        $(`${currentHighlightLink}`).classList.remove("highlighted");
+      $$('[name^="linkTo"]').forEach((element) => {
+        element.classList.remove("highlighted");
+      });
       // 根据哈希值高亮相应的链接
       switch (hash) {
         case "/updateConfig":
-          $("linkToUpdateConfig").classList.add("highlighted");
-          currentHighlightLink = "linkToUpdateConfig";
+          $("[name = linkToConfig]").classList.add("highlighted");
           break;
         default:
-          $("linkToRunningServer").classList.add("highlighted");
-          currentHighlightLink = "linkToRunningServer";
+          $("[name = linkToServer]").classList.add("highlighted");
       }
-    }
+    };
     //渲染页面主内容
     const renderPageContent = async (pageHash) => {
       const rv = document.querySelector(".router-view");
@@ -469,23 +474,20 @@
         case "/updateConfig": {
           rv.innerHTML = updateConfig;
           await renderConfigForm();
-          $("#addExec").addEventListener("click", () => addExec());
           $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
           $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
           $("#http-auth").addEventListener("click", () => toggleAuthInput());
-          $("#config-form").addEventListener("change", () => submitConfig(event));
-          $$("[name = deleteExecBtn]").forEach((obj) => {
-            obj.addEventListener("click", () => {
-              deleteExec(obj, event);
-            });
-          });
-          if (typeof ps !== "undefined")
-            window.clearTimeout(ps.timeout)
+          $("#configForm").addEventListener("change", () =>
+            submitConfig(event)
+          );
+          if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
           break;
         }
         default: {
           rv.innerHTML = runningServer;
-          ps.addEventListener("playing", aggregateStats, { once: true });
+          ps.addEventListener("playing", aggregateStats, {
+            once: true,
+          });
           ps.addEventListener("message", (e) => { });
           ps.addEventListener("suspend", (e) => { });
           ps.addEventListener("playerdisconnected", (e) => {
@@ -495,28 +497,14 @@
       }
     };
 
-    //增加一个启动项
-    const addExec = () => {
-      const exec = str2dom(execTemp({ value: "" })).querySelector(".exec")
-      exec.querySelector("[name = deleteExecBtn]").addEventListener("click", function () {
-        deleteExec(exec.querySelector("[name = deleteExecBtn]"), event);
-      });
-      $("#exec-container").appendChild(exec);
-    };
-    //启动项删除
-    const deleteExec = (obj, event) => {
-      const exec = obj.parentNode.parentNode;
-      $("#exec-container").removeChild(exec);
-      submitConfig(event);
-    };
     //开关http验证
     const toggleAuthInput = () => {
       const displayAuth = $("#http-auth").checked;
-      $(".auth-input").style.display = (displayAuth ? "flex" : "none");
-      $(".auth-input").querySelector("input").value = ""
-    }
+      $(".auth-input").style.display = displayAuth ? "flex" : "none";
+      $(".auth-input").querySelector("input").value = "";
+    };
     const toggleAuthInfo = (event) => {
-      const auth = $("#auth")
+      const auth = $("#auth");
       switch (event.type) {
         case "focus":
           auth.type = "text";
@@ -525,20 +513,109 @@
           auth.type = "password";
           break;
       }
-    }
+    };
+    const parseUE5 = (UE5) => {
+      const exec = {
+        unattended: false,
+        renderOffScreen: false,
+        audioMixer: false,
+      };
+
+      const params = UE5.split(" ");
+      [, exec.GPUFile] = params;
+
+      const paramMapping = {
+        "-PixelStreamingURL": "pixelStreamingURL",
+        "-GraphicsAdapter": "graphicsAdapter",
+        "-ResX": "resX",
+        "-ResY": "resY",
+        "-PixelStreamingWebRTCFps": "pixelStreamingWebRTCFps",
+        "-Unattended": "unattended",
+        "-RenderOffScreen": "renderOffScreen",
+        "-AudioMixer": "audioMixer",
+      };
+
+      params.forEach((param) => {
+        if (param.startsWith("-")) {
+          const [key, value] = param.split("=");
+          if (paramMapping[key]) {
+            exec[paramMapping[key]] =
+              key.startsWith("-Unattended") ||
+                key.startsWith("-RenderOffScreen") ||
+                key.startsWith("-AudioMixer")
+                ? true
+                : value;
+          }
+        }
+      });
+
+      exec.resolution = `${exec.resX}*${exec.resY}`;
+      delete exec.resX;
+      delete exec.resY;
+
+      return exec;
+    };
+
     const processData = (data) => {
-      const params = ["PORT", "auth", "one2one", "UE5", "preload", "exeUeCoolTime", "UEVersion", "iceServers", "boot", "comment"]
+      const params = [
+        "PORT",
+        "auth",
+        "one2one",
+        "UE5",
+        "preload",
+        "exeUeCoolTime",
+        "UEVersion",
+        "iceServers",
+        "boot",
+        "comment",
+      ];
       const handlers = {
-        "UE5": (value) => {
+        UE5: (value) => {
+          const shareInfo = ({
+            GPUFile,
+            pixelStreamingURL,
+            graphicsAdapter,
+            resolution,
+            pixelStreamingWebRTCFps,
+            unattended,
+            renderOffScreen,
+            audioMixer,
+          } = parseUE5(value[0]));
+          shareInfo.graphicsAdapter = new Map();
           value.forEach((exec) => {
-            const execItem = str2dom(execTemp({ value: exec })).querySelector(".exec");
-            $("#exec-container").appendChild(execItem);
+            const { graphicsAdapter } = parseUE5(exec);
+            shareInfo.graphicsAdapter.set(
+              graphicsAdapter,
+              (shareInfo.graphicsAdapter.get(graphicsAdapter) || 0) + 1
+            );
           });
+          shareInfo.GPUNumber = shareInfo.graphicsAdapter.size;
+          for (const item in shareInfo) {
+            if (item === "graphicsAdapter") {
+              for (const gpuInfo of shareInfo.graphicsAdapter) {
+                const temp = execTemp({
+                  graphicsAdapter: gpuInfo[0],
+                  GPUNumber: gpuInfo[1],
+                });
+                const exec = str2dom(temp).querySelector(".exec");
+
+                $("#exec-input").appendChild(exec);
+              }
+            } else {
+              const input = $(`[name = ${item}]`);
+              if (input.type === "checkbox") {
+                input.checked = shareInfo[`${item}`];
+              } else {
+                input.value = shareInfo[`${item}`];
+              }
+            }
+          }
         },
-        "iceServers": (value) => {
-          $("[name=iceServers]").value = JSON.stringify(value, null, '\t');
+
+        iceServers: (value) => {
+          $("[name=iceServers]").value = JSON.stringify(value, null, "\t");
         },
-        "auth": (value) => {
+        auth: (value) => {
           if (typeof value === "string") {
             $("#auth").value = value;
             $("#http-auth").checked = true;
@@ -547,9 +624,9 @@
             toggleAuthInput();
           }
         },
-        "UEVersion": (value) => {
-          document.querySelector("[name=UEVersion]").checked = (value === 4.27);
-        }
+        UEVersion: (value) => {
+          document.querySelector("[name=UEVersion]").checked = value === 4.27;
+        },
       };
 
       for (const key in data) {
@@ -559,7 +636,6 @@
           handlers[key](data[key]);
         } else {
           const item = document.querySelector(`[name="${key}"]`);
-          console.log(params.length)
           if (item) {
             if (item.type === "checkbox") {
               item.checked = data[key];
@@ -593,75 +669,118 @@
       try {
         const config = {};
         const element = event.target;
+        console.log(element.parentNode.parentNode);
         const key = element.id;
-        let value = element.type === "checkbox" ? element.checked : element.value;
+        let value =
+          element.type === "checkbox" ? element.checked : element.value;
         let PORT_new = null;
 
-        const updateUE5Config = () => {
-          config["UE5"] = [];
-          $$("[name = UE5]").forEach((exec) => {
-            if (exec.value) config["UE5"].push(exec.value);
-          });
-        };
-        if (element.getAttribute("name") === "deleteExecBtn") {
-          const ue5Input = element.closest('.exec').querySelector('[name="UE5"]');
-          if (ue5Input.value.trim() === '') return;
-          updateUE5Config();
-        }
-        else {
-          if (key === "http-auth" && value === true) return;
-          if (key === "iceServers" && !canBeParsed(value)) {
-            alert("iceServers格式有误！");
-            renderPageContent(window.location.hash.slice(1))
-            return;
-          }
+        if (key === "GPUNumber") {
+          var execElements = $$(".exec");
+          var gpuNumber = parseInt($("#GPUNumber").value, 10);
 
+          if (execElements.length < gpuNumber) {
+            for (let i = execElements.length; i < gpuNumber; i++) {
+              const temp = execTemp({
+                graphicsAdapter: i,
+                GPUNumber: 0,
+              });
+              const exec = str2dom(temp).querySelector(".exec");
+
+              $("#exec-input").appendChild(exec);
+            }
+          } else if (execElements.length > gpuNumber) {
+            var excess = execElements.length - gpuNumber;
+
+            for (let i = 0; i < excess; i++) {
+              execElements[execElements.length - 1 - i].remove();
+            }
+          }
+          return;
+        }
+        if (key === "http-auth" && value === true) return;
+        if (key === "iceServers" && !canBeParsed(value)) {
+          alert("iceServers格式有误！");
+          renderPageContent(window.location.hash.slice(1));
+          return;
+        }
+        if ($("#exec-input").contains(element)) {
+          config["UE5"] = [];
+          const selector = (name) => $(`[name=${name}]`);
+
+          const GPUFile = selector("GPUFile").value;
+          const pixelStreamingURL = selector("pixelStreamingURL").value;
+          const [resX, resY] = selector("resolution").value.split("*");
+          const pixelStreamingWebRTCFps = selector(
+            "pixelStreamingWebRTCFps"
+          ).value;
+
+          const unattended = selector("unattended").checked ? "-Unattended" : "";
+          const renderOffScreen = selector("renderOffScreen").checked
+            ? "-RenderOffScreen"
+            : "";
+          const audioMixer = selector("audioMixer").checked ? "-AudioMixer" : "";
+
+          $$("[name = processNumber]").forEach(exec => {
+            const processNumber = exec.value;
+            for (let i = 0; i < processNumber; i++) {
+              config["UE5"].push(`start ${GPUFile} ${unattended} ${renderOffScreen} ${audioMixer} -PixelStreamingURL=${pixelStreamingURL} -GraphicsAdapter=${exec.id} -ForceRes -ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${pixelStreamingWebRTCFps}`)
+            }
+          })
+        } else {
           switch (element.type) {
             case "number":
               config[key] = parseFloat(value);
-              if (key === "PORT" && value !== window.location.port) PORT_new = value;
+              if (key === "PORT" && value !== window.location.port)
+                PORT_new = value;
               break;
             case "checkbox":
-              config[key === "http-auth" ? "auth" : key] = key === "UEVersion" ? (value ? 4.27 : 5) : value;
+              config[key === "http-auth" ? "auth" : key] =
+                key === "UEVersion" ? (value ? 4.27 : 5) : value;
               break;
             default:
-              if (element.name === "UE5") {
-                updateUE5Config();
-                break;
-              }
-              else if (element.name === "auth") {
+              if (element.name === "auth") {
                 const authRule = /^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/;
                 if (!authRule.test(value)) {
-                  alert("请输入正确的用户名和密码格式，例如：username:password。");
-                  renderPageContent(window.location.hash.slice(1))
+                  alert(
+                    "请输入正确的用户名和密码格式，例如：username:password。"
+                  );
+                  renderPageContent(window.location.hash.slice(1));
                   return;
                 }
               }
-              config[key] = element.name === "iceServers" ? JSON.parse(value) : value;
+              config[key] =
+                element.name === "iceServers" ? JSON.parse(value) : value;
           }
         }
 
-        await fetch("./updateConfig", {
+        await fetch("./signal", {
           method: "POST",
-          headers: { "Content-type": "application/json" },
-          body: JSON.stringify(config),
+          headers: {
+            "Content-type": "application/json",
+            "signal": encodeURIComponent(JSON.stringify(config))
+          },
         }).then((res) => {
           if (res.ok) {
-            $("linkToUpdateConfig").setAttribute("data-normal", "✅ 更新成功");
-            $("linkToUpdateConfig").setAttribute("data-mini", "✅");
-            $("linkToUpdateConfig").animate([
-              { opacity: 0 },
-              { opacity: 1 },
-            ],
+            $("[name = linkToConfig]").setAttribute(
+              "data-normal",
+              "✅ 更新成功"
+            );
+            $("[name = linkToConfig]").setAttribute("data-mini", "✅");
+            $("[name = linkToConfig]").animate(
+              [{ opacity: 0 }, { opacity: 1 }],
               {
                 duration: 200,
                 iterations: 3,
-                easing: "steps(2, jump-none)"
+                easing: "steps(2, jump-none)",
               }
             );
             setTimeout(() => {
-              $("linkToUpdateConfig").setAttribute("data-normal", "⚙️ signal.json");
-              $("linkToUpdateConfig").setAttribute("data-mini", "⚙️");
+              $("[name = linkToConfig]").setAttribute(
+                "data-normal",
+                "⚙️ signal.json"
+              );
+              $("[name = linkToConfig]").setAttribute("data-mini", "⚙️");
             }, 1000);
 
             if (PORT_new) {
@@ -669,18 +788,16 @@
               url.port = PORT_new;
               window.location.replace(url);
             }
+          } else {
+            alert(`❌ 更新失败 ${res.statusText}`);
+            renderPageContent(window.location.hash.slice(1));
           }
-          else {
-            alert("❌ 更新失败");
-            renderPageContent(window.location.hash.slice(1))
-          }
-        })
+        });
       } catch (error) {
-        alert("❌ 更新失败");
+        alert(`❌ 更新失败 ${error}`);
         console.log("updateConfig failed", error);
       }
     };
-
 
     const aggregateStats = async () => {
       const statsReport = await ps.pc.getStats(null);
@@ -751,18 +868,17 @@
       stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
 
       ps.timeout = setTimeout(aggregateStats, 1000);
-    }
+    };
 
     const navigateBasedOnHash = () => {
-      const pageHash = window.location.hash.slice(1)
+      const pageHash = window.location.hash.slice(1);
       renderPageContent(pageHash);
       highlightActiveLink(pageHash);
-    }
+    };
     // // 页面加载和变化事件
     window.onload = () => {
-
       navigateBasedOnHash();
-    }
+    };
     window.onhashchange = () => {
       navigateBasedOnHash();
     };
