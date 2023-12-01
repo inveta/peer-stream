@@ -46,7 +46,7 @@ async function Signal(request, response, server) {
 
   //修改了端口，执行下列方法使其生效
   if (newSignal.PORT) {
-    await global.serve();
+    await global.serve(newSignal.PORT);
 
   }
 
