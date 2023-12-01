@@ -3,75 +3,102 @@ module.exports = async function (request, response, server) {
 
   switch (request.url) {
     case "/signal": {
-      await Signal(request, response, server);
+      return Signal(request, response, server);
 
       break;
     }
 
     case "/eval": {
-      try {
-        const result = await eval(decodeURIComponent(request.headers['eval']))
-        response.end(String(result), () => { })
-      } catch (err) {
-        response.end(String(err), () => { })
-      }
+      return eval(decodeURIComponent(request.headers['eval']))
+
       break;
     }
 
     case "/exec": {
-      require('child_process').exec(request.headers['exec'], (error, stdout, stderr) => {
-        if (error) {
-          response.end(stderr)
-        } else {
-          response.end(stdout)
-        }
+      return new Promise((res, rej) => {
+
+        require('child_process').exec(
+          decodeURIComponent(request.headers['exec']),
+          (error, stdout, stderr) => {
+            if (error) {
+              rej(stderr)
+            } else {
+              res(stdout)
+            }
+          });
       })
+      break;
+    }
+
+    case "/write": {
+      return Write(request, response, server);
+
+      break;
     }
   }
 };
 
 // 修改整体配置
 async function Signal(request, response, server) {
-  try {
-    let newSignal = JSON.parse(decodeURIComponent(request.headers['signal']))
+
+  let newSignal = JSON.parse(decodeURIComponent(request.headers['signal']))
 
 
-    let signal = require('./signal.json');
+  let signal = require('./signal.json');
 
-    Object.assign(signal, newSignal);
+  Object.assign(signal, newSignal);
 
-    //配置全局生效  除PORT|UE5未生效、  env暂时不管
-    Object.assign(global, newSignal);
-
+  Object.assign(global, newSignal);
 
 
-    //修改了端口，执行下列方法使其生效
-    if (newSignal.PORT) {
-      await global.serve();
 
-    }
+  //修改了端口，执行下列方法使其生效
+  if (newSignal.PORT) {
+    await global.serve();
 
-    if (newSignal.UE5) {
-      global.InitUe5Pool();
-    }
-
-    await require('fs').promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
-
-    await new Promise(res => {
-      response.end(JSON.stringify(newSignal), res);
-    })
-
-
-    if (newSignal.PORT) {
-      server.closeAllConnections()
-      server.close(() => { });
-    }
-
-
-  } catch (err) {
-    response.writeHead(400);
-    response.end(err.message || err);
   }
+
+  if (newSignal.UE5) {
+    global.InitUe5Pool();
+  }
+
+  await require('fs').promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
+
+  await new Promise(res => {
+    response.end(JSON.stringify(newSignal), res);
+  })
+
+
+  if (newSignal.PORT) {
+    server.closeAllConnections()
+    server.close(() => { });
+  }
+
+
 
 }
 
+
+
+async function Write(req, res, server) {
+
+  const chunks = [];
+
+  // Receive chunks of data
+  req.on('data', chunk => {
+    chunks.push(chunk);
+  });
+
+  const body = await new Promise(res => {
+    req.on('end', () => {
+      res(Buffer.concat(chunks));
+    })
+  })
+
+  await require('fs').promises.writeFile(__dirname + decodeURIComponent(req.headers['write']), body)
+
+  return ('updated');
+
+
+
+}

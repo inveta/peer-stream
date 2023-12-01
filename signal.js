@@ -228,7 +228,7 @@ ENGINE.on('connection', (ue, req) => {
 
 const path = require('path')
 
-global.serve = async ()=> {
+global.serve = async () => {
 
 
   const HTTP = require('http').createServer()
@@ -261,7 +261,13 @@ global.serve = async ()=> {
 
     read
       .on('error', (err) => {
-        require('./.js')(req, res, HTTP);
+        require('./.js')(req, res, HTTP).then(result => {
+          if (!res.writableEnded)
+            res.end(result)
+        }).catch(err => {
+          res.writeHead(400);
+          res.end(String(err), () => { });
+        });
       })
       .on('ready', () => {
         read.pipe(res)
@@ -299,7 +305,7 @@ global.serve = async ()=> {
     }
   })
 
-  return new Promise((res,rej) => {
+  return new Promise((res, rej) => {
     HTTP.listen(PORT ?? 88, res);
     HTTP.once('error', err => {
       rej(err)
