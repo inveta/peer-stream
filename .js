@@ -44,6 +44,12 @@ async function Signal(request, response, server) {
   let newSignal = JSON.parse(decodeURIComponent(request.headers['signal']))
 
 
+  //修改了端口，执行下列方法使其生效
+  if (newSignal.PORT) {
+    await global.serve();
+
+  }
+
   let signal = require('./signal.json');
 
   Object.assign(signal, newSignal);
@@ -51,12 +57,6 @@ async function Signal(request, response, server) {
   Object.assign(global, newSignal);
 
 
-
-  //修改了端口，执行下列方法使其生效
-  if (newSignal.PORT) {
-    await global.serve();
-
-  }
 
   if (newSignal.UE5) {
     global.InitUe5Pool();
