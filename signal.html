@@ -197,6 +197,16 @@
       margin: 0.5rem 0 0 0;
     }
 
+    #exec-input .switch-input {
+      @media screen and (min-width: 425px) {
+        width: calc(50% / 3);
+      }
+
+      @media screen and (min-width: 1200px) {
+        margin: 0.5rem 0.75%;
+        width: 11%;
+      }
+    }
     #exec-container {
       width: 100%;
     }
@@ -557,6 +567,10 @@
     };
 
     const updateUE5Info = (value) => {
+      if(value.length <= 0) {
+        updateInputValue(`[name = GPUNumber]`, 0)
+        return;
+      }
       const shareInfo = parseUE5(value[0]);
       shareInfo.graphicsAdapter = new Map();
       value.forEach((exec) => {
@@ -568,7 +582,7 @@
       });
       shareInfo.GPUNumber = shareInfo.graphicsAdapter.size;
       for (const item in shareInfo) {
-        if (item === "graphicsAdapter") {
+        if (item === "graphicsAdapter" && $$(".exec").length !== shareInfo.GPUNumber) {
           for (const gpuInfo of shareInfo.graphicsAdapter) {
             const exec = str2dom(execTemp({ graphicsAdapter: gpuInfo[0], GPUNumber: gpuInfo[1] })).querySelector(".exec");
             $("#exec-input").appendChild(exec);
@@ -666,6 +680,7 @@
 
     const handleConfigUpdate = async (config, PORT_new) => {
       try {
+        console.log(config)
         const response = await fetch("./signal", {
           method: "POST",
           headers: {
@@ -697,10 +712,12 @@
           const url = new URL(window.location);
           url.port = PORT_new;
           window.location.replace(url);
+          console.log(url)
         }
       } catch (error) {
         alert(`❌ 更新失败: ${error}`);
-        console.error("Error updating config", error);
+        renderConfigForm();
+        console.error("updating config", error);
       }
     };
 
@@ -715,13 +732,18 @@
       if (key === "GPUNumber") {
         const execElements = $$(".exec");
         const gpuNumber = parseInt(value, 10);
+        if(gpuNumber < 0) {
+          alert("GPU 数量不能小于0");
+          renderConfigForm();
+          return;
+        }
         execElements.length < gpuNumber ? appendExecElements(gpuNumber, execElements) : needToupdate = removeExecElements(gpuNumber, execElements);
         if(!needToupdate) return;
       }
-
       if (key === "http-auth" && value) return;
       if (key === "iceServers" && !canBeParsed(value)) {
         alert("iceServers格式有误！");
+        renderConfigForm();
         return;
       }
 
