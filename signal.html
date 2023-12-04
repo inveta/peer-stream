@@ -199,14 +199,15 @@
 
     #exec-input .switch-input {
       @media screen and (min-width: 425px) {
-        width: calc(50% / 3);
+        width: calc(100% / 3);
       }
 
       @media screen and (min-width: 1200px) {
-        margin: 0.5rem 0.75%;
-        width: 11%;
+        width: calc(100% / 3);
+        margin: 0;
       }
     }
+
     #exec-container {
       width: 100%;
     }
@@ -278,6 +279,7 @@
     <a class="sidebarBtn" href=" " data-normal="🎥 视频监控" data-mini="🎥" aria-label="视频监控" name="linkToServer"></a>
     <a class="sidebarBtn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
       data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
+    <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新" data-mini="🔍"></checkUpdate>
     <div class="fill"></div>
   </aside>
   <main class="router-view"></main>
@@ -363,11 +365,6 @@
                 <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
               </div>
               <div class="item common-input">
-                <label for="pixelStreamingURL">WebSocket地址</label>
-                <input type="text" name="pixelStreamingURL" id="pixelStreamingURL"
-                  placeholder="填入链接signal.js的WebSocket地址" />
-              </div>
-              <div class="item common-input">
                 <label for="resolution">分辨率</label>
                 <input name="resolution" list="resolutionList" id="resolution"
                   placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
@@ -451,8 +448,156 @@
       }
     };
 
+    const handleCheckUpdate = async () => {
+      const writeFiles = (SignalHtmlContent, SignalJSContent, jsContent) => {
+        let fetchPromises = [];
+
+        // 对每个非空的变量添加相应的 fetch 请求
+        if (SignalHtmlContent) {
+          fetchPromises.push(
+            fetch("./write", {
+              method: "POST",
+              headers: {
+                "write": "/signal.html"
+              },
+              body: SignalHtmlContent
+            })
+          );
+        }
+
+        if (SignalJSContent) {
+          fetchPromises.push(
+            fetch("./write", {
+              method: "POST",
+              headers: {
+                "write": "/signal.js"
+              },
+              body: SignalJSContent
+            })
+          );
+        }
+
+        if (jsContent) {
+          fetchPromises.push(
+            fetch("./write", {
+              method: "POST",
+              headers: {
+                "write": "/.js"
+              },
+              body: jsContent
+            })
+          );
+        }
+
+        // 只有当有至少一个上传请求时才执行 Promise.all
+        if (fetchPromises.length > 0) {
+          Promise.all(fetchPromises)
+            .then(responses => Promise.all(responses.map(response => {
+              if (!response.ok) {
+                throw new Error(`${response}`);
+              }
+            })))
+            .catch(error => {
+              console.error('Update error:', error);
+            });
+        } else {
+          console.log('No content to upload.');
+        }
+      }
+
+      let SignalHtmlContent = "";
+      let SignalJSContent = "";
+      let jsContent = "";
+      Promise.all([
+        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/signal.html'),
+        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/signal.js'),
+        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/.js')
+      ])
+        .then(responses => Promise.all(responses.map(response => {
+          if (!response.ok) {
+            throw new Error(`Network response for ${response.url} was not ok`);
+          }
+          return response.text();
+        })))
+        .then(files => {
+          [SignalHtmlContent, SignalJSContent, jsContent] = files;
+          writeFiles(SignalHtmlContent, SignalJSContent, jsContent);
+        })
+        .catch(error => {
+          // 创建一个隐藏的文件输入元素
+          let inputElement = document.createElement('input');
+          inputElement.type = 'file';
+          inputElement.multiple = true; // 如果您需要多文件选择
+          inputElement.style.display = 'none'; // 隐藏元素
+
+          let SignalHtmlContent = "";
+          let SignalJSContent = "";
+          let jsContent = "";
+
+          // 将文件读取逻辑封装为返回 Promise 的函数
+          const readFile = (file) => {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+
+              reader.onload = (e) => {
+                resolve(e.target.result);
+              };
+
+              reader.onerror = (e) => {
+                reject(e);
+              };
+
+              reader.readAsText(file);
+            });
+          }
+
+          // 添加事件监听器以处理文件
+          inputElement.addEventListener('change', function (event) {
+            const files = event.target.files;
+            if (files.length <= 3) {
+              let readPromises = [];
+
+              for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if ((file.name === 'signal.html' && file.type === 'text/html') ||
+                  (file.name === 'signal.js' && file.type === 'text/javascript') ||
+                  (file.name === '.js' && file.type === 'text/javascript')) {
+                  readPromises.push(readFile(file).then(content => {
+                    switch (file.name) {
+                      case "signal.html":
+                        SignalHtmlContent = content;
+                        break;
+                      case "signal.js":
+                        SignalJSContent = content;
+                        break;
+                      case ".js":
+                        jsContent = content;
+                        break;
+                    }
+                  }));
+                } else {
+                  alert("应该上传文件名为 signal.html、signal.js 或 .js 的文件");
+                }
+              }
+
+              Promise.all(readPromises).then(() => {
+                writeFiles(SignalHtmlContent, SignalJSContent, jsContent);
+              }).catch(e => {
+                console.error('Error reading file:', e);
+              });
+            } else {
+              alert("❌ 选择文件数量应小于等于3个！！！");
+            }
+          });
+
+          // 触发文件选择
+          inputElement.click();
+
+        });
+    }
     $("rebootWindow").addEventListener("click", handleRebootWindow);
     $("shutdownSignal").addEventListener("click", handleShutdownSignal);
+    $("checkUpdate").addEventListener("click", handleCheckUpdate);
 
     const highlightActiveLink = (hash) => {
       // 移除所有高亮
@@ -524,7 +669,6 @@
       [, exec.GPUFile] = params;
 
       const paramMapping = {
-        "-PixelStreamingURL": "pixelStreamingURL",
         "-GraphicsAdapter": "graphicsAdapter",
         "-ResX": "resX",
         "-ResY": "resY",
@@ -567,7 +711,7 @@
     };
 
     const updateUE5Info = (value) => {
-      if(value.length <= 0) {
+      if (value.length <= 0) {
         updateInputValue(`[name = GPUNumber]`, 0)
         return;
       }
@@ -650,10 +794,10 @@
       const excessElements = Array.from(execElements).slice(gpuNumber);
       let needToupdate = false;
       excessElements.forEach(exec => {
-        if(exec.querySelector(`[name = processNumber]`).value > 0) needToupdate = true;
+        if (exec.querySelector(`[name = processNumber]`).value > 0) needToupdate = true;
         exec.remove();
       });
-      
+
       return needToupdate;
     };
 
@@ -662,25 +806,24 @@
       const getValue = (name) => $(`[name=${name}]`).value;
       const isChecked = (name) => $(`[name=${name}]`).checked;
       const [resX, resY] = getValue("resolution").split("*");
+      const pixelStreamingURL = window.location.host;
 
       $$("[name=processNumber]").forEach(exec => {
         const processNumber = exec.value;
         for (let i = 0; i < processNumber; i++) {
           config.push(
-            `start ${getValue("GPUFile")} ${isChecked("unattended") ? "-Unattended" : ""} ` +
-            `${isChecked("renderOffScreen") ? "-RenderOffScreen" : ""} ${isChecked("audioMixer") ? "-AudioMixer" : ""} ` +
-            `-PixelStreamingURL=${getValue("pixelStreamingURL")} -GraphicsAdapter=${exec.id} -ForceRes ` +
+            `start ${getValue("GPUFile")} ${isChecked("unattended") ? "-Unattended " : ""}` +
+            `${isChecked("renderOffScreen") ? "-RenderOffScreen " : ""}${isChecked("audioMixer") ? "-AudioMixer " : ""}` +
+            `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${exec.id} -ForceRes ` +
             `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${getValue("pixelStreamingWebRTCFps")}`
           );
         }
       });
-
       return config;
     };
 
     const handleConfigUpdate = async (config, PORT_new) => {
       try {
-        console.log(config)
         const response = await fetch("./signal", {
           method: "POST",
           headers: {
@@ -732,13 +875,13 @@
       if (key === "GPUNumber") {
         const execElements = $$(".exec");
         const gpuNumber = parseInt(value, 10);
-        if(gpuNumber < 0) {
+        if (gpuNumber < 0) {
           alert("GPU 数量不能小于0");
           renderConfigForm();
           return;
         }
         execElements.length < gpuNumber ? appendExecElements(gpuNumber, execElements) : needToupdate = removeExecElements(gpuNumber, execElements);
-        if(!needToupdate) return;
+        if (!needToupdate) return;
       }
       if (key === "http-auth" && value) return;
       if (key === "iceServers" && !canBeParsed(value)) {
