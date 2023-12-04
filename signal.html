@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='deepskyblue'/></svg>">
   <style>
     :root {
       --main-bg-color-dark: #000000;
@@ -200,11 +202,8 @@
     #exec-input .switch-input {
       @media screen and (min-width: 425px) {
         width: calc(100% / 3);
-      }
-
-      @media screen and (min-width: 1200px) {
-        width: calc(100% / 3);
-        margin: 0;
+        margin-left: 0;
+        margin-right: 0;
       }
     }
 
@@ -271,7 +270,7 @@
   <aside class="sidebar">
     <a class="sidebarBtn" href="./signal.json" target="_blank" download="signal.json" data-normal="⬇️ 下载 signal.json"
       data-mini="⬇️" aria-label="下载 signal.json"></a>
-    <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow>
+    <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
     <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎">
     </shutdownSignal>
     <a class="sidebarBtn" href="#/updateConfig" data-normal="⚙️ signal.json" data-mini="⚙️" aria-label="signal.json"
@@ -413,7 +412,7 @@
       `;
     const runningServer = `
         <div id="runningServers-container">
-            <video is="peer-stream" id="ws://10.0.42.16:88" audio> </video>
+            <video is="peer-stream" audio> </video>
 
           <!-- WebRTC monitor -->
           <pre id="stats">Not connected</pre>    
@@ -451,57 +450,52 @@
     const handleCheckUpdate = async () => {
       const writeFiles = (SignalHtmlContent, SignalJSContent, jsContent) => {
         let fetchPromises = [];
+        const contents = [
+          { content: SignalHtmlContent, path: "/signal.html" },
+          { content: SignalJSContent, path: "/signal.js" },
+          { content: jsContent, path: "/.js" }
+        ];
 
-        // 对每个非空的变量添加相应的 fetch 请求
-        if (SignalHtmlContent) {
-          fetchPromises.push(
-            fetch("./write", {
-              method: "POST",
-              headers: {
-                "write": "/signal.html"
-              },
-              body: SignalHtmlContent
-            })
-          );
-        }
+        contents.forEach(({ content, path }) => {
+          if (content) {
+            fetchPromises.push(
+              fetch("./write", {
+                method: "POST",
+                headers: {
+                  "write": path
+                },
+                body: content
+              })
+            )
+          }
+        })
 
-        if (SignalJSContent) {
-          fetchPromises.push(
-            fetch("./write", {
-              method: "POST",
-              headers: {
-                "write": "/signal.js"
-              },
-              body: SignalJSContent
-            })
-          );
-        }
-
-        if (jsContent) {
-          fetchPromises.push(
-            fetch("./write", {
-              method: "POST",
-              headers: {
-                "write": "/.js"
-              },
-              body: jsContent
-            })
-          );
-        }
-
-        // 只有当有至少一个上传请求时才执行 Promise.all
         if (fetchPromises.length > 0) {
           Promise.all(fetchPromises)
             .then(responses => Promise.all(responses.map(response => {
               if (!response.ok) {
                 throw new Error(`${response}`);
+              } else {
+                const checkUpdate = $("checkUpdate");
+                checkUpdate.setAttribute("data-normal", "✅ 更新成功");
+                checkUpdate.setAttribute("data-mini", "✅");
+                checkUpdate.animate([{ opacity: 0 }, { opacity: 1 }], {
+                  duration: 200,
+                  iterations: 3,
+                  easing: "steps(2, jump-none)",
+                });
+                setTimeout(() => {
+                  checkUpdate.setAttribute("data-normal", "🔍 检查更新");
+                  checkUpdate.setAttribute("data-mini", "🔍");
+                }, 1000);
               }
             })))
             .catch(error => {
+              alert(`❌ 更新失败: ${error}`);
               console.error('Update error:', error);
             });
         } else {
-          console.log('No content to upload.');
+          console.log('No file to upload.');
         }
       }
 
@@ -524,17 +518,15 @@
           writeFiles(SignalHtmlContent, SignalJSContent, jsContent);
         })
         .catch(error => {
-          // 创建一个隐藏的文件输入元素
           let inputElement = document.createElement('input');
           inputElement.type = 'file';
-          inputElement.multiple = true; // 如果您需要多文件选择
-          inputElement.style.display = 'none'; // 隐藏元素
+          inputElement.multiple = true;
+          inputElement.style.display = 'none';
 
           let SignalHtmlContent = "";
           let SignalJSContent = "";
           let jsContent = "";
 
-          // 将文件读取逻辑封装为返回 Promise 的函数
           const readFile = (file) => {
             return new Promise((resolve, reject) => {
               const reader = new FileReader();
@@ -551,7 +543,6 @@
             });
           }
 
-          // 添加事件监听器以处理文件
           inputElement.addEventListener('change', function (event) {
             const files = event.target.files;
             if (files.length <= 3) {
@@ -590,12 +581,11 @@
             }
           });
 
-          // 触发文件选择
           inputElement.click();
 
         });
     }
-    $("rebootWindow").addEventListener("click", handleRebootWindow);
+    // $("rebootWindow").addEventListener("click", handleRebootWindow);
     $("shutdownSignal").addEventListener("click", handleShutdownSignal);
     $("checkUpdate").addEventListener("click", handleCheckUpdate);
 
