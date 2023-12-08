@@ -52,7 +52,7 @@
     }
 
     .sidebarBtn::before {
-      filter: sepia(100%) hue-rotate(180deg) saturate(500%);
+      filter: sepia(100%) hue-rotate(312deg) saturate(300%);
       content: attr(data-mini);
     }
 
@@ -124,6 +124,11 @@
       border-radius: 0.5rem;
     }
 
+    input:focus {
+      border: 1px solid #00bfff;
+      outline: none;
+    }
+
     .item {
       margin: 0.5rem 0;
       display: flex;
@@ -133,14 +138,14 @@
     }
 
     .common-input,
-    .auth-input,
+    #auth-input,
     .textarea-container {
       margin: 0.5rem 3%;
       width: 44%;
     }
 
     .common-input input,
-    .auth-input input {
+    #auth-input input {
       width: auto;
       margin: 0.7rem 0;
       height: 1.6rem;
@@ -235,7 +240,7 @@
       }
 
       .common-input,
-      .auth-input,
+      #auth-input,
       .textarea-container {
         margin: 0.5rem 1%;
         width: 48%;
@@ -280,9 +285,9 @@
     <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
     <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎">
     </shutdownSignal>
-    <a class="sidebarBtn" href="#/updateConfig" data-normal="⚙️ signal.json" data-mini="⚙️" aria-label="signal.json"
+    <a class="sidebarBtn" href="#/updateConfig" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
       name="linkToConfig"></a>
-    <a class="sidebarBtn" href=" " data-normal="🎥 视频监控" data-mini="🎥" aria-label="视频监控" name="linkToServer"></a>
+    <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
     <a class="sidebarBtn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
       data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
     <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新" data-mini="🔍"></checkUpdate>
@@ -315,7 +320,7 @@
       `;
     const updateConfig = `
         <form id="configForm">
-          <div class="item auth-input">
+          <div class="item" id="auth-input">
             <label for="auth">用户验证</label>
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
           </div>
@@ -455,12 +460,12 @@
     };
 
     const handleCheckUpdate = async () => {
-      const writeFiles = (SignalHtmlContent, SignalJSContent, jsContent) => {
+      const writeFiles = (SignalHtmlContent, SignalJSContent, PeerStreamContent) => {
         let fetchPromises = [];
         const contents = [
           { content: SignalHtmlContent, path: "/signal.html" },
           { content: SignalJSContent, path: "/signal.js" },
-          { content: jsContent, path: "/.js" }
+          { content: PeerStreamContent, path: "/peer-stream.js" }
         ];
 
         contents.forEach(({ content, path }) => {
@@ -482,9 +487,9 @@
             .then(responses => Promise.all(responses.map(response => {
               if (!response.ok) {
                 throw new Error(`${response}`);
-              } else {
-                handleUpdateSuccess($("checkUpdate"), {"data-normal": "🔍 检查更新", "data-mini": "🔍"})
               }
+              handleUpdateSuccess($("checkUpdate"), { "data-normal": "🔍 检查更新", "data-mini": "🔍" })
+              window.location.reload();
             })))
             .catch(error => {
               alert(`❌ 更新失败: ${error}`);
@@ -495,16 +500,16 @@
         }
       };
 
-      let SignalHtmlContent = "", SignalJSContent = "", jsContent = "";
+      let SignalHtmlContent = "", SignalJSContent = "", PeerStreamContent = "";
 
       const checkUpdate = $("checkUpdate");
       checkUpdate.setAttribute("data-normal", "⏳ 更新中...");
       checkUpdate.setAttribute("data-mini", "⏳");
       //先通过github仓库尝试获取，如果失败，允许用户本地上传
       Promise.all([
-        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/signal.html'),
-        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/signal.js'),
-        fetch('https://raw.githubusercontent.com/inveta/peer-stream/main/.js')
+        fetch('https://inveta.github.io/peer-stream/signal.html'),
+        fetch('https://inveta.github.io/peer-stream/signal.js'),
+        fetch('https://inveta.github.io/peer-stream/peer-stream.js')
       ])
         .then(responses => Promise.all(responses.map(response => {
           if (!response.ok) {
@@ -513,16 +518,14 @@
           return response.text();
         })))
         .then(files => {
-          [SignalHtmlContent, SignalJSContent, jsContent] = files;
-          writeFiles(SignalHtmlContent, SignalJSContent, jsContent);
+          [SignalHtmlContent, SignalJSContent, PeerStreamContent] = files;
+          writeFiles(SignalHtmlContent, SignalJSContent, PeerStreamContent);
         })
         .catch(error => {
           let inputElement = document.createElement('input');
           inputElement.type = 'file';
           inputElement.multiple = true;
           inputElement.style.display = 'none';
-
-          let SignalHtmlContent = "", SignalJSContent = "", jsContent = "";
 
           const readFile = (file) => {
             return new Promise((resolve, reject) => {
@@ -545,7 +548,7 @@
             const fileList = {
               'signal.html:text/html': content => SignalHtmlContent = content,
               'signal.js:text/javascript': content => SignalJSContent = content,
-              '.js:text/javascript': content => jsContent = content
+              'peer-stream.js:text/javascript': content => PeerStreamContent = content
             };
 
             if (files.length > 3) {
@@ -562,12 +565,12 @@
               if (fileList[`${file.name}:${file.type}`]) {
                 readPromises.push(readFile(file).then(fileList[`${file.name}:${file.type}`]));
               } else {
-                alert("应该上传文件名为 signal.html、signal.js 或 .js 的文件");
+                alert("应该上传文件名为 signal.html、signal.js 或 peer-stream.js 的文件");
               }
             }
 
             Promise.all(readPromises).then(() => {
-              writeFiles(SignalHtmlContent, SignalJSContent, jsContent);
+              writeFiles(SignalHtmlContent, SignalJSContent, PeerStreamContent);
             }).catch(e => {
               console.error('Error reading file:', e);
             });
@@ -622,7 +625,8 @@
     };
     //开关http验证
     const toggleAuthInput = () => {
-      $(".auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
+      $("#auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
+      $("#auth").focus();
     };
     //切换用户验证按钮显示方式
     const toggleAuthInfo = (event) => {
@@ -771,7 +775,7 @@
           const errorText = await response.text();
           throw new Error(errorText);
         }
-        handleUpdateSuccess($(`[name = linkToConfig]`), {"data-normal": "⚙️ signal.json", "data-mini": "⚙️"})
+        handleUpdateSuccess($(`[name = linkToConfig]`), { "data-normal": "⚙️ signal.json", "data-mini": "⚙️" })
         //PORT更新后，需要重新加载页面
         if (PORT_new) {
           const url = new URL(window.location);
