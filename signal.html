@@ -5,13 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='deepskyblue'/></svg>">
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='coral'/></svg>">
   <style>
     :root {
       --main-bg-color-dark: #000000;
       --font-color-dark: #ffffff;
       --sidabar-bg-color-dark: #708090;
-      --btn-hover-bg-color-dark: #1e1313;
+      --btn-icon-input-color: #FF7F50;
     }
 
     html {
@@ -99,12 +99,12 @@
     }
 
     input[type="checkbox"]:checked {
-      border-color: #00bfff;
+      border-color: var(--btn-icon-input-color);
     }
 
     input[type="checkbox"]:checked:before {
       left: 2rem;
-      background: #00bfff;
+      background: var(--btn-icon-input-color);
     }
 
     #configForm {
@@ -125,7 +125,7 @@
     }
 
     input:focus {
-      border: 1px solid #00bfff;
+      border: 1px solid var(--btn-icon-input-color);
       outline: none;
     }
 
@@ -314,8 +314,8 @@
     };
     const execTemp = template`
         <div class="common-input item exec">
-          <span>GPU ${"graphicsAdapter"} 进程个数</span>
-          <input name="processNumber" id="${"graphicsAdapter"}" type="number" value="${"GPUNumber"}" placeholder="请输入需要的进程个数"/>
+          <label for="GPU_${"graphicsAdapter"}">GPU ${"graphicsAdapter"} 进程个数</label>
+          <input name="processNumber" id="GPU_${"graphicsAdapter"}" type="number" value="${"GPUNumber"}" placeholder="请输入需要的进程个数"/>
         </div>
       `;
     const updateConfig = `
