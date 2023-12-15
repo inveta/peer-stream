@@ -1,27 +1,27 @@
 {
-	"env": false,
-	"PORT": 88,
-	"throttle": false,
-	"auth": false,
-	"one2one": false,
-	"UE5": [
-		"start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
-		"start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=1 -ProjectID=GPU_1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
-	],
-	"preload": 0,
-	"exeUeCoolTime": 60,
-	"UEVersion": 5,
-	"iceServers": [
-		{
-			"urls": [
-				"stun:stun.l.google.com:19302",
-				"stun:stun1.l.google.com:19302",
-				"stun:stun2.l.google.com:19302",
-				"stun:stun3.l.google.com:19302",
-				"stun:stun4.l.google.com:19302"
-			]
-		}
-	],
-	"boot": true,
-	"comment": "备注\n1234"
+  "env": false,
+  "PORT": 88,
+  "throttle": false,
+  "auth": false,
+  "one2one": false,
+  "UE5": [
+    "start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=0 -ProjectID=GPU_0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
+    "start C:/Users/admin/Desktop/gza/Windows/gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://127.0.0.1:88/ -GraphicsAdapter=1 -ProjectID=GPU_1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
+  ],
+  "preload": 0,
+  "exeUeCoolTime": 60,
+  "UEVersion": 5,
+  "iceServers": [
+    {
+      "urls": [
+        "stun:stun.l.google.com:19302",
+        "stun:stun1.l.google.com:19302",
+        "stun:stun2.l.google.com:19302",
+        "stun:stun3.l.google.com:19302",
+        "stun:stun4.l.google.com:19302"
+      ]
+    }
+  ],
+  "boot": false,
+  "comment": "备注\n1234"
 }
