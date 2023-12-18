@@ -301,20 +301,10 @@
         return false;
       }
     };
-    const template = (strings, ...keys) => {
-      return (...values) => {
-        const dict = values[values.length - 1] || {};
-        return strings.map((str, i) => {
-          if (i === strings.length - 1) return str;
-          const value = Number.isInteger(keys[i]) ? values[keys[i]] : dict[keys[i]];
-          return str + value;
-        }).join('');
-      };
-    };
-    const execTemp = template`
+    const execTemp = `
         <div class="common-input item exec">
-          <label for="GPU_${'graphicsAdapter'}">GPU ${'graphicsAdapter'} 进程个数</label>
-          <input name="processNumber" id="GPU_${'graphicsAdapter'}" type="number" value="${'GPUNumber'}" placeholder="请输入需要的进程个数"/>
+          <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
+          <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
         </div>
       `;
     const updateConfig = `
@@ -431,17 +421,6 @@
         btn.setAttribute('data-mini', btnContent['date-mini']);
       }, 1000);
     };
-    // const handleRebootWindow = async () => {
-    //   try {
-    //     await fetch("./exec", {
-    //       headers: {
-    //         exec: 'sudo shutdown -r now',
-    //       },
-    //     });
-    //   } catch (error) {
-    //     console.log("rebootWindow failed", error);
-    //   }
-    // };
 
     const handleShutdownSignal = async () => {
       try {
@@ -582,7 +561,6 @@
           inputElement.click();
         });
     };
-    // $("rebootWindow").addEventListener("click", handleRebootWindow);
     $('shutdownSignal').addEventListener('click', handleShutdownSignal);
     $('checkUpdate').addEventListener('click', handleCheckUpdate);
     //渲染页面主内容
@@ -632,13 +610,7 @@
     };
     const updateInputValue = (selector, value, isCheckbox = false) => {
       const input = $(selector);
-      if (input) {
-        if (isCheckbox) {
-          input.checked = value;
-        } else {
-          input.value = value;
-        }
-      }
+      if (input) isCheckbox ? input.checked = value : input.value = value;
     };
     //读取signal.json中的参数，对参数配置表单进行初始化渲染
     const renderConfigForm = () => {
@@ -681,18 +653,14 @@
         //渲染UE5部分的参数
         for (const item in shareInfo) {
           if (item === 'graphicsAdapter') {
-            if ($$('.exec').length > 0) {
-              $$('.exec').forEach(exec => {
-                $('#exec-container').removeChild(exec);
-              })
-            }
+            $$('.exec').forEach(exec => {
+              $('#exec-container').removeChild(exec);
+            })
             for (const gpuInfo of shareInfo.graphicsAdapter) {
-              const exec = str2dom(
-                execTemp({
-                  graphicsAdapter: gpuInfo[0],
-                  GPUNumber: gpuInfo[1],
-                })
-              ).querySelector('.exec');
+              let exec = str2dom(execTemp
+                .replaceAll("graphicsAdapter", gpuInfo[0])
+                .replaceAll("GPUNumber", gpuInfo[1])
+              ).querySelector('.exec')
               $('#exec-container').appendChild(exec);
             }
           } else {
@@ -799,12 +767,12 @@
 
       //加入一个UE5中的GPU进程数量输入框
       const appendExecElements = (gpuNumber, execElements) => {
-        const execInput = $('#exec-container');
         for (let i = execElements.length; i < gpuNumber; i++) {
-          const exec = str2dom(
-            execTemp({ graphicsAdapter: i, GPUNumber: 0 })
-          ).querySelector('.exec');
-          execInput.appendChild(exec);
+          let exec = str2dom(execTemp
+            .replaceAll("graphicsAdapter", i)
+            .replaceAll("GPUNumber", 0)
+          ).querySelector('.exec')
+          $('#exec-container').appendChild(exec);
         }
       };
       //移除多余UE5中的GPU进程数量输入框，且如果移除的输入框中，值不为0，就需要进行更新，删除多余的参数
@@ -812,39 +780,45 @@
         const excessElements = Array.from(execElements).slice(gpuNumber);
         let needToupdate = false;
         excessElements.forEach((exec) => {
-          if (exec.querySelector(`[name = processNumber]`).value > 0)
-            needToupdate = true;
+          if (exec.querySelector(`[name = processNumber]`).value > 0) needToupdate = true;
           exec.remove();
         });
-
         return needToupdate;
       };
 
-      let config = {};
-      let value =
-        event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-      let PORT_new = null;
-      let needToupdate = false;
-
-      if (event.target.id === 'GPUNumber') {
-        const gpuNumber = parseInt(value, 10);
-        if (gpuNumber < 0) {
-          alert('GPU 数量不能小于0');
-          renderConfigForm();
-          return;
+      const handlers = {
+        'GPUNumber': (value) => {
+          const gpuNumber = parseInt(value, 10);
+          if (gpuNumber < 0) {
+            alert('GPU 数量不能小于0');
+            renderConfigForm();
+            return true;
+          }
+          const execElements = $$('.exec');
+          let needsUpdate = false;
+          execElements.length < gpuNumber
+            ? appendExecElements(gpuNumber, execElements)
+            : (needsUpdate = removeExecElements(gpuNumber, execElements));
+          return needsUpdate;
+        },
+        'http-auth': (value) => {
+          return value;
+        },
+        'iceServers': (value) => {
+          if (!canBeParsed(value)) {
+            alert('iceServers格式有误！');
+            renderConfigForm();
+            return true;
+          }
+          return false;
         }
-        const execElements = $$('.exec');
-        execElements.length < gpuNumber
-          ? appendExecElements(gpuNumber, execElements)
-          : (needToupdate = removeExecElements(gpuNumber, execElements));
-        if (!needToupdate) return;
-      }
-      if (event.target.id === 'http-auth' && value) return;
-      if (event.target.id === 'iceServers' && !canBeParsed(value)) {
-        alert('iceServers格式有误！');
-        renderConfigForm();
-        return;
-      }
+      };
+
+      let config = {};
+      let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+      let PORT_new = null;
+
+      if (handlers[event.target.id] && handlers[event.target.id](value)) return;
       //对UE5内的参数修改要特殊处理
       if ($('#exec-container').contains(event.target)) {
         config['UE5'] = createUE5Config();
