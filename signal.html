@@ -131,7 +131,7 @@
       outline: none;
     }
 
-    .item {
+    item {
       margin: 0.5rem 0;
       display: flex;
       flex-direction: column;
@@ -302,55 +302,55 @@
       }
     };
     const execTemp = `
-        <div class="common-input item exec">
+        <item class="common-input exec">
           <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
           <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
-        </div>
+        </item>
       `;
     const updateConfig = `
         <form id="configForm">
-          <div class="item" id="auth-input">
+          <item id="auth-input">
             <label for="auth">用户验证</label>
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
-          </div>
-          <div class="item common-input">
+          </item>
+          <item class="common-input">
             <label for="PORT">端口</label>
             <input type="number" id="PORT" name="PORT" required />
-          </div>
-          <div class="item common-input">
+          </item>
+          <item class="common-input">
             <label for="preload">预加载个数</label>
             <input type="number" name="preload" id="preload" required />
-          </div>
-          <div class="item common-input">
+          </item>
+          <item class="common-input">
             <label for="exeUeCoolTime">冷却时间 (s) </label>
             <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
-          </div>
-          <div class="item switch-input">
+          </item>
+          <item class="switch-input">
             <label for="auth">http 认证</label>
             <input type="checkbox" id="http-auth" name="http-auth" />
-          </div>
-          <div class="item switch-input">
+          </item>
+          <item class="switch-input">
             <label for="one2one">一对一模式</label>
             <input type="checkbox" id="one2one" name="one2one" />
-          </div>
-          <div class="item switch-input">
+          </item>
+          <item class="switch-input">
             <label for="boot">
               <span>开机自启动</span>
             </label>
             <input type="checkbox" id="boot" name="boot" />
-          </div>
-          <div class="item switch-input">
+          </item>
+          <item class="switch-input">
             <label for="UEVersion">
               <span>旧版 UE4</span>
             </label>
             <input type="checkbox" id="UEVersion" name="UEVersion" />
-          </div>
+          </item>
           <div id="exec-container">
-            <div class="item common-input">
+            <item class="common-input">
               <label for="GPUFile">UE启动进程</label>
               <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
-            </div>
-            <div class="item common-input">
+            </item>
+            <item class="common-input">
               <label for="resolution">分辨率</label>
               <input name="resolution" list="resolutionList" id="resolution"
                 placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
@@ -362,29 +362,29 @@
                 <option value="800*600"></option>
                 <option value="640*480"></option>
               </datalist>
-            </div>
-            <div class="item common-input">
+            </item>
+            <item class="common-input">
               <label for="pixelStreamingWebRTCFps">渲染帧率</label>
               <input type="number" name="pixelStreamingWebRTCFps" id="pixelStreamingWebRTCFps"
                 placeholder="填入所需渲染出的帧率(应为数字)" />
-            </div>
-            <div class="item common-input">
+            </item>
+            <item class="common-input">
               <label for="GPUNumber">GPU数量</label>
               <input type="number" name="GPUNumber" id="GPUNumber"
                 placeholder="请填入需要的GPU数量"/>
-            </div>
-            <div class="item switch-input">
+            </item>
+            <item class="switch-input">
               <label for="unattended">忽略错误弹窗</label>
               <input type="checkbox" name="unattended" id="unattended" />
-            </div>
-            <div class="item switch-input">
+            </item>
+            <item class="switch-input">
               <label for="renderOffScreen">后台渲染UE</label>
               <input type="checkbox" name="renderOffScreen" id="renderOffScreen" />
-            </div>
-            <div class="item switch-input">
+            </item>
+            <item class="switch-input">
               <label for="audioMixer">传输音频</label>
               <input type="checkbox" name="audioMixer" id="audioMixer" />
-            </div>
+            </item>
           </div>
           <div class="textarea-container">
             <label for="iceServers">iceServers</label>
@@ -418,7 +418,7 @@
       });
       setTimeout(() => {
         btn.setAttribute('data-normal', btnContent['data-normal']);
-        btn.setAttribute('data-mini', btnContent['date-mini']);
+        btn.setAttribute('data-mini', btnContent['data-mini']);
       }, 1000);
     };
 
@@ -624,8 +624,8 @@
             unattended: false,
             renderOffScreen: false,
             audioMixer: false,
+            GPUFile: params[1]
           };
-          [, exec.GPUFile] = params;
           let boolParams = ['-Unattended', '-RenderOffScreen', '-AudioMixer'];
 
           for (const param of params) {
@@ -692,9 +692,8 @@
 
       return fetch('./signal.json')
         .then((res) => {
-          if (!res.ok) {
+          if (!res.ok)
             throw new Error(`HTTP error! status: ${res.status}`);
-          }
           return res.json();
         })
         .then((data) => {
@@ -708,28 +707,28 @@
     //上传处理后的signal参数
     const handleConfigUpdate = async (config, PORT_new) => {
       try {
-        const response = await fetch('./signal', {
+        fetch('./signal', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             signal: encodeURIComponent(JSON.stringify(config)),
           },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
-        }
-        handleUpdateSuccess($(`[name = linkToConfig]`), {
-          'data-normal': '⚙️ signal.json',
-          'data-mini': '⚙️',
-        });
-        //PORT更新后，需要重新加载页面
-        if (PORT_new) {
-          const url = new URL(window.location);
-          url.port = PORT_new;
-          window.location.replace(url);
-        }
+        }).then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+          }
+          console.log(response)
+          handleUpdateSuccess($(`[name = linkToConfig]`), {
+            'data-normal': '⚙️ 系统配置',
+            'data-mini': '⚙️',
+          });
+          if (PORT_new) {
+            const url = new URL(window.location);
+            url.port = PORT_new;
+            window.location.replace(url);
+          }
+        })
       } catch (error) {
         alert(`❌ 更新失败: ${error}`);
         renderConfigForm();
@@ -746,19 +745,14 @@
         let config = [];
         let [resX, resY] = getValue('resolution').split('*');
         let pixelStreamingURL = window.location.host;
-        let GPUFile = getValue('GPUFile');
-        let unattended = isChecked('audioMixer');
-        let renderOffScreen = isChecked('renderOffScreen');
-        let audioMixer = isChecked('audioMixer');
-        let pixelStreamingWebRTCFps = getValue('pixelStreamingWebRTCFps');
 
         $$('[name=processNumber]').forEach((processNumber) => {
           for (let i = 0; i < processNumber.value; i++) {
             config.push(
-              `start ${GPUFile} ${unattended ? '-Unattended ' : ''}` +
-              `${renderOffScreen ? '-RenderOffScreen ' : ''}${audioMixer ? '-AudioMixer ' : ''}` +
+              `start ${getValue('GPUFile')} ${isChecked('unattended') ? '-Unattended ' : ''}` +
+              `${isChecked('renderOffScreen') ? '-RenderOffScreen ' : ''}${isChecked('audioMixer') ? '-AudioMixer ' : ''}` +
               `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id.slice(4)} -ForceRes ` +
-              `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${pixelStreamingWebRTCFps}`
+              `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${getValue('pixelStreamingWebRTCFps')}`
             );
           }
         });
