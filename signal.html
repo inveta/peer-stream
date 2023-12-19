@@ -757,7 +757,7 @@
             config.push(
               `start ${GPUFile} ${unattended ? '-Unattended ' : ''}` +
               `${renderOffScreen ? '-RenderOffScreen ' : ''}${audioMixer ? '-AudioMixer ' : ''}` +
-              `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id} -ForceRes ` +
+              `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id.slice(4)} -ForceRes ` +
               `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${pixelStreamingWebRTCFps}`
             );
           }
