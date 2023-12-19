@@ -30,6 +30,7 @@ const { Server } = require("ws");
 
 G_StartUe5Pool = [];
 global.InitUe5Pool = function () {
+  G_StartUe5Pool = [];
   for (const key in global.UE5 || []) {
     const value = UE5[key];
     // 将命令行字符串转换为数组
@@ -561,22 +562,31 @@ require("readline")
 
 process.title = __filename;
 
-if (global.boot) {
-  switch (process.platform) {
-    case "win32": {
-      const signal_bat = require("path").join(
-        process.env.APPDATA,
-        "Microsoft",
-        "Windows",
-        "Start Menu",
-        "Programs",
-        "Startup",
-        "signal.bat"
-      );
-      const bat = `"${process.argv[0]}" "${__filename}"`;
-      require("fs").writeFile(signal_bat, bat, () => {});
+const signal_bat = require("path").join(
+  process.env.APPDATA,
+  "Microsoft",
+  "Windows",
+  "Start Menu",
+  "Programs",
+  "Startup",
+  "signal.bat"
+);
+
+global.Boot=function(){
+  if (global.boot) {
+    switch (process.platform) {
+      case "win32": {
+        const bat = `"${process.argv[0]}" "${__filename}"`;
+        return require("fs").promises.writeFile(signal_bat, bat);
+      }
     }
-    case "linux": {
+  }else{
+    switch (process.platform) {
+      case "win32": {
+        return require("fs").promises.rm(signal_bat,{force:true})
+      }
     }
   }
 }
+
+Boot();

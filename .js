@@ -59,7 +59,11 @@ async function Signal(request, response, server) {
 
 
   if (newSignal.UE5) {
-    global.InitUe5Pool();
+    await global.InitUe5Pool();
+  }
+
+  if (newSignal.boot !== undefined) {
+    await global.Boot()
   }
 
   await require('fs').promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
