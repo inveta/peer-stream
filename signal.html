@@ -290,17 +290,6 @@
   <main class="router-view"></main>
 
   <script type="text/javascript">
-    //字符串转dom
-    const str2dom = (obj) => new DOMParser().parseFromString(obj, 'text/html');
-    //判断字符串是否能被JSON解析器正确解析
-    const canBeParsed = (str) => {
-      try {
-        JSON.parse(str);
-        return true;
-      } catch (error) {
-        return false;
-      }
-    };
     const execTemp = `
         <item class="common-input exec">
           <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
@@ -334,15 +323,11 @@
             <input type="checkbox" id="one2one" name="one2one" />
           </item>
           <item class="switch-input">
-            <label for="boot">
-              <span>开机自启动</span>
-            </label>
+            <label for="boot">开机自启动</label>
             <input type="checkbox" id="boot" name="boot" />
           </item>
           <item class="switch-input">
-            <label for="UEVersion">
-              <span>旧版 UE4</span>
-            </label>
+            <label for="UEVersion">旧版 UE4</label>
             <input type="checkbox" id="UEVersion" name="UEVersion" />
           </item>
           <div id="exec-container">
@@ -435,13 +420,17 @@
     };
 
     const handleCheckUpdate = async () => {
-      const writeFiles = (SignalHtmlContent, SignalJSContent, PeerStreamContent) => {
-        let fetchPromises = [];
+      const writeFiles = (
+        SignalHtmlContent,
+        SignalJSContent,
+        PeerStreamContent
+      ) => {
         const contents = [
           { content: SignalHtmlContent, path: '/signal.html' },
           { content: SignalJSContent, path: '/signal.js' },
           { content: PeerStreamContent, path: '/peer-stream.js' },
         ];
+        let fetchPromises = [];
 
         contents.forEach(({ content, path }) => {
           if (content) {
@@ -482,7 +471,9 @@
         }
       };
 
-      let SignalHtmlContent, SignalJSContent, PeerStreamContent = '';
+      let SignalHtmlContent,
+        SignalJSContent,
+        PeerStreamContent = '';
 
       const checkUpdate = $('checkUpdate');
       checkUpdate.setAttribute('data-normal', '⏳ 更新中...');
@@ -532,9 +523,12 @@
           inputElement.addEventListener('change', (event) => {
             const files = event.target.files;
             const fileList = {
-              'signal.html:text/html': (content) => (SignalHtmlContent = content),
-              'signal.js:text/javascript': (content) => (SignalJSContent = content),
-              'peer-stream.js:text/javascript': (content) => (PeerStreamContent = content),
+              'signal.html:text/html': (content) =>
+                (SignalHtmlContent = content),
+              'signal.js:text/javascript': (content) =>
+                (SignalJSContent = content),
+              'peer-stream.js:text/javascript': (content) =>
+                (PeerStreamContent = content),
             };
 
             if (files.length > 3) {
@@ -548,11 +542,19 @@
 
             Array.from(files).forEach((file) => {
               const fileKey = `${file.name}:${file.type}`;
-              fileList[fileKey] ? readPromises.push(readFile(file).then(fileList[fileKey])) : alert('请上传 signal.html、signal.js 或 peer-stream.js 文件')
+              fileList[fileKey]
+                ? readPromises.push(readFile(file).then(fileList[fileKey]))
+                : alert(
+                  '请上传 signal.html、signal.js 或 peer-stream.js 文件'
+                );
             });
             Promise.all(readPromises)
               .then(() => {
-                writeFiles(SignalHtmlContent, SignalJSContent, PeerStreamContent);
+                writeFiles(
+                  SignalHtmlContent,
+                  SignalJSContent,
+                  PeerStreamContent
+                );
               })
               .catch((e) => {
                 console.error('Error reading file:', e);
@@ -597,7 +599,9 @@
     };
     //开关http验证
     const toggleAuthInput = () => {
-      $('#auth-input').style.display = $('#http-auth').checked ? 'flex' : 'none';
+      $('#auth-input').style.display = $('#http-auth').checked
+        ? 'flex'
+        : 'none';
       $('#auth').focus();
     };
     //切换用户验证按钮显示方式
@@ -610,7 +614,7 @@
     };
     const updateInputValue = (selector, value, isCheckbox = false) => {
       const input = $(selector);
-      if (input) isCheckbox ? input.checked = value : input.value = value;
+      if (input) isCheckbox ? (input.checked = value) : (input.value = value);
     };
     //读取signal.json中的参数，对参数配置表单进行初始化渲染
     const renderConfigForm = () => {
@@ -618,20 +622,23 @@
       const updateUE5Info = (value) => {
         //解析UE5参数字符串
         const parseUE5 = (UE5) => {
-          const toCamelCase = (str) => str.charAt(1).toLowerCase() + str.slice(2); //将大驼峰命名转为小驼峰命名
+          const toCamelCase = (str) =>
+            str.charAt(1).toLowerCase() + str.slice(2); //将大驼峰命名转为小驼峰命名
           const params = UE5.split(' ');
           const exec = {
             unattended: false,
             renderOffScreen: false,
             audioMixer: false,
-            GPUFile: params[1]
+            GPUFile: params[1],
           };
           let boolParams = ['-Unattended', '-RenderOffScreen', '-AudioMixer'];
 
           for (const param of params) {
             if (param.startsWith('-')) {
               const [key, value] = param.split('=');
-              exec[toCamelCase(key)] = boolParams.includes(key) ? true : value;
+              exec[toCamelCase(key)] = boolParams.includes(key)
+                ? true
+                : value;
             }
           }
           const { resX, resY, ...rest } = exec;
@@ -647,24 +654,35 @@
         shareInfo.graphicsAdapter = new Map();
         value.forEach((exec) => {
           const { graphicsAdapter } = parseUE5(exec);
-          shareInfo.graphicsAdapter.set(graphicsAdapter, (shareInfo.graphicsAdapter.get(graphicsAdapter) || 0) + 1);
+          shareInfo.graphicsAdapter.set(
+            graphicsAdapter,
+            (shareInfo.graphicsAdapter.get(graphicsAdapter) || 0) + 1
+          );
         });
         shareInfo.GPUNumber = shareInfo.graphicsAdapter.size;
         //渲染UE5部分的参数
         for (const item in shareInfo) {
           if (item === 'graphicsAdapter') {
-            $$('.exec').forEach(exec => {
+            $$('.exec').forEach((exec) => {
               $('#exec-container').removeChild(exec);
-            })
+            });
             for (const gpuInfo of shareInfo.graphicsAdapter) {
-              let exec = str2dom(execTemp
-                .replaceAll("graphicsAdapter", gpuInfo[0])
-                .replaceAll("GPUNumber", gpuInfo[1])
-              ).querySelector('.exec')
+              let exec = new DOMParser()
+                .parseFromString(
+                  execTemp
+                    .replaceAll('graphicsAdapter', gpuInfo[0])
+                    .replaceAll('GPUNumber', gpuInfo[1]),
+                  'text/html'
+                )
+                .querySelector('.exec');
               $('#exec-container').appendChild(exec);
             }
           } else {
-            updateInputValue(`[name="${item}"]`, shareInfo[`${item}`], $(`[name="${item}"]`)?.type === 'checkbox');
+            updateInputValue(
+              `[name="${item}"]`,
+              shareInfo[`${item}`],
+              $(`[name="${item}"]`)?.type === 'checkbox'
+            );
           }
         }
       };
@@ -672,7 +690,11 @@
         //对获取到的部分signal.json参数要进行特殊处理
         const handlers = {
           UE5: (value) => updateUE5Info(value),
-          iceServers: (value) => updateInputValue('[name=iceServers]', JSON.stringify(value, null, '\t')),
+          iceServers: (value) =>
+            updateInputValue(
+              '[name=iceServers]',
+              JSON.stringify(value, null, '\t')
+            ),
           auth: (value) => {
             if (typeof value === 'string') {
               updateInputValue('#auth', value);
@@ -682,18 +704,24 @@
               toggleAuthInput();
             }
           },
-          UEVersion: (value) => updateInputValue('[name=UEVersion]', value === 4.27, true),
+          UEVersion: (value) =>
+            updateInputValue('[name=UEVersion]', value === 4.27, true),
         };
 
         Object.keys(data).forEach((key) => {
-          handlers[key] ? handlers[key](data[key]) : updateInputValue(`[name="${key}"]`, data[key], $(`[name="${key}"]`)?.type === 'checkbox');
+          handlers[key]
+            ? handlers[key](data[key])
+            : updateInputValue(
+              `[name="${key}"]`,
+              data[key],
+              $(`[name="${key}"]`)?.type === 'checkbox'
+            );
         });
       };
 
       return fetch('./signal.json')
         .then((res) => {
-          if (!res.ok)
-            throw new Error(`HTTP error! status: ${res.status}`);
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           return res.json();
         })
         .then((data) => {
@@ -718,7 +746,6 @@
             const errorText = await response.text();
             throw new Error(errorText);
           }
-          console.log(response)
           handleUpdateSuccess($(`[name = linkToConfig]`), {
             'data-normal': '⚙️ 系统配置',
             'data-mini': '⚙️',
@@ -728,7 +755,7 @@
             url.port = PORT_new;
             window.location.replace(url);
           }
-        })
+        });
       } catch (error) {
         alert(`❌ 更新失败: ${error}`);
         renderConfigForm();
@@ -762,26 +789,31 @@
       //加入一个UE5中的GPU进程数量输入框
       const appendExecElements = (gpuNumber, execElements) => {
         for (let i = execElements.length; i < gpuNumber; i++) {
-          let exec = str2dom(execTemp
-            .replaceAll("graphicsAdapter", i)
-            .replaceAll("GPUNumber", 0)
-          ).querySelector('.exec')
+          let exec = new DOMParser()
+            .parseFromString(
+              execTemp
+                .replaceAll('graphicsAdapter', i)
+                .replaceAll('GPUNumber', 0),
+              'text/html'
+            )
+            .querySelector('.exec');
           $('#exec-container').appendChild(exec);
         }
       };
       //移除多余UE5中的GPU进程数量输入框，且如果移除的输入框中，值不为0，就需要进行更新，删除多余的参数
       const removeExecElements = (gpuNumber, execElements) => {
         const excessElements = Array.from(execElements).slice(gpuNumber);
-        let needToupdate = false;
+        let needToupdate = true;
         excessElements.forEach((exec) => {
-          if (exec.querySelector(`[name = processNumber]`).value > 0) needToupdate = true;
+          if (exec.querySelector(`[name = processNumber]`).value > 0)
+            needToupdate = false;
           exec.remove();
         });
         return needToupdate;
       };
 
       const handlers = {
-        'GPUNumber': (value) => {
+        GPUNumber: (value) => {
           const gpuNumber = parseInt(value, 10);
           if (gpuNumber < 0) {
             alert('GPU 数量不能小于0');
@@ -789,7 +821,9 @@
             return true;
           }
           const execElements = $$('.exec');
-          let needsUpdate = false;
+          let needsUpdate = true;
+          console.log(gpuNumber);
+          console.log(execElements);
           execElements.length < gpuNumber
             ? appendExecElements(gpuNumber, execElements)
             : (needsUpdate = removeExecElements(gpuNumber, execElements));
@@ -798,21 +832,36 @@
         'http-auth': (value) => {
           return value;
         },
-        'iceServers': (value) => {
-          if (!canBeParsed(value)) {
+        auth: (value) => {
+          if (!/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/.test(value)) {
+            alert(
+              '请输入正确的用户名和密码格式，例如：username:password。'
+            );
+            return true;
+          }
+          return false;
+        },
+        iceServers: (value) => {
+          try {
+            JSON.parse(value);
+            return false;
+          } catch (error) {
             alert('iceServers格式有误！');
             renderConfigForm();
             return true;
           }
-          return false;
-        }
+        },
       };
 
       let config = {};
-      let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+      let value =
+        event.target.type === 'checkbox'
+          ? event.target.checked
+          : event.target.value;
       let PORT_new = null;
 
-      if (handlers[event.target.id] && handlers[event.target.id](value)) return;
+      if (handlers[event.target.id] && handlers[event.target.id](value))
+        return;
       //对UE5内的参数修改要特殊处理
       if ($('#exec-container').contains(event.target)) {
         config['UE5'] = createUE5Config();
@@ -824,17 +873,13 @@
               PORT_new = value;
             break;
           case 'checkbox':
-            config[event.target.id === 'http-auth' ? 'auth' : event.target.id] = event.target.id === 'UEVersion' ? (value ? 4.27 : 5) : value;
+            config[
+              event.target.id === 'http-auth' ? 'auth' : event.target.id
+            ] = event.target.id === 'UEVersion' ? (value ? 4.27 : 5) : value;
             break;
           default:
-            if (event.target.name === 'auth') {
-              const authRule = /^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/;
-              if (!authRule.test(value)) {
-                alert('请输入正确的用户名和密码格式，例如：username:password。');
-                return;
-              }
-            }
-            config[event.target.id] = event.target.name === 'iceServers' ? JSON.parse(value) : value;
+            config[event.target.id] =
+              event.target.name === 'iceServers' ? JSON.parse(value) : value;
         }
       }
 
