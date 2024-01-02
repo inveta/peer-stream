@@ -769,6 +769,13 @@
         const getValue = (name) => $(`[name=${name}]`).value;
         const isChecked = (name) => $(`[name=${name}]`).checked;
 
+        const startCmds = {
+          'exe': 'start',
+          'sh': 'sh'
+        };
+
+        const filePath = getValue('GPUFile');
+        const startCmd = startCmds[filePath.slice(((filePath.lastIndexOf(".") - 1) >>> 0) + 2)];
         let config = [];
         let [resX, resY] = getValue('resolution').split('*');
         let pixelStreamingURL = window.location.host;
@@ -776,7 +783,7 @@
         $$('[name=processNumber]').forEach((processNumber) => {
           for (let i = 0; i < processNumber.value; i++) {
             config.push(
-              `start ${getValue('GPUFile')} ${isChecked('unattended') ? '-Unattended ' : ''}` +
+              `${startCmd} ${filePath} ${isChecked('unattended') ? '-Unattended ' : ''}` +
               `${isChecked('renderOffScreen') ? '-RenderOffScreen ' : ''}${isChecked('audioMixer') ? '-AudioMixer ' : ''}` +
               `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id.slice(4)} -ForceRes ` +
               `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${getValue('pixelStreamingWebRTCFps')}`
