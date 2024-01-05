@@ -459,7 +459,7 @@ function print() {
     });
   });
 
-  const feList = [...PLAYER.clients].filter((fe) => !fe.ue);
+  const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   if (feList.length) {
     console.log("idle players:");
     logs.push([""])
