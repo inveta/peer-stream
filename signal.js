@@ -2,9 +2,7 @@
 
 Object.assign(global, require("./signal.json"));
 
-require("child_process").exec(
-  `start http://localhost:${PORT}/signal.html#/updateConfig`
-);
+
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
@@ -434,24 +432,35 @@ setInterval(() => {
   });
 }, 30 * 1000);
 
+
+
+// 内网IP地址
+const nets = require('os').networkInterfaces();
+global.address = Object.values(nets).flat()
+  .find(x => x.family === 'IPv4' && !x.internal)?.address
+
+require("child_process").exec(
+  `start http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`
+);
+
 // 打印映射关系
 function print() {
   console.clear();
-  const logs = [];
+  const logs = [{ type: 'signal', address, PORT }];
 
   ENGINE.clients.forEach((ue) => {
     const log = {
-      type: "UE",
+      type: "UE:",
       address: ue.req.socket.remoteAddress,
-      port: ue.req.socket.remotePort,
+      PORT: ue.req.socket.remotePort,
       url: ue.req.url
     };
     logs.push(log)
     ue.fe.forEach((fe) => {
       const log = {
-        type: "peer-stream",
+        type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
-        port: fe.req.socket.remotePort,
+        PORT: fe.req.socket.remotePort,
         url: fe.req.url
       }
       logs.push(log)
@@ -460,12 +469,12 @@ function print() {
 
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   if (feList.length) {
-    logs.push({ type: "idle players" })
+    logs.push({ type: "idle:" })
     feList.forEach((fe) => {
       const log = {
-        type: "peer-stream",
+        type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
-        port: fe.req.socket.remotePort,
+        PORT: fe.req.socket.remotePort,
         url: fe.req.url
       }
       logs.push(log)
@@ -476,7 +485,8 @@ function print() {
     a.send(JSON.stringify(logs))
   })
   console.table(logs)
-  console.log(`http://localhost:${PORT}/signal.html#/updateConfig`)
+  // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`)
+  // console.log(__filename)
 }
 
 let lastPreStart = new Date(0);
