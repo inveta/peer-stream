@@ -446,14 +446,14 @@ require("child_process").exec(
 // 打印映射关系
 function print() {
   console.clear();
-  const logs = [{ type: 'signal', address, PORT }];
+  const logs = [{ type: 'signal', address, PORT, path: __dirname }];
 
   ENGINE.clients.forEach((ue) => {
     const log = {
       type: "UE:",
       address: ue.req.socket.remoteAddress,
       PORT: ue.req.socket.remotePort,
-      url: ue.req.url
+      path: ue.req.url
     };
     logs.push(log)
     ue.fe.forEach((fe) => {
@@ -461,7 +461,7 @@ function print() {
         type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
-        url: fe.req.url
+        path: fe.req.url
       }
       logs.push(log)
     });
@@ -469,13 +469,13 @@ function print() {
 
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   if (feList.length) {
-    logs.push({ type: "idle:" })
+    logs.push({ type: "idle:", address: '0.0.0.0', PORT: 0, path: '.' })
     feList.forEach((fe) => {
       const log = {
         type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
-        url: fe.req.url
+        path: fe.req.url
       }
       logs.push(log)
     });
