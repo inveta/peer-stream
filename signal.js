@@ -462,7 +462,7 @@ function print() {
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue);
   if (feList.length) {
     console.log("idle players:");
-    logs.push([])
+    logs.push([""])
     feList.forEach((fe) => {
       const log = [
         "     ",
