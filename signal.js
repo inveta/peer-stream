@@ -437,39 +437,37 @@ setInterval(() => {
 // 打印映射关系
 function print() {
   console.clear();
-  console.log();
   const logs = [];
 
   ENGINE.clients.forEach((ue) => {
-    const log = [
-      "",
-      ue.req.socket.remoteAddress,
-      ue.req.socket.remotePort,
-      ue.req.url];
-    console.log(...log);
+    const log = {
+      type: "UE",
+      address: ue.req.socket.remoteAddress,
+      port: ue.req.socket.remotePort,
+      url: ue.req.url
+    };
     logs.push(log)
     ue.fe.forEach((fe) => {
-      const log = [
-        "     ",
-        fe.req.socket.remoteAddress,
-        fe.req.socket.remotePort,
-        fe.req.url]
-      console.log(...log);
+      const log = {
+        type: "peer-stream",
+        address: fe.req.socket.remoteAddress,
+        port: fe.req.socket.remotePort,
+        url: fe.req.url
+      }
       logs.push(log)
     });
   });
 
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   if (feList.length) {
-    console.log("idle players:");
-    logs.push([""])
+    logs.push({ type: "idle players" })
     feList.forEach((fe) => {
-      const log = [
-        "     ",
-        fe.req.socket.remoteAddress,
-        fe.req.socket.remotePort,
-        fe.req.url]
-      console.log(...log);
+      const log = {
+        type: "peer-stream",
+        address: fe.req.socket.remoteAddress,
+        port: fe.req.socket.remotePort,
+        url: fe.req.url
+      }
       logs.push(log)
     });
   }
@@ -477,6 +475,8 @@ function print() {
   EXECUE.clients.forEach(a => {
     a.send(JSON.stringify(logs))
   })
+  console.table(logs)
+  console.log(`http://localhost:${PORT}/signal.html#/updateConfig`)
 }
 
 let lastPreStart = new Date(0);
