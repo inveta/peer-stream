@@ -162,8 +162,8 @@ function InitExecUe() {
     socket.isAlive = true;
     socket.on("pong", heartbeat);
   });
-  EXECUE.on("onclose", () => { });
-  EXECUE.on("error", () => { });
+
+  print();
 }
 
 InitExecUe();
