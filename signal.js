@@ -161,9 +161,9 @@ function InitExecUe() {
 
     socket.isAlive = true;
     socket.on("pong", heartbeat);
+    print();
   });
 
-  print();
 }
 
 InitExecUe();
