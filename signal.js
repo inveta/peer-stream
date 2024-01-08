@@ -1,4 +1,4 @@
-"5.1.2";
+"5.1.3";
 
 Object.assign(global, require("./signal.json"));
 
@@ -446,7 +446,7 @@ require("child_process").exec(
 // 打印映射关系
 function print() {
   console.clear();
-  const logs = [{ type: 'signal', address, PORT, path: __dirname }];
+  const logs = [{ type: 'Signal', address, PORT, path: __dirname }];
 
   ENGINE.clients.forEach((ue) => {
     const log = {
@@ -458,7 +458,7 @@ function print() {
     logs.push(log)
     ue.fe.forEach((fe) => {
       const log = {
-        type: 'peer-stream',
+        type: 'Peer Stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url
@@ -472,7 +472,7 @@ function print() {
     logs.push({ type: "idle:", address: '0.0.0.0', PORT: 0, path: '.' })
     feList.forEach((fe) => {
       const log = {
-        type: 'peer-stream',
+        type: 'Peer Stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url
@@ -569,7 +569,7 @@ require("readline")
     console.log(eval(line));
   });
 
-process.title = __filename;
+// process.title = __filename;
 
 const signal_bat = require("path").join(
   process.env.APPDATA,

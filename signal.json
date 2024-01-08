@@ -1,7 +1,6 @@
 {
 	"env": false,
 	"PORT": 88,
-	"throttle": false,
 	"auth": false,
 	"one2one": false,
 	"UE5": [
