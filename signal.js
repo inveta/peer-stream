@@ -485,9 +485,10 @@ function print() {
   })
   console.clear();
   console.table(logs)
-  // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`)
-  // console.log(__filename)
+
 }
+
+print();
 
 let lastPreStart = new Date(0);
 function Preload() {
