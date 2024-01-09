@@ -445,7 +445,6 @@ require("child_process").exec(
 
 // 打印映射关系
 function print() {
-  console.clear();
   const logs = [{ type: 'Signal', address, PORT, path: __dirname }];
 
   ENGINE.clients.forEach((ue) => {
@@ -484,6 +483,7 @@ function print() {
   EXECUE.clients.forEach(a => {
     a.send(JSON.stringify(logs))
   })
+  console.clear();
   console.table(logs)
   // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`)
   // console.log(__filename)
@@ -559,14 +559,23 @@ function PlayerQueueKeepAlive() {
 }
 
 PlayerQueueKeepAlive();
-// debug
+
+// command line
 require("readline")
   .createInterface({
     input: process.stdin,
     output: process.stdout,
   })
   .on("line", (line) => {
-    console.log(eval(line));
+    require('child_process').exec(
+      line || ' ',
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(stderr)
+        } else {
+          console.log(stdout)
+        }
+      });
   });
 
 // process.title = __filename;
