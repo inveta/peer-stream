@@ -591,7 +591,7 @@ const signal_bat = require("path").join(
   "signal.bat"
 );
 
-const signal_sh = require("path").join("/", "etc", "init.d", "signal.sh");
+const signal_sh = require("path").join("/", "etc", "profile.d", "signal.sh");
 
 global.Boot = async function () {
   if (global.boot) {
@@ -601,7 +601,7 @@ global.Boot = async function () {
         return fs.promises.writeFile(signal_bat, bat);
       }
       case "linux": {
-        const sh = `"${process.argv[0]}" "${__filename}"`;
+        const sh = `nohup "${process.argv[0]}" "${__filename}" &`;
         await fs.promises.writeFile(signal_sh, sh);
         await fs.promises.chmod(signal_sh, 0o777)
       }
