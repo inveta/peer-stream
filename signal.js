@@ -601,7 +601,7 @@ global.Boot = async function () {
         return fs.promises.writeFile(signal_bat, bat);
       }
       case "linux": {
-        const sh = `nohup "${process.argv[0]}" "${__filename}" &`;
+        const sh = `nohup "${process.argv[0]}" "${__filename}" > "${__dirname}/signal.log" &`;
         await fs.promises.writeFile(signal_sh, sh);
         await fs.promises.chmod(signal_sh, 0o777)
       }
