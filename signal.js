@@ -2,7 +2,7 @@
 
 Object.assign(global, require("./signal.json"));
 
-
+const fs = require('fs')
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
@@ -18,9 +18,9 @@ if (global.env) {
       (([key]) => key.startsWith("UE5_")).map(([key, value]) => value)
     ),
   };
-  require("fs").promises.writeFile("./signal.json", JSON.stringify(signal));
+  fs.promises.writeFile("./signal.json", JSON.stringify(signal));
   Object.assign(global, signal);
-  // require('fs').promises.rm('./.signal.js');
+  // fs.promises.rm('./.signal.js');
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 
@@ -251,7 +251,7 @@ global.serve = async (PORT) => {
     }
 
     // serve static files
-    const read = require("fs").createReadStream(
+    const read = fs.createReadStream(
       path.join(__dirname, path.normalize(req.url))
     );
     const types = {
@@ -598,21 +598,21 @@ global.Boot = async function () {
     switch (process.platform) {
       case "win32": {
         const bat = `"${process.argv[0]}" "${__filename}"`;
-        return require("fs").promises.writeFile(signal_bat, bat);
+        return fs.promises.writeFile(signal_bat, bat);
       }
       case "linux": {
         const sh = `"${process.argv[0]}" "${__filename}"`;
-        await require("fs").promises.writeFile(signal_sh, sh);
-        await require('fs').promises.chmod(signal_sh, 0o777)
+        await fs.promises.writeFile(signal_sh, sh);
+        await fs.promises.chmod(signal_sh, 0o777)
       }
     }
   } else {
     switch (process.platform) {
       case "win32": {
-        return require("fs").promises.rm(signal_bat, { force: true })
+        return fs.promises.rm(signal_bat, { force: true })
       }
       case "linux": {
-        return require("fs").promises.rm(signal_sh, { force: true });
+        return fs.promises.rm(signal_sh, { force: true });
       }
     }
   }
