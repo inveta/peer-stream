@@ -593,7 +593,7 @@ const signal_bat = require("path").join(
 
 const signal_sh = require("path").join("/", "etc", "init.d", "signal.sh");
 
-global.Boot = function () {
+global.Boot = async function () {
   if (global.boot) {
     switch (process.platform) {
       case "win32": {
@@ -603,17 +603,20 @@ global.Boot = function () {
       case "linux": {
         const bat = `"${process.argv[0]}" "${__filename}"`;
 
-        require("fs").promises.writeFile(signal_sh, bat);
+        await require("fs").promises.writeFile(signal_sh, bat);
 
-        require("child_process").exec(
-          "chmod +x " + signal_sh,
-          (error, stdout, stderr) => {
-            if (error) {
-              console.error(`执行错误: ${error}`);
+        await new Promise((res, rej) => {
+
+          require("child_process").exec(
+            "chmod +x " + signal_sh,
+            (error, stdout, stderr) => {
+              if (error) {
+                rej(`执行错误: ${stderr}`);
+              } else res(stdout);
             }
-          }
-        );
-        return Promise.resolve();
+          );
+        })
+        return 1;
       }
     }
   } else {
