@@ -582,7 +582,7 @@ require("readline")
 // process.title = __filename;
 
 const signal_bat = require("path").join(
-  process.env.APPDATA,
+  process.env.APPDATA || "",
   "Microsoft",
   "Windows",
   "Start Menu",
@@ -591,6 +591,8 @@ const signal_bat = require("path").join(
   "signal.bat"
 );
 
+const signal_sh = require("path").join("/", "etc", "init.d", "signal.sh");
+
 global.Boot = function () {
   if (global.boot) {
     switch (process.platform) {
@@ -598,11 +600,29 @@ global.Boot = function () {
         const bat = `"${process.argv[0]}" "${__filename}"`;
         return require("fs").promises.writeFile(signal_bat, bat);
       }
+      case "linux": {
+        const bat = `"${process.argv[0]}" "${__filename}"`;
+
+        require("fs").promises.writeFile(signal_sh, bat);
+
+        require("child_process").exec(
+          "chmod +x " + signal_sh,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.error(`执行错误: ${error}`);
+            }
+          }
+        );
+        return Promise.resolve();
+      }
     }
   } else {
     switch (process.platform) {
       case "win32": {
         return require("fs").promises.rm(signal_bat, { force: true })
+      }
+      case "linux": {
+        return require("fs").promises.rm(signal_sh, { force: true });
       }
     }
   }
