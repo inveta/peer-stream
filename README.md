@@ -25,7 +25,7 @@ start http://localhost:88/signal.html
 
 ## signal.json
 
-| env           | type     | default | usage                                                               |
+| options       | type     | default | usage                                                               |
 | ------------- | -------- | ------- | ------------------------------------------------------------------- |
 | PORT          | number   | 88      | WebSocket/HTTP port for player & UE5                                |
 | UE5           | string[] | []      | run command when player connected (UE5 auto start)                  |
@@ -33,7 +33,7 @@ start http://localhost:88/signal.html
 | auth          | string   | ''      | HTTP Basic Auth username:password                                   |
 | boot          | bool     | false   | node signal.js on system boot                                       |
 | exeUeCoolTime | number   | 60      | Time interval between starting the same UE instance again next time |
-| preload       | number   | 1       | Number of pre started UE instances                                  |
+| preload       | int      | 1       | Number of pre started UE instances                                  |
 
 ### Load Balance
 
