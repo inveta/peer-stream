@@ -601,22 +601,9 @@ global.Boot = async function () {
         return require("fs").promises.writeFile(signal_bat, bat);
       }
       case "linux": {
-        const bat = `"${process.argv[0]}" "${__filename}"`;
-
-        await require("fs").promises.writeFile(signal_sh, bat);
-
-        await new Promise((res, rej) => {
-
-          require("child_process").exec(
-            "chmod +x " + signal_sh,
-            (error, stdout, stderr) => {
-              if (error) {
-                rej(`执行错误: ${stderr}`);
-              } else res(stdout);
-            }
-          );
-        })
-        return 1;
+        const sh = `"${process.argv[0]}" "${__filename}"`;
+        await require("fs").promises.writeFile(signal_sh, sh);
+        await require('fs').promises.chmod(signal_sh, 0o777)
       }
     }
   } else {
