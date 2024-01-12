@@ -30,6 +30,10 @@
       background-color: var(--main-bg-color-dark);
     }
 
+    .router-view {
+      margin-left: 3rem;
+    }
+
     .sidebar {
       position: fixed;
       top: 0;
@@ -109,7 +113,6 @@
     }
 
     #configForm {
-      margin: 0 0 0 3rem;
       height: 98%;
       color: var(--font-color-dark);
       font-size: 1rem;
@@ -184,7 +187,6 @@
     #runningServers-container {
       display: flex;
       height: 100%;
-      margin-left: 3rem;
     }
 
     @media (max-width: 480px) {
@@ -199,7 +201,7 @@
       }
 
       #exec-container .switch-input {
-        width: calc(100% / 3);
+        width: calc(52% / 3);
         margin-left: 0;
         margin-right: 0;
       }
@@ -225,14 +227,6 @@
         margin: 0.5rem 3%;
         width: 94%;
       }
-
-      #configForm {
-        margin-left: 11rem;
-      }
-
-      #runningServers-container {
-        margin-left: 11rem;
-      }
     }
 
     @media (min-width: 1200px) {
@@ -249,6 +243,10 @@
 
       .switch-input {
         width: calc(50% / 4);
+      }
+
+      .router-view {
+        margin-left: 11rem;
       }
     }
 
@@ -267,6 +265,32 @@
       font-size: 1rem;
       color: var(--font-color-dark);
     }
+
+    #users {
+      margin: 0 1rem;
+      position: absolute;
+      top: 1rem;
+      width: calc(100% - 13rem);
+    }
+
+    table,
+    td,
+    th {
+      border: 1px solid #FFFFFF;
+      border-collapse: collapse;
+      color: #fff;
+    }
+
+    thead,
+    tfoot {
+      background-color: #333;
+      color: #fff;
+    }
+
+    td,
+    th {
+      padding: 4px;
+    }
   </style>
 </head>
 
@@ -282,6 +306,8 @@
     <a class="sidebarBtn" href="#/updateConfig" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
       name="linkToConfig"></a>
     <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
+    <a class="sidebarBtn" href="#/processList" data-normal="👤 进程列表" data-mini="👤" aria-label="进程列表"
+      name="linkToProcess"></a>
     <a class="sidebarBtn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
       data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
     <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新 12.15" data-mini="🔍"></checkUpdate>
@@ -386,8 +412,21 @@
           <video is="peer-stream" audio> </video>
 
           <!-- WebRTC monitor -->
-          <pre id="stats">Not connected</pre>    
+          <pre id="stats">Not connected</pre>
         </div>
+      `;
+    const processList = `
+        <table id="users">
+          <thead>
+            <tr>
+              <th>type</th>
+              <th>address</th>
+              <th>PORT</th>
+              <th>path</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       `;
     // DOM查询缓存
     const $ = (selector) => document.querySelector(selector);
@@ -590,6 +629,11 @@
           });
           $('[name = linkToServer]').classList.add('highlighted');
         },
+        "/processList": () => {
+          $('.router-view').innerHTML = usersList;
+          $('[name = linkToProcess]').classList.add('highlighted');
+          getProcess();
+        }
       };
 
       $$('[name^="linkTo"]').forEach((element) => {
@@ -893,6 +937,32 @@
       await handleConfigUpdate(config, PORT_new);
     };
 
+    const getProcess = () => {
+      const ws = new WebSocket('ws://localhost:88', 'exec-ue');
+      ws.onopen = function () {
+        console.info("✅", ws);
+      }
+
+      ws.onmessage = function (e) {
+        const userTable = $('#users').querySelector('tbody');
+        userTable.innerHTML = "";
+        let users = JSON.parse(e.data);
+        users.forEach((user) => {
+          let placeholder = document.createElement('tbody');
+          placeholder.innerHTML = `<tr>
+              <td>${user.type}</td>
+              <td>${user.address}</td>
+              <td>${user.PORT}</td>
+              <td>${user.path}</td>
+            </tr>`;
+          userTable.appendChild(placeholder.querySelector('tr'));
+        })
+      }
+
+      ws.onclose = function (e) {
+        console.warn(e);
+      }
+    }
     const aggregateStats = async () => {
       const statsReport = await ps.pc.getStats(null);
       stats.innerText = '';
