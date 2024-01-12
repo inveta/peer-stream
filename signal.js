@@ -581,17 +581,10 @@ require("readline")
 
 // process.title = __filename;
 
-const signal_bat = require("path").join(
-  process.env.APPDATA || "",
-  "Microsoft",
-  "Windows",
-  "Start Menu",
-  "Programs",
-  "Startup",
-  "signal.bat"
-);
+const signal_bat = process.env.APPDATA +
+  '\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\signal.bat';
 
-const signal_sh = require("path").join("/", "etc", "profile.d", "signal.sh");
+const signal_sh = "/etc/profile.d/signal.sh";
 
 global.Boot = async function () {
   if (global.boot) {
