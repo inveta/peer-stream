@@ -243,7 +243,7 @@ global.serve = async (PORT) => {
       auth = Buffer.from(auth || "", "base64").toString("utf-8");
       if (global.auth !== auth) {
         res.writeHead(401, {
-          "WWW-Authenticate": 'Basic realm="Authorization required"',
+          "WWW-Authenticate": 'Basic realm="Auth required"',
         });
         res.end("Auth failed !");
         return;
@@ -437,7 +437,7 @@ setInterval(() => {
 // 内网IP地址
 const nets = require('os').networkInterfaces();
 global.address = Object.values(nets).flat()
-  .find(x => x.family === 'IPv4' && !x.internal)?.address
+  .find(a => a.family === 'IPv4' && !a.internal)?.address
 
 require("child_process").exec(
   `start http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`
@@ -447,38 +447,32 @@ require("child_process").exec(
 function print() {
   const logs = [{ type: 'Signal', address, PORT, path: __dirname }];
 
+  const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
+  feList.forEach((fe) => {
+    logs.push({
+      type: 'Peer Stream',
+      address: fe.req.socket.remoteAddress,
+      PORT: fe.req.socket.remotePort,
+      path: fe.req.url
+    })
+  });
+
   ENGINE.clients.forEach((ue) => {
-    const log = {
+    logs.push({
       type: "UE:",
       address: ue.req.socket.remoteAddress,
       PORT: ue.req.socket.remotePort,
       path: ue.req.url
-    };
-    logs.push(log)
+    })
     ue.fe.forEach((fe) => {
-      const log = {
+      logs.push({
         type: 'Peer Stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url
-      }
-      logs.push(log)
+      })
     });
   });
-
-  const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
-  if (feList.length) {
-    logs.push({ type: "idle:", address: '0.0.0.0', PORT: 0, path: '.' })
-    feList.forEach((fe) => {
-      const log = {
-        type: 'Peer Stream',
-        address: fe.req.socket.remoteAddress,
-        PORT: fe.req.socket.remotePort,
-        path: fe.req.url
-      }
-      logs.push(log)
-    });
-  }
 
   EXECUE.clients.forEach(a => {
     a.send(JSON.stringify(logs))
