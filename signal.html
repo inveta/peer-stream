@@ -266,7 +266,7 @@
       color: var(--font-color-dark);
     }
 
-    #users {
+    #process {
       margin: 0 1rem;
       position: absolute;
       top: 1rem;
@@ -416,7 +416,7 @@
         </div>
       `;
     const processList = `
-        <table id="users">
+        <table id="process">
           <thead>
             <tr>
               <th>type</th>
@@ -944,18 +944,18 @@
       }
 
       ws.onmessage = function (e) {
-        const userTable = $('#users').querySelector('tbody');
-        userTable.innerHTML = "";
-        let users = JSON.parse(e.data);
-        users.forEach((user) => {
+        const processTable = $('#process').querySelector('tbody');
+        processTable.innerHTML = "";
+        let processes = JSON.parse(e.data);
+        processes.forEach((process) => {
           let placeholder = document.createElement('tbody');
           placeholder.innerHTML = `<tr>
-              <td>${user.type}</td>
-              <td>${user.address}</td>
-              <td>${user.PORT}</td>
-              <td>${user.path}</td>
+              <td>${process.type}</td>
+              <td>${process.address}</td>
+              <td>${process.PORT}</td>
+              <td>${process.path}</td>
             </tr>`;
-          userTable.appendChild(placeholder.querySelector('tr'));
+          processTable.appendChild(placeholder.querySelector('tr'));
         })
       }
 
