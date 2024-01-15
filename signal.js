@@ -1,8 +1,6 @@
-"5.1.2";
+'5.1.2';
 
-Object.assign(global, require("./signal.json"));
-
-
+Object.assign(global, require('./signal.json'));
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
@@ -15,16 +13,16 @@ if (global.env) {
     exeUeCoolTime: +process.env.exeUeCoolTime,
     UEVersion: +process.env.UEVersion,
     UE5: Object.entries(process.env).filter(
-      (([key]) => key.startsWith("UE5_")).map(([key, value]) => value)
+      (([key]) => key.startsWith('UE5_')).map(([key, value]) => value)
     ),
   };
-  require("fs").promises.writeFile("./signal.json", JSON.stringify(signal));
+  require('fs').promises.writeFile('./signal.json', JSON.stringify(signal));
   Object.assign(global, signal);
   // require('fs').promises.rm('./.signal.js');
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 
-const { Server } = require("ws");
+const { Server } = require('ws');
 
 G_StartUe5Pool = [];
 global.InitUe5Pool = function () {
@@ -32,7 +30,7 @@ global.InitUe5Pool = function () {
   for (const key in global.UE5 || []) {
     const value = UE5[key];
     // 将命令行字符串转换为数组
-    const args = value.split(" ");
+    const args = value.split(' ');
 
     // 使用正则表达式提取 -PixelStreamingURL 参数的值
     const match = value.match(/-PixelStreamingURL=([^ ]+)/);
@@ -42,7 +40,7 @@ global.InitUe5Pool = function () {
       console.error(`PixelStreamingURL not found. ${value}`);
       continue;
     }
-    const url = require("url");
+    const url = require('url');
     const pixelStreamingURL = match[1];
     const paseUrl = url.parse(pixelStreamingURL);
     paseUrl.pathname = key;
@@ -64,12 +62,12 @@ global.InitUe5Pool = function () {
     if (isIpAddress) {
       localCmd = false;
       modifiedArgs.shift();
-      startCmd = modifiedArgs.join(" ");
+      startCmd = modifiedArgs.join(' ');
       G_StartUe5Pool.push([localCmd, ipAddress, key, startCmd, new Date(0)]);
       continue;
     }
-    startCmd = modifiedArgs.join(" ");
-    G_StartUe5Pool.push([localCmd, "", key, startCmd, new Date(0)]);
+    startCmd = modifiedArgs.join(' ');
+    G_StartUe5Pool.push([localCmd, '', key, startCmd, new Date(0)]);
   }
 };
 function GetFreeUe5() {
@@ -85,7 +83,7 @@ function GetFreeUe5() {
     hasStartUp = false;
     for (ueClient of ENGINE.clients) {
       //websocket 获取的url前面会加上一个'/'
-      if ("/" + key == ueClient.req.url) {
+      if ('/' + key == ueClient.req.url) {
         hasStartUp = true;
         break;
       }
@@ -114,7 +112,7 @@ function GetFreeUe5() {
   return;
 }
 function getIPv4(ip) {
-  const net = require("net");
+  const net = require('net');
   if (net.isIPv6(ip)) {
     const match = ip.match(/::ffff:(\d+\.\d+\.\d+\.\d+)/);
     if (match) {
@@ -129,7 +127,7 @@ function StartExecUe() {
     const [localCmd, ipAddress, key, startCmd, lastDate, exeWs] = execUe5;
     //启动本地的UE
     if (localCmd) {
-      require("child_process").exec(
+      require('child_process').exec(
         startCmd,
         { cwd: __dirname },
         (error, stdout, stderr) => {
@@ -152,33 +150,32 @@ function InitExecUe() {
   //exec-ue的websocket连接管理
   global.EXECUE = new Server(
     { noServer: true, clientTracking: true },
-    () => { }
+    () => {}
   );
-  EXECUE.on("connection", (socket, req) => {
+  EXECUE.on('connection', (socket, req) => {
     socket.req = req;
 
     socket.isAlive = true;
-    socket.on("pong", heartbeat);
+    socket.on('pong', heartbeat);
     print();
   });
-
 }
 
 InitExecUe();
 
-global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => { });
+global.ENGINE = new Server({ noServer: true, clientTracking: true }, () => {});
 
-ENGINE.on("connection", (ue, req) => {
+ENGINE.on('connection', (ue, req) => {
   ue.req = req;
 
   ue.isAlive = true;
-  ue.on("pong", heartbeat);
+  ue.on('pong', heartbeat);
 
   ue.fe = new Set();
   // sent to UE5 as initial signal
   ue.send(
     JSON.stringify({
-      type: "config",
+      type: 'config',
       peerConnectionOptions: {
         iceServers: global.iceServers,
       },
@@ -188,7 +185,7 @@ ENGINE.on("connection", (ue, req) => {
   // 认领空闲的前端们
   for (const fe of PLAYER.clients) {
     if (!fe.ue) {
-      PLAYER.emit("connection", fe, fe.req);
+      PLAYER.emit('connection', fe, fe.req);
     }
   }
   print();
@@ -198,8 +195,8 @@ ENGINE.on("connection", (ue, req) => {
 
     // Convert incoming playerId to a string if it is an integer, if needed. (We support receiving it as an int or string).
 
-    if (msg.type === "ping") {
-      ue.send(JSON.stringify({ type: "pong", time: msg.time }));
+    if (msg.type === 'ping') {
+      ue.send(JSON.stringify({ type: 'pong', time: msg.time }));
       return;
     }
 
@@ -211,9 +208,9 @@ ENGINE.on("connection", (ue, req) => {
     if (!fe) return;
 
     delete msg.playerId; // no need to send it to the player
-    if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
+    if (['offer', 'answer', 'iceCandidate'].includes(msg.type)) {
       fe.send(JSON.stringify(msg));
-    } else if (msg.type === "disconnectPlayer") {
+    } else if (msg.type === 'disconnectPlayer') {
       fe.close(1011, msg.reason);
     } else {
     }
@@ -229,75 +226,75 @@ ENGINE.on("connection", (ue, req) => {
   ue.onerror;
 });
 
-const path = require("path");
+const path = require('path');
 
 global.serve = async (PORT) => {
-  const HTTP = require("http").createServer();
+  const HTTP = require('http').createServer();
 
-  HTTP.on("request", (req, res) => {
+  HTTP.on('request', (req, res) => {
     // websocket请求时不触发
 
     // Basic Authentication
     if (global.auth) {
-      let auth = req.headers.authorization?.replace("Basic ", "");
-      auth = Buffer.from(auth || "", "base64").toString("utf-8");
+      let auth = req.headers.authorization?.replace('Basic ', '');
+      auth = Buffer.from(auth || '', 'base64').toString('utf-8');
       if (global.auth !== auth) {
         res.writeHead(401, {
-          "WWW-Authenticate": 'Basic realm="Authorization required"',
+          'WWW-Authenticate': 'Basic realm="Authorization required"',
         });
-        res.end("Auth failed !");
+        res.end('Auth failed !');
         return;
       }
     }
 
     // serve static files
-    const read = require("fs").createReadStream(
+    const read = require('fs').createReadStream(
       path.join(__dirname, path.normalize(req.url))
     );
     const types = {
-      ".html": "text/html",
-      ".css": "text/css",
-      ".js": "text/javascript",
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
     };
     const type = types[path.extname(req.url)];
-    if (type) res.setHeader("Content-Type", type);
+    if (type) res.setHeader('Content-Type', type);
 
     read
-      .on("error", (err) => {
-        require("./.js")(req, res, HTTP)
+      .on('error', (err) => {
+        require('./.js')(req, res, HTTP)
           .then((result) => {
             if (!res.writableEnded) res.end(result);
           })
           .catch((err) => {
             res.writeHead(400);
-            res.end(String(err), () => { });
+            res.end(String(err), () => {});
           });
       })
-      .on("ready", () => {
+      .on('ready', () => {
         read.pipe(res);
       });
   });
 
-  HTTP.on("upgrade", (req, socket, head) => {
+  HTTP.on('upgrade', (req, socket, head) => {
     // WS子协议
-    if (req.headers["sec-websocket-protocol"] === "peer-stream") {
+    if (req.headers['sec-websocket-protocol'] === 'peer-stream') {
       PLAYER.handleUpgrade(req, socket, head, (fe) => {
-        PLAYER.emit("connection", fe, req);
+        PLAYER.emit('connection', fe, req);
       });
-    } else if (req.headers["sec-websocket-protocol"] === "exec-ue") {
+    } else if (req.headers['sec-websocket-protocol'] === 'exec-ue') {
       EXECUE.handleUpgrade(req, socket, head, (fe) => {
-        EXECUE.emit("connection", fe, req);
+        EXECUE.emit('connection', fe, req);
       });
     } else {
       ENGINE.handleUpgrade(req, socket, head, (fe) => {
-        ENGINE.emit("connection", fe, req);
+        ENGINE.emit('connection', fe, req);
       });
     }
   });
 
   return new Promise((res, rej) => {
     HTTP.listen(PORT ?? 88, res);
-    HTTP.once("error", (err) => {
+    HTTP.once('error', (err) => {
       rej(err);
     });
   });
@@ -311,7 +308,7 @@ global.PLAYER = new Server({
   noServer: true,
 });
 // every player
-PLAYER.on("connection", (fe, req) => {
+PLAYER.on('connection', (fe, req) => {
   fe.req = req;
 
   fe.isAlive = true;
@@ -326,7 +323,7 @@ PLAYER.on("connection", (fe, req) => {
 
   fe.send(
     JSON.stringify({
-      type: "seticeServers",
+      type: 'seticeServers',
       iceServers: global.iceServers,
     })
   );
@@ -336,7 +333,7 @@ PLAYER.on("connection", (fe, req) => {
     if (global.UEVersion && global.UEVersion === 4.27) {
       fe.send(
         JSON.stringify({
-          type: "playerConnected",
+          type: 'playerConnected',
           playerId: req.socket.remotePort,
           dataChannel: true,
           sfu: false,
@@ -345,7 +342,7 @@ PLAYER.on("connection", (fe, req) => {
     } else {
       fe.ue.send(
         JSON.stringify({
-          type: "playerConnected",
+          type: 'playerConnected',
           playerId: req.socket.remotePort,
           dataChannel: true,
           sfu: false,
@@ -368,12 +365,12 @@ PLAYER.on("connection", (fe, req) => {
     msg = JSON.parse(msg.data);
 
     msg.playerId = req.socket.remotePort;
-    if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
+    if (['offer', 'answer', 'iceCandidate'].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg));
-    } else if (msg.type === "pong") {
+    } else if (msg.type === 'pong') {
       fe.isAlive = true;
     } else {
-      fe.send("? " + msg.type);
+      fe.send('? ' + msg.type);
     }
   };
 
@@ -381,7 +378,7 @@ PLAYER.on("connection", (fe, req) => {
     if (fe.ue) {
       fe.ue.send(
         JSON.stringify({
-          type: "playerDisconnected",
+          type: 'playerDisconnected',
           playerId: req.socket.remotePort,
         })
       );
@@ -390,7 +387,7 @@ PLAYER.on("connection", (fe, req) => {
     // 当用户连接数大于ue实例的时候，有用户退出意味着可以，认领空闲的前端们
     for (const fe of PLAYER.clients) {
       if (!fe.ue) {
-        PLAYER.emit("connection", fe, fe.req);
+        PLAYER.emit('connection', fe, fe.req);
       }
     }
 
@@ -411,7 +408,7 @@ setInterval(() => {
 
     fe.send(
       JSON.stringify({
-        type: "ping",
+        type: 'ping',
       })
     );
     fe.isAlive = false;
@@ -421,26 +418,25 @@ setInterval(() => {
     if (ue.isAlive === false) return ue.close();
 
     ue.isAlive = false;
-    ue.ping("", false);
+    ue.ping('', false);
   });
 
   EXECUE.clients.forEach(function each(ws) {
     if (ws.isAlive === false) return ws.close();
 
     ws.isAlive = false;
-    ws.ping("", false);
+    ws.ping('', false);
   });
 }, 30 * 1000);
 
-
-
 // 内网IP地址
 const nets = require('os').networkInterfaces();
-global.address = Object.values(nets).flat()
-  .find(x => x.family === 'IPv4' && !x.internal)?.address
+global.address = Object.values(nets)
+  .flat()
+  .find((x) => x.family === 'IPv4' && !x.internal)?.address;
 
-require("child_process").exec(
-  `start http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`
+require('child_process').exec(
+  `start http://${address || 'localhost'}:${PORT}/signal.html#/config`
 );
 
 // 打印映射关系
@@ -450,42 +446,44 @@ function print() {
 
   ENGINE.clients.forEach((ue) => {
     const log = {
-      type: "UE:",
+      type: 'UE:',
       address: ue.req.socket.remoteAddress,
       PORT: ue.req.socket.remotePort,
-      path: ue.req.url
+      path: ue.req.url,
     };
-    logs.push(log)
+    logs.push(log);
     ue.fe.forEach((fe) => {
       const log = {
         type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
-        path: fe.req.url
-      }
-      logs.push(log)
+        path: fe.req.url,
+      };
+      logs.push(log);
     });
   });
 
-  const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
+  const feList = [...PLAYER.clients]
+    .filter((fe) => !fe.ue)
+    .concat(...EXECUE.clients);
   if (feList.length) {
-    logs.push({ type: "idle:", address: '0.0.0.0', PORT: 0, path: '.' })
+    logs.push({ type: 'idle:', address: '0.0.0.0', PORT: 0, path: '.' });
     feList.forEach((fe) => {
       const log = {
         type: 'peer-stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
-        path: fe.req.url
-      }
-      logs.push(log)
+        path: fe.req.url,
+      };
+      logs.push(log);
     });
   }
 
-  EXECUE.clients.forEach(a => {
-    a.send(JSON.stringify(logs))
-  })
-  console.table(logs)
-  // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/updateConfig`)
+  EXECUE.clients.forEach((a) => {
+    a.send(JSON.stringify(logs));
+  });
+  console.table(logs);
+  // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/config`)
   // console.log(__filename)
 }
 
@@ -532,7 +530,7 @@ function PlayerQueue() {
   }
   let seq = 1;
   let msg = {};
-  msg.type = "playerqueue";
+  msg.type = 'playerqueue';
   fe.forEach((fe) => {
     msg.seq = seq;
     seq = seq + 1;
@@ -560,42 +558,42 @@ function PlayerQueueKeepAlive() {
 
 PlayerQueueKeepAlive();
 // debug
-require("readline")
+require('readline')
   .createInterface({
     input: process.stdin,
     output: process.stdout,
   })
-  .on("line", (line) => {
+  .on('line', (line) => {
     console.log(eval(line));
   });
 
 process.title = __filename;
 
-const signal_bat = require("path").join(
+const signal_bat = require('path').join(
   process.env.APPDATA,
-  "Microsoft",
-  "Windows",
-  "Start Menu",
-  "Programs",
-  "Startup",
-  "signal.bat"
+  'Microsoft',
+  'Windows',
+  'Start Menu',
+  'Programs',
+  'Startup',
+  'signal.bat'
 );
 
 global.Boot = function () {
   if (global.boot) {
     switch (process.platform) {
-      case "win32": {
+      case 'win32': {
         const bat = `"${process.argv[0]}" "${__filename}"`;
-        return require("fs").promises.writeFile(signal_bat, bat);
+        return require('fs').promises.writeFile(signal_bat, bat);
       }
     }
   } else {
     switch (process.platform) {
-      case "win32": {
-        return require("fs").promises.rm(signal_bat, { force: true })
+      case 'win32': {
+        return require('fs').promises.rm(signal_bat, { force: true });
       }
     }
   }
-}
+};
 
-Boot().catch(err => { });
+Boot().catch((err) => {});
