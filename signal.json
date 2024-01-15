@@ -1,12 +1,11 @@
 {
 	"env": false,
 	"PORT": 88,
-	"throttle": false,
 	"auth": false,
 	"one2one": false,
 	"UE5": [
-		"start C:\\Users\\admin\\Desktop\\大古水电站二期0104\\Windows\\HuaDianDaGu.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
-		"start C:\\Users\\admin\\Desktop\\大古水电站二期0104\\Windows\\HuaDianDaGu.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
+		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
+		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
 	],
 	"preload": 0,
 	"exeUeCoolTime": 60,
@@ -22,6 +21,6 @@
 			]
 		}
 	],
-	"boot": false,
+	"boot": true,
 	"comment": "备注\n1234"
 }

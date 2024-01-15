@@ -1,13 +1,13 @@
 # 虚幻引擎 UE5 像素流 [中文](README-zh.md) [English](README.md)
 
-和官方臃肿不堪的像素流SDK相比，我们在官方的基础上做了大量的优化和精简，开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
+和官方臃肿不堪的像素流SDK相比，我们在官方的基础上做了大量的优化和精简，并加入了许多新功能，开发出了轻量、零依赖、开箱即用的软件套装，前端的peer-stream.js基于WebComponentsAPI，后端signal.js基于NodeJS和npm/ws。
 
  | 文件名         | 大小  | 作用                             |
  | -------------- | ----- | -------------------------------- |
- | signal.js      | 14 KB | 信令服务器入口文件，通过node启动 |
+ | signal.js      | 16 KB | 信令服务器入口文件，通过node启动 |
  | peer-stream.js | 22 KB | 浏览器SDK，一键开启。            |
  | signal.json    | 1 KB  | signal.js 的启动参数。           |
- | signal.html    | 20+KB | 在线 GUI 配置页面。              |
+ | signal.html    | 30+KB | 在线 GUI 配置页面。              |
 
 ## 示例
 
@@ -24,15 +24,12 @@ start http://localhost:88/signal.html
 
 ## signal.js 信令服务器
 
-signal.js 在官方库的基础上做了大量优化，并加入了许多新功能。
-
-- 文件体积 14KB。
+- 文件体积 15KB。
 - 读取signal.json配置。
 - 提供http文件服务，和WebSocket共享端口号。
 - 面向前端和面向UE5的端口号绑定，通过WebSocket子协议区分。
 - 通过环境变量统一传参，支持命令行或配置文件。
-- 提供密码认证服务。
-- 可以限制最大连接数。
+- 提供HTTP Basic用户名密码认证服务。
 - 支持多个UE5连接。
 - 控制台实时打印UE5和前端的多对多映射关系。
 - 对WebSocket连接做节流过滤，提高稳定性。
@@ -40,10 +37,13 @@ signal.js 在官方库的基础上做了大量优化，并加入了许多新功�
 - 前端连入时，可以自动启动UE5进程。
 - 多个UE5连入时，负载均衡。
 - 支持stun公网穿透，在公网间互连。
-- 控制台可输入调试代码，并打印计算结果。
+- 控制台可调式系统命令。
 - 定时发送心跳连接保活。
 - 前端的端口号与ID绑定。
-- 窗口标题等于当前路径，方便查找文件。
+- 即时打印当前上下文路径，方便查找文件。
+- 自动嗅探网络IP地址。
+- 向下兼容UE4。
+- 支持Windows和Linux下的开机自启动。
 
 ### signal.json 启动参数
 
@@ -51,15 +51,15 @@ signal.js 在官方库的基础上做了大量优化，并加入了许多新功�
 | ------------- | ---------- | ------ | -------------------------------- |
 | PORT          | 正整数     | 88     | WebSocket/HTTP 全局统一端口号    |
 | UE5           | 命令行列表 | []     | UE5自启动脚本池                  |
-| one2one       | 布尔       | false  | 限制UE5和前端一一映射            |
+| one2one       | 开关       | false  | 限制UE5和前端一一映射            |
 | auth          | 字符串     | ''     | HTTP Basic 认证的 "用户名:密码"  |
-| throttle      | 布尔       | false  | WebSocket 节流，避免频繁的重连   |
+| boot          | 开关       | false  | 是否随开机启动signal.js          |
 | exeUeCoolTime | 正整数     | 60     | 下次再启动同一个UE实例的时间间隔 |
 | preload       | 正整数     | 1      | 预启动UE实例的个数               |
+| iceServers    | 列表       | []     | 跨公网连接所需                   |
+| comment       | 字符串     | ''     | 备注                             |
 
 ### 负载均衡与UE5自启动
-
-`signal.js` 既支持多个前端连接，也支持多个UE5连接，此时前端和UE5的多对多映射关系是均衡负载的：前端会被引向最空闲的UE5进程。若想要限制一一映射关系，开启`one2one` 环境变量。最好提供 `UE5_*` 自启动命令行，更多实例参考 `signal.json`。流程图如下：
 
 ```mermaid
 flowchart TD;
@@ -109,15 +109,15 @@ start path/to/UE5.exe -{key}={value}
 
 常用的启动选项:
 
-| 参数                           | 类型 | 功能                         |
-| ------------------------------ | ---- | ---------------------------- |
-| -PixelStreamingURL=""          | URL* | 连接signal.js的WebSocket地址 |
-| -RenderOffScreen               | void | 后台渲染UE                   |
-| -Unattended                    | void | 忽略错误弹窗                 |
-| -GraphicsAdapter=0             | +int | 指定GPU                      |
-| -ForceRes -ResX=1280 -ResY=720 | px²  | 渲染分辨率                   |
-| -PixelStreamingWebRTCFps=30    | fps  | 渲染帧率                     |
-| -AudioMixer                    | void | 传输音频                     |
+| 参数                        | 类型 | 功能                         |
+| --------------------------- | ---- | ---------------------------- |
+| -PixelStreamingURL=""       | URL* | 连接signal.js的WebSocket地址 |
+| -RenderOffScreen            | void | 后台渲染UE                   |
+| -Unattended                 | void | 忽略错误弹窗                 |
+| -GraphicsAdapter=0          | +int | 指定GPU                      |
+| -ResX=1280 -ResY=720        | px²  | 渲染分辨率，搭配-ForceRes    |
+| -PixelStreamingWebRTCFps=30 | fps  | 渲染帧率                     |
+| -AudioMixer                 | void | 传输音频                     |
 
 ## peer-stream.js 前端开发包
 
@@ -195,12 +195,12 @@ ps.addEventListener('事件名称', e => {
 
 ## signal.html 配置页面
 
-- 文件体积 20+KB。
-- 在线可视化编辑 signal.json。
+- 文件体积 30+KB。
+- 在线可视化配置signal.json，实时生效。
 - 端口号与信令共享。
 - 在线预览peer-stream.js视频流。
 - 后台进程监控。
-- 命令行调试signal.js。
+- 实时监控所有用户和UE进程。
 
 ## IOS端Safari兼容
 

@@ -1,6 +1,8 @@
-'5.1.2';
+'5.1.3';
 
 Object.assign(global, require('./signal.json'));
+
+const fs = require('fs');
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
@@ -18,7 +20,7 @@ if (global.env) {
   };
   require('fs').promises.writeFile('./signal.json', JSON.stringify(signal));
   Object.assign(global, signal);
-  // require('fs').promises.rm('./.signal.js');
+  // fs.promises.rm('./.signal.js');
 }
 ////////////////////////////////// 2024年6月 删除 !!!!
 
@@ -441,51 +443,45 @@ require('child_process').exec(
 
 // 打印映射关系
 function print() {
-  console.clear();
-  const logs = [{ type: 'signal', address, PORT, path: __dirname }];
-
-  ENGINE.clients.forEach((ue) => {
-    const log = {
-      type: 'UE:',
-      address: ue.req.socket.remoteAddress,
-      PORT: ue.req.socket.remotePort,
-      path: ue.req.url,
-    };
-    logs.push(log);
-    ue.fe.forEach((fe) => {
-      const log = {
-        type: 'peer-stream',
-        address: fe.req.socket.remoteAddress,
-        PORT: fe.req.socket.remotePort,
-        path: fe.req.url,
-      };
-      logs.push(log);
-    });
-  });
+  const logs = [{ type: 'Signal', address, PORT, path: __dirname }];
 
   const feList = [...PLAYER.clients]
     .filter((fe) => !fe.ue)
     .concat(...EXECUE.clients);
-  if (feList.length) {
-    logs.push({ type: 'idle:', address: '0.0.0.0', PORT: 0, path: '.' });
-    feList.forEach((fe) => {
-      const log = {
-        type: 'peer-stream',
+  feList.forEach((fe) => {
+    logs.push({
+      type: 'Peer Stream',
+      address: fe.req.socket.remoteAddress,
+      PORT: fe.req.socket.remotePort,
+      path: fe.req.url,
+    });
+  });
+
+  ENGINE.clients.forEach((ue) => {
+    logs.push({
+      type: 'UE:',
+      address: ue.req.socket.remoteAddress,
+      PORT: ue.req.socket.remotePort,
+      path: ue.req.url,
+    });
+    ue.fe.forEach((fe) => {
+      logs.push({
+        type: 'Peer Stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url,
-      };
-      logs.push(log);
+      });
     });
-  }
+  });
 
   EXECUE.clients.forEach((a) => {
     a.send(JSON.stringify(logs));
   });
+  console.clear();
   console.table(logs);
-  // console.log(`http://${address || 'localhost'}:${PORT}/signal.html#/config`)
-  // console.log(__filename)
 }
+
+print();
 
 let lastPreStart = new Date(0);
 function Preload() {
@@ -567,7 +563,7 @@ require('readline')
     console.log(eval(line));
   });
 
-process.title = __filename;
+// process.title = __filename;
 
 const signal_bat = require('path').join(
   process.env.APPDATA,
@@ -579,7 +575,7 @@ const signal_bat = require('path').join(
   'signal.bat'
 );
 
-global.Boot = function () {
+global.Boot = async function () {
   if (global.boot) {
     switch (process.platform) {
       case 'win32': {
