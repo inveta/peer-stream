@@ -189,6 +189,48 @@
       height: 100%;
     }
 
+    video {
+      overflow: hidden;
+      height: calc(100vh - 2rem);
+      width: 100%;
+      margin: 1rem;
+    }
+
+    #stats {
+      position: absolute;
+      pointer-events: none;
+      margin: 1rem;
+      text-shadow: var(--btn-color-dark) 0 0 0.3em;
+      font-size: 1rem;
+      color: var(--font-color-dark);
+    }
+
+    #process {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: calc(100% - 5rem);
+    }
+
+    table,
+    td,
+    th {
+      border: 1px solid #FFFFFF;
+      border-collapse: collapse;
+      color: #fff;
+    }
+
+    thead,
+    tfoot {
+      background-color: #333;
+      color: #fff;
+    }
+
+    td,
+    th {
+      padding: 4px;
+    }
+
     @media (max-width: 480px) {
       html {
         font-size: 14px;
@@ -227,6 +269,10 @@
         margin: 0.5rem 3%;
         width: 94%;
       }
+
+      #process {
+        width: calc(100% - 13rem);
+      }
     }
 
     @media (min-width: 1200px) {
@@ -249,48 +295,6 @@
         margin-left: 11rem;
       }
     }
-
-    video {
-      overflow: hidden;
-      height: calc(100vh - 2rem);
-      width: 100%;
-      margin: 1rem;
-    }
-
-    #stats {
-      position: absolute;
-      pointer-events: none;
-      margin: 1rem;
-      text-shadow: var(--btn-color-dark) 0 0 0.3em;
-      font-size: 1rem;
-      color: var(--font-color-dark);
-    }
-
-    #process {
-      margin: 0 1rem;
-      position: absolute;
-      top: 1rem;
-      width: calc(100% - 13rem);
-    }
-
-    table,
-    td,
-    th {
-      border: 1px solid #FFFFFF;
-      border-collapse: collapse;
-      color: #fff;
-    }
-
-    thead,
-    tfoot {
-      background-color: #333;
-      color: #fff;
-    }
-
-    td,
-    th {
-      padding: 4px;
-    }
   </style>
 </head>
 
@@ -303,14 +307,14 @@
     <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
     <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎">
     </shutdownSignal>
-    <a class="sidebarBtn" href="#/updateConfig" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
+    <a class="sidebarBtn" href="#/config" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
       name="linkToConfig"></a>
     <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
-    <a class="sidebarBtn" href="#/processList" data-normal="👤 进程列表" data-mini="👤" aria-label="进程列表"
+    <a class="sidebarBtn" href="#/process" data-normal="👤 进程管理" data-mini="👤" aria-label="进程管理"
       name="linkToProcess"></a>
     <a class="sidebarBtn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
       data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
-    <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新 12.15" data-mini="🔍"></checkUpdate>
+    <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新 1.16" data-mini="🔍"></checkUpdate>
     <div class="fill"></div>
   </aside>
   <main class="router-view"></main>
@@ -322,7 +326,7 @@
           <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
         </item>
       `;
-    const updateConfig = `
+    const config = `
         <form id="configForm">
           <item id="auth-input">
             <label for="auth">用户验证</label>
@@ -415,7 +419,7 @@
           <pre id="stats">Not connected</pre>
         </div>
       `;
-    const processList = `
+    const process = `
         <table id="process">
           <thead>
             <tr>
@@ -607,8 +611,8 @@
     //渲染页面主内容
     const renderPageContent = async (pageHash) => {
       const actions = {
-        '/updateConfig': async () => {
-          $('.router-view').innerHTML = updateConfig;
+        '/config': async () => {
+          $('.router-view').innerHTML = config;
           await renderConfigForm();
           $('#auth').addEventListener('focus', () => toggleAuthInfo(event));
           $('#auth').addEventListener('blur', () => toggleAuthInfo(event));
@@ -629,8 +633,8 @@
           });
           $('[name = linkToServer]').classList.add('highlighted');
         },
-        "/processList": () => {
-          $('.router-view').innerHTML = processList;
+        "/process": () => {
+          $('.router-view').innerHTML = process;
           $('[name = linkToProcess]').classList.add('highlighted');
           getProcess();
         }
@@ -938,7 +942,8 @@
     };
 
     const getProcess = () => {
-      const ws = new WebSocket('ws://localhost:88', 'exec-ue');
+      const url = new URL(window.location);
+      const ws = new WebSocket(`ws://${url.hostname}:${url.port}`, `exec-ue`)
       ws.onopen = function () {
         console.info("✅", ws);
       }
