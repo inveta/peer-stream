@@ -3,6 +3,7 @@
 Object.assign(global, require("./signal.json"));
 
 const fs = require('fs')
+const child_process = require('child_process')
 
 ////////////////////////////////// 2024年6月 删除 !!!!
 if (global.env) {
@@ -129,7 +130,7 @@ function StartExecUe() {
     const [localCmd, ipAddress, key, startCmd, lastDate, exeWs] = execUe5;
     //启动本地的UE
     if (localCmd) {
-      require("child_process").exec(
+      child_process.exec(
         startCmd,
         { cwd: __dirname },
         (error, stdout, stderr) => {
@@ -440,7 +441,7 @@ const nets = require('os').networkInterfaces();
 global.address = Object.values(nets).flat()
   .find(a => a.family === 'IPv4' && !a.internal)?.address
 
-require("child_process").exec(
+child_process.exec(
   `start http://${address}:${PORT}/signal.html#/config`
 );
 
@@ -563,7 +564,7 @@ require("readline")
     output: process.stdout,
   })
   .on("line", (line) => {
-    require('child_process').exec(
+    child_process.exec(
       line || ' ',
       (error, stdout, stderr) => {
         if (error) {
@@ -623,4 +624,25 @@ global.killPlayer = async function (playerId) {
   fe.ue = null;
 
 	print();
+}
+
+
+global.killUE=async function(port){
+	let command = `netstat -ano | findstr "${port}.*:${PORT}"`
+	const PID = await new Promise((res,rej)=>{
+		child_process.exec(command, (err, stdout, stderr) => {
+			if(err)return rej(stderr)
+			const PID=			stdout.trim().split('\n')[0].trim().split(/\s+/).pop();
+			res(PID)
+		})
+	})
+
+	command = `taskkill /PID ${PID} /F`;
+	await new Promise((res,rej)=>{
+		child_process.exec(command, (err, stdout, stderr) => {
+			if (err) 
+				return rej(stderr);
+			res(stdout.trim());
+		});
+	})
 }

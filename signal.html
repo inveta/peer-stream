@@ -948,7 +948,8 @@
 
       ws.onmessage = function (e) {
         let logs = JSON.parse(e.data);
-        logs = logs.map(a=>`<tr>
+        logs = logs.map(a=>`
+          <tr>
             <td>${a.type}</td>
             <td>${a.address}</td>
             <td>${a.PORT}</td>
@@ -966,14 +967,20 @@
 
     async function tableClick(event){
       if(event.target.innerHTML==='断开'){
-        const PORT = event.target.previousElementSibling.previousElementSibling.innerText
+        const process = event.target.parentElement.children
+        const PORT = process[2].innerText
+        const eval = {
+          'signal.js':'process.exit(0)',
+          'Unreal Engine':`killUE(${PORT})`,
+          '	Peer Stream':`killPlayer(${PORT})`
+        }[process[0].innerText]
+
         await fetch('./eval', {
           headers: {
-            eval: encodeURIComponent(`killPlayer(${PORT})`),
+            eval: encodeURIComponent(eval),
           },
         }).then(r=>{
           if(!r.ok) throw(r.headers.get('error'))
-          // return r.text()
           handleUpdateSuccess($(`[name = linkToProcess]`));
         }).catch(err=>{
           alert(err)
