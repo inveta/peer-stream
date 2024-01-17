@@ -269,8 +269,9 @@ global.serve = async (PORT) => {
             if (!res.writableEnded) res.end(result);
           })
           .catch((err) => {
+						res.setHeader('error',String(err))
             res.writeHead(400);
-            res.end(String(err), () => { });
+            res.end('', () => { });
           });
       })
       .on("ready", () => {
@@ -445,12 +446,12 @@ require("child_process").exec(
 
 // 打印映射关系
 function print() {
-  const logs = [{ type: 'Signal', address, PORT, path: __dirname }];
+  const logs = [{ type: 'signal.js', address, PORT, path: __dirname }];
 
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   feList.forEach((fe) => {
     logs.push({
-      type: 'Peer Stream',
+      type: '	Peer Stream',
       address: fe.req.socket.remoteAddress,
       PORT: fe.req.socket.remotePort,
       path: fe.req.url
@@ -459,14 +460,14 @@ function print() {
 
   ENGINE.clients.forEach((ue) => {
     logs.push({
-      type: "UE:",
+      type: "Unreal Engine",
       address: ue.req.socket.remoteAddress,
       PORT: ue.req.socket.remotePort,
       path: ue.req.url
     })
     ue.fe.forEach((fe) => {
       logs.push({
-        type: 'Peer Stream',
+        type: '	Peer Stream',
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url
@@ -606,3 +607,20 @@ global.Boot = async function () {
 }
 
 Boot().catch(err => { });
+
+
+
+global.killPlayer = async function (playerId) {
+  const fe = [...PLAYER.clients].find(a => a.req.socket.remotePort === playerId)
+  if (!fe) throw 'peer-stream not found!'
+  fe.ue.send(
+    JSON.stringify({
+      type: "playerDisconnected",
+      playerId,
+    })
+  )
+  fe.ue.fe.delete(fe);
+  fe.ue = null;
+
+	print();
+}

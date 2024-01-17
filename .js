@@ -1,9 +1,9 @@
 
-module.exports = async function (request, response, server) {
+module.exports = async function (request, response, HTTP) {
 
   switch (request.url) {
     case "/signal": {
-      return Signal(request, response, server);
+      return Signal(request, response, HTTP);
 
       break;
     }
@@ -31,7 +31,7 @@ module.exports = async function (request, response, server) {
     }
 
     case "/write": {
-      return Write(request, response, server);
+      return Write(request, response, HTTP);
 
       break;
     }
@@ -39,7 +39,7 @@ module.exports = async function (request, response, server) {
 };
 
 // 修改整体配置
-async function Signal(request, response, server) {
+async function Signal(request, response, HTTP) {
 
   let newSignal = JSON.parse(decodeURIComponent(request.headers['signal']))
 
@@ -74,8 +74,8 @@ async function Signal(request, response, server) {
 
 
   if (newSignal.PORT) {
-    server.closeAllConnections()
-    server.close(() => { });
+    HTTP.closeAllConnections()
+    HTTP.close(() => { });
   }
 
 
@@ -84,7 +84,7 @@ async function Signal(request, response, server) {
 
 
 
-async function Write(req, res, server) {
+async function Write(req, res, HTTP) {
 
   const chunks = [];
 
@@ -106,3 +106,20 @@ async function Write(req, res, server) {
 
 
 }
+
+
+
+global.restartProcess = function () {
+  HTTP.closeAllConnections()
+  HTTP.close(() => {
+    console.log(1111)
+    require('child_process').spawn(
+      process.argv[0],
+      [process.argv[1], ...process.argv.slice(2)], {
+      stdio: 'inherit',
+      detached: true
+    }).unref();
+    process.exit();
+  });
+}
+

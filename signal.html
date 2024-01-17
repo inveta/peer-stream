@@ -212,12 +212,10 @@
       width: calc(100% - 5rem);
     }
 
-    table,
-    td,
-    th {
-      border: 1px solid #FFFFFF;
-      border-collapse: collapse;
+    table {
+      /* border-collapse: collapse; */
       color: #fff;
+      white-space: pre-wrap;
     }
 
     thead,
@@ -229,6 +227,11 @@
     td,
     th {
       padding: 4px;
+    }
+
+    td:last-child:hover{
+      cursor: pointer;
+      color: var(--btn-icon-input-color);
     }
 
     @media (max-width: 480px) {
@@ -305,8 +308,7 @@
     <a class="sidebarBtn" href="./signal.json" target="_blank" download="signal.json" data-normal="⬇️ 下载 signal.json"
       data-mini="⬇️" aria-label="下载 signal.json"></a>
     <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
-    <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎">
-    </shutdownSignal>
+    <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal>
     <a class="sidebarBtn" href="#/config" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
       name="linkToConfig"></a>
     <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
@@ -420,13 +422,14 @@
         </div>
       `;
     const process = `
-        <table id="process">
+        <table id="process" onclick="tableClick(event)">
           <thead>
             <tr>
-              <th>type</th>
-              <th>address</th>
-              <th>PORT</th>
-              <th>path</th>
+              <th>进程</th>
+              <th>IP地址</th>
+              <th>端口号</th>
+              <th>路径</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -436,7 +439,9 @@
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => document.querySelectorAll(selector);
     //更新成功提示
-    const handleUpdateSuccess = (btn, btnContent) => {
+    const handleUpdateSuccess = (btn) => {
+      let normal = btn.getAttribute('data-normal')
+      let mini = btn.getAttribute('data-mini')
       btn.setAttribute('data-normal', '✅ 更新成功');
       btn.setAttribute('data-mini', '✅');
       btn.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -445,8 +450,8 @@
         easing: 'steps(2, jump-none)',
       });
       setTimeout(() => {
-        btn.setAttribute('data-normal', btnContent['data-normal']);
-        btn.setAttribute('data-mini', btnContent['data-mini']);
+        btn.setAttribute('data-normal', normal);
+        btn.setAttribute('data-mini', mini);
       }, 1000);
     };
 
@@ -497,10 +502,7 @@
                   if (!response.ok) {
                     throw new Error(`${response}`);
                   }
-                  handleUpdateSuccess($('checkUpdate'), {
-                    'data-normal': '🔍 检查更新 12.15',
-                    'data-mini': '🔍',
-                  });
+                  handleUpdateSuccess($('checkUpdate'));
                   window.location.reload();
                 })
               )
@@ -794,10 +796,7 @@
             const errorText = await response.text();
             throw new Error(errorText);
           }
-          handleUpdateSuccess($(`[name = linkToConfig]`), {
-            'data-normal': '⚙️ 系统配置',
-            'data-mini': '⚙️',
-          });
+          handleUpdateSuccess($(`[name = linkToConfig]`));
           if (PORT_new) {
             const url = new URL(window.location);
             url.port = PORT_new;
@@ -942,32 +941,46 @@
     };
 
     const getProcess = () => {
-      const url = new URL(window.location);
-      const ws = new WebSocket(`ws://${url.hostname}:${url.port}`, `exec-ue`)
+      const ws = new WebSocket(`ws://${location.host}/Process`, `exec-ue`)
       ws.onopen = function () {
         console.info("✅", ws);
       }
 
       ws.onmessage = function (e) {
-        const processTable = $('#process').querySelector('tbody');
-        processTable.innerHTML = "";
-        let processes = JSON.parse(e.data);
-        processes.forEach((process) => {
-          let placeholder = document.createElement('tbody');
-          placeholder.innerHTML = `<tr>
-              <td>${process.type}</td>
-              <td>${process.address}</td>
-              <td>${process.PORT}</td>
-              <td>${process.path}</td>
-            </tr>`;
-          processTable.appendChild(placeholder.querySelector('tr'));
-        })
+        let logs = JSON.parse(e.data);
+        logs = logs.map(a=>`<tr>
+            <td>${a.type}</td>
+            <td>${a.address}</td>
+            <td>${a.PORT}</td>
+            <td>${a.path}</td>
+            <td>断开</td>
+          </tr>  `).join('');
+        $('table#process tbody').innerHTML = logs;
       }
 
       ws.onclose = function (e) {
         console.warn(e);
       }
+      
     }
+
+    async function tableClick(event){
+      if(event.target.innerHTML==='断开'){
+        const PORT = event.target.previousElementSibling.previousElementSibling.innerText
+        await fetch('./eval', {
+          headers: {
+            eval: encodeURIComponent(`killPlayer(${PORT})`),
+          },
+        }).then(r=>{
+          if(!r.ok) throw(r.headers.get('error'))
+          // return r.text()
+          handleUpdateSuccess($(`[name = linkToProcess]`));
+        }).catch(err=>{
+          alert(err)
+        })
+      }
+    }
+
     const aggregateStats = async () => {
       const statsReport = await ps.pc.getStats(null);
       stats.innerText = '';
