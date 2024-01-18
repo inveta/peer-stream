@@ -12,7 +12,7 @@
       :root {
         --main-bg-color-dark: #000000;
         --font-color-dark: #ffffff;
-        --sidabar-bg-color-dark: #708090;
+        --sidabar-bg-color-dark: #707070;
         --btn-icon-input-color: #ff7f50;
       }
 
@@ -106,7 +106,7 @@
         left: 0.15rem;
         top: 0.075rem;
         border-radius: 50%;
-        transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+        /* transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s; */
       }
 
       input[type="checkbox"]:checked {
@@ -320,8 +320,6 @@
         data-mini="⬇️"
         aria-label="下载 signal.json"
       ></a>
-      <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
-      <!-- <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal> -->
       <a
         class="sidebarBtn"
         href="#/config"
@@ -379,7 +377,7 @@
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
           </item>
           <item class="common-input">
-            <label for="PORT">端口</label>
+            <label for="PORT">端口号</label>
             <input type="number" id="PORT" name="PORT" required />
           </item>
           <item class="common-input">
@@ -484,6 +482,7 @@
       const $$ = (selector) => document.querySelectorAll(selector);
       //更新成功提示
       const handleUpdateSuccess = (btn) => {
+        // btn.getAnimations()[0]?.finish();
         let normal = btn.getAttribute("data-normal");
         let mini = btn.getAttribute("data-mini");
         btn.setAttribute("data-normal", "✅ 更新成功");
@@ -531,7 +530,7 @@
                       throw new Error(`${response}`);
                     }
                     handleUpdateSuccess($("checkUpdate"));
-                    window.location.reload();
+                    // window.location.reload();
                   })
                 )
               )
@@ -646,9 +645,7 @@
           });
           ps.addEventListener("message", (e) => {});
           ps.addEventListener("suspend", (e) => {});
-          ps.addEventListener("playerdisconnected", (e) => {
-            console.log("playerdisconnected");
-          });
+
           $("[name = linkToServer]").classList.add("highlighted");
         },
         "#/process": () => {
@@ -786,17 +783,16 @@
       };
       //上传处理后的signal参数
       const handleConfigUpdate = async (config, PORT_new) => {
-        try {
-          fetch("./signal", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              signal: encodeURIComponent(JSON.stringify(config)),
-            },
-          }).then(async (response) => {
+        fetch("./signal", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            signal: encodeURIComponent(JSON.stringify(config)),
+          },
+        })
+          .then((response) => {
             if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(errorText);
+              throw response.headers.get("error");
             }
             handleUpdateSuccess($(`[name = linkToConfig]`));
             if (PORT_new) {
@@ -804,12 +800,12 @@
               url.port = PORT_new;
               window.location.replace(url);
             }
+          })
+          .catch((error) => {
+            alert(error);
+            renderConfigForm();
+            console.error(error);
           });
-        } catch (error) {
-          alert(`❌ 更新失败: ${error}`);
-          renderConfigForm();
-          console.error("updating config", error);
-        }
       };
       //对需要上传的signal参数进行处理并准备上传
       const submitConfig = async (event) => {
