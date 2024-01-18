@@ -190,7 +190,7 @@
         margin: 0.7rem 0;
       }
 
-      #runningServers-container {
+      peer-stream {
         display: flex;
         height: 100%;
       }
@@ -456,12 +456,12 @@
         </form> 
       `;
       const runningServer = `
-        <div id="runningServers-container">
+        <peer-stream>
           <video is="peer-stream" audio> </video>
 
           <!-- WebRTC monitor -->
           <pre id="stats">Not connected</pre>
-        </div>
+        </peer-stream>
       `;
       const process = `
         <table id="process" onclick="tableClick(event)">
@@ -527,7 +527,7 @@
                 Promise.all(
                   responses.map((response) => {
                     if (!response.ok) {
-                      throw new Error(`${response}`);
+                      throw response.headers.get('error');
                     }
                     handleUpdateSuccess($("checkUpdate"));
                     // window.location.reload();
@@ -783,7 +783,7 @@
       };
       //上传处理后的signal参数
       const handleConfigUpdate = async (config, PORT_new) => {
-        fetch("./signal", {
+        return fetch("./signal", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -791,15 +791,10 @@
           },
         })
           .then((response) => {
-            if (!response.ok) {
-              throw response.headers.get("error");
-            }
+            if (!response.ok) throw response.headers.get("error");
+
             handleUpdateSuccess($(`[name = linkToConfig]`));
-            if (PORT_new) {
-              const url = new URL(window.location);
-              url.port = PORT_new;
-              window.location.replace(url);
-            }
+            if (PORT_new) location.port = PORT_new;
           })
           .catch((error) => {
             alert(error);
