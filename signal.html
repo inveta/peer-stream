@@ -1,334 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='coral'/></svg>"
+    />
+    <style>
+      :root {
+        --main-bg-color-dark: #000000;
+        --font-color-dark: #ffffff;
+        --sidabar-bg-color-dark: #708090;
+        --btn-icon-input-color: #ff7f50;
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='coral'/></svg>" />
-  <style>
-    :root {
-      --main-bg-color-dark: #000000;
-      --font-color-dark: #ffffff;
-      --sidabar-bg-color-dark: #708090;
-      --btn-icon-input-color: #ff7f50;
-    }
-
-    html {
-      font-size: calc(14px + (100vw - 480px) * (3 / 720));
-    }
-
-    html::-webkit-scrollbar,
-    textarea::-webkit-scrollbar {
-      display: none;
-    }
-
-    body {
-      height: 100vh;
-      width: 100vw;
-      margin: 0;
-      background-color: var(--main-bg-color-dark);
-    }
-
-    .router-view {
-      margin-left: 3rem;
-    }
-
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 3rem;
-      font-size: 1rem;
-      z-index: 4;
-      color: #000000;
-    }
-
-    .sidebarBtn {
-      height: 64px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: var(--sidabar-bg-color-dark);
-      text-decoration: none;
-      color: black;
-      cursor: pointer;
-    }
-
-    .sidebarBtn::before {
-      filter: sepia(100%) hue-rotate(312deg) saturate(300%);
-      content: attr(data-mini);
-    }
-
-    .highlighted {
-      background-color: var(--main-bg-color-dark);
-      color: var(--font-color-dark);
-    }
-
-    .fill {
-      background-color: var(--sidabar-bg-color-dark);
-      flex: 100%;
-      height: 100%;
-    }
-
-    :has(+ .highlighted) {
-      border-bottom-right-radius: 1rem;
-    }
-
-    .highlighted+* {
-      border-top-right-radius: 1rem;
-    }
-
-    input[type='checkbox'] {
-      appearance: none;
-      width: 4rem;
-      height: 2rem;
-      position: relative;
-      border-radius: 1rem;
-      cursor: pointer;
-      background-color: white;
-      border: 0.125rem solid #dddddd;
-    }
-
-    input[type='checkbox']:before {
-      content: '';
-      position: absolute;
-      width: 1.6rem;
-      height: 1.6rem;
-      background: #dddddd;
-      left: 0.15rem;
-      top: 0.075rem;
-      border-radius: 50%;
-      transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
-    }
-
-    input[type='checkbox']:checked {
-      border-color: var(--btn-icon-input-color);
-    }
-
-    input[type='checkbox']:checked:before {
-      left: 2rem;
-      background: var(--btn-icon-input-color);
-    }
-
-    #configForm {
-      height: 98%;
-      color: var(--font-color-dark);
-      font-size: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    input,
-    textarea {
-      color: var(--font-color-dark);
-      background-color: var(--main-bg-color-dark);
-      border: 1px solid var(--sidabar-bg-color-dark);
-      border-radius: 0.5rem;
-    }
-
-    input:focus,
-    textarea:focus {
-      border: 1px solid var(--btn-icon-input-color);
-      outline: none;
-    }
-
-    item {
-      margin: 0.5rem 0;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      position: relative;
-    }
-
-    .common-input,
-    #auth-input,
-    .textarea-container {
-      margin: 0.5rem 4%;
-      width: 92%;
-    }
-
-    .common-input input,
-    #auth-input input {
-      width: auto;
-      margin: 0.7rem 0;
-      height: 1.6rem;
-      font-size: 1.2rem;
-    }
-
-    .switch-input {
-      align-items: center;
-      width: calc(100% / 2);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .switch-input input {
-      margin: 0.5rem 0 0 0;
-    }
-
-    #exec-container {
-      width: 100%;
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    .textarea-container {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .textarea-container textarea {
-      height: 10rem;
-      margin: 0.7rem 0;
-    }
-
-    #runningServers-container {
-      display: flex;
-      height: 100%;
-    }
-
-    video {
-      overflow: hidden;
-      height: calc(100vh - 2rem);
-      width: 100%;
-      margin: 1rem;
-    }
-
-    #stats {
-      position: absolute;
-      pointer-events: none;
-      margin: 1rem;
-      text-shadow: var(--btn-color-dark) 0 0 0.3em;
-      font-size: 1rem;
-      color: var(--font-color-dark);
-    }
-
-    #process {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: calc(100% - 5rem);
-    }
-
-    table {
-      /* border-collapse: collapse; */
-      color: #fff;
-      white-space: pre-wrap;
-    }
-
-    thead,
-    tfoot {
-      background-color: #333;
-      color: #fff;
-    }
-
-    td,
-    th {
-      padding: 4px;
-    }
-
-    td:last-child:hover{
-      cursor: pointer;
-      color: var(--btn-icon-input-color);
-    }
-
-    @media (max-width: 480px) {
       html {
-        font-size: 14px;
-      }
-    }
-
-    @media screen and (min-width: 480px) {
-      .switch-input {
-        width: calc(100% / 4);
+        font-size: calc(14px + (100vw - 480px) * (3 / 720));
       }
 
-      #exec-container .switch-input {
-        width: calc(52% / 3);
-        margin-left: 0;
-        margin-right: 0;
-      }
-    }
-
-    @media screen and (min-width: 768px) {
-      .sidebar {
-        width: 11rem;
+      html::-webkit-scrollbar,
+      textarea::-webkit-scrollbar {
+        display: none;
       }
 
-      .sidebarBtn {
-        padding-left: 1rem;
-        justify-content: left;
-      }
-
-      .sidebarBtn::before {
-        content: attr(data-normal);
-      }
-
-      .common-input,
-      #auth-input,
-      .textarea-container {
-        margin: 0.5rem 3%;
-        width: 94%;
-      }
-
-      #process {
-        width: calc(100% - 13rem);
-      }
-    }
-
-    @media (min-width: 1200px) {
-      html {
-        font-size: 16px;
-      }
-
-      .common-input,
-      #auth-input,
-      .textarea-container {
-        margin: 0.5rem 1%;
-        width: 48%;
-      }
-
-      .switch-input {
-        width: calc(50% / 4);
+      body {
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        background-color: var(--main-bg-color-dark);
       }
 
       .router-view {
-        margin-left: 11rem;
+        margin-left: 3rem;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <script type="text/javascript" src="./peer-stream.js"></script>
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 3rem;
+        font-size: 1rem;
+        z-index: 4;
+        color: #000000;
+      }
 
-  <aside class="sidebar">
-    <a class="sidebarBtn" href="./signal.json" target="_blank" download="signal.json" data-normal="⬇️ 下载 signal.json"
-      data-mini="⬇️" aria-label="下载 signal.json"></a>
-    <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
-    <!-- <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal> -->
-    <a class="sidebarBtn" href="#/config" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
-      name="linkToConfig"></a>
-    <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
-    <a class="sidebarBtn" href="#/process" data-normal="👤 进程管理" data-mini="👤" aria-label="进程管理"
-      name="linkToProcess"></a>
-    <a class="sidebarBtn" href="https://github.com/inveta/peer-stream" target="_blank" rel="noopener"
-      data-normal="📦 Github 源码" data-mini="📦" aria-label="Github 源码"></a>
-    <checkUpdate class="sidebarBtn" data-normal="🔍 检查更新 1.16" data-mini="🔍"></checkUpdate>
-    <div class="fill"></div>
-  </aside>
-  <main class="router-view"></main>
+      .sidebarBtn {
+        height: 64px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--sidabar-bg-color-dark);
+        text-decoration: none;
+        color: black;
+        cursor: pointer;
+      }
 
-  <script type="text/javascript">
-    const execTemp = `
+      .sidebarBtn:hover {
+        color: var(--btn-icon-input-color);
+      }
+
+      .sidebarBtn::before {
+        filter: sepia(100%) hue-rotate(312deg) saturate(300%);
+        content: attr(data-mini);
+      }
+
+      .highlighted {
+        background-color: var(--main-bg-color-dark);
+        color: var(--font-color-dark);
+      }
+
+      .fill {
+        background-color: var(--sidabar-bg-color-dark);
+        flex: 100%;
+        height: 100%;
+      }
+
+      :has(+ .highlighted) {
+        border-bottom-right-radius: 1rem;
+      }
+
+      .highlighted + * {
+        border-top-right-radius: 1rem;
+      }
+
+      input[type="checkbox"] {
+        appearance: none;
+        width: 4rem;
+        height: 2rem;
+        position: relative;
+        border-radius: 1rem;
+        cursor: pointer;
+        background-color: white;
+        border: 0.125rem solid #dddddd;
+      }
+
+      input[type="checkbox"]:before {
+        content: "";
+        position: absolute;
+        width: 1.6rem;
+        height: 1.6rem;
+        background: #dddddd;
+        left: 0.15rem;
+        top: 0.075rem;
+        border-radius: 50%;
+        transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+      }
+
+      input[type="checkbox"]:checked {
+        border-color: var(--btn-icon-input-color);
+      }
+
+      input[type="checkbox"]:checked:before {
+        left: 2rem;
+        background: var(--btn-icon-input-color);
+      }
+
+      #configForm {
+        height: 98%;
+        color: var(--font-color-dark);
+        font-size: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      input,
+      textarea {
+        color: var(--font-color-dark);
+        background-color: var(--main-bg-color-dark);
+        border: 1px solid var(--sidabar-bg-color-dark);
+        border-radius: 0.5rem;
+      }
+
+      input:focus,
+      textarea:focus {
+        border: 1px solid var(--btn-icon-input-color);
+        outline: none;
+      }
+
+      item {
+        margin: 0.5rem 0;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        position: relative;
+      }
+
+      .common-input,
+      #auth-input,
+      .textarea-container {
+        margin: 0.5rem 4%;
+        width: 92%;
+      }
+
+      .common-input input,
+      #auth-input input {
+        width: auto;
+        margin: 0.7rem 0;
+        height: 1.6rem;
+        font-size: 1.2rem;
+      }
+
+      .switch-input {
+        align-items: center;
+        width: calc(100% / 2);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .switch-input input {
+        margin: 0.5rem 0 0 0;
+      }
+
+      #exec-container {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .textarea-container {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .textarea-container textarea {
+        height: 10rem;
+        margin: 0.7rem 0;
+      }
+
+      #runningServers-container {
+        display: flex;
+        height: 100%;
+      }
+
+      video {
+        overflow: hidden;
+        height: calc(100vh - 2rem);
+        width: 100%;
+        margin: 1rem;
+      }
+
+      #stats {
+        position: absolute;
+        pointer-events: none;
+        margin: 1rem;
+        text-shadow: var(--btn-color-dark) 0 0 0.3em;
+        font-size: 1rem;
+        color: var(--font-color-dark);
+      }
+
+      #process {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: calc(100% - 5rem);
+      }
+
+      table {
+        /* border-collapse: collapse; */
+        color: #fff;
+        white-space: pre-wrap;
+      }
+
+      thead,
+      tfoot {
+        background-color: #333;
+        color: #fff;
+      }
+
+      td,
+      th {
+        padding: 4px;
+      }
+
+      td:last-child:hover {
+        cursor: pointer;
+        color: var(--btn-icon-input-color);
+      }
+
+      @media (max-width: 480px) {
+        html {
+          font-size: 14px;
+        }
+      }
+
+      @media screen and (min-width: 480px) {
+        .switch-input {
+          width: calc(100% / 4);
+        }
+
+        #exec-container .switch-input {
+          width: calc(52% / 3);
+          margin-left: 0;
+          margin-right: 0;
+        }
+      }
+
+      @media screen and (min-width: 768px) {
+        .sidebar {
+          width: 11rem;
+        }
+
+        .sidebarBtn {
+          padding-left: 1rem;
+          justify-content: left;
+        }
+
+        .sidebarBtn::before {
+          content: attr(data-normal);
+        }
+
+        .common-input,
+        #auth-input,
+        .textarea-container {
+          margin: 0.5rem 3%;
+          width: 94%;
+        }
+
+        #process {
+          width: calc(100% - 13rem);
+        }
+      }
+
+      @media (min-width: 1200px) {
+        html {
+          font-size: 16px;
+        }
+
+        .common-input,
+        #auth-input,
+        .textarea-container {
+          margin: 0.5rem 1%;
+          width: 48%;
+        }
+
+        .switch-input {
+          width: calc(50% / 4);
+        }
+
+        .router-view {
+          margin-left: 11rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <script type="text/javascript" src="./peer-stream.js"></script>
+
+    <aside class="sidebar">
+      <a
+        class="sidebarBtn"
+        href="./signal.json"
+        target="_blank"
+        download="signal.json"
+        data-normal="⬇️ 下载 signal.json"
+        data-mini="⬇️"
+        aria-label="下载 signal.json"
+      ></a>
+      <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
+      <!-- <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal> -->
+      <a
+        class="sidebarBtn"
+        href="#/config"
+        data-normal="⚙️ 系统配置"
+        data-mini="⚙️"
+        aria-label="系统配置"
+        name="linkToConfig"
+      ></a>
+      <a
+        class="sidebarBtn"
+        href=" "
+        data-normal="▶️ 进入应用"
+        data-mini="▶️"
+        aria-label="进入应用"
+        name="linkToServer"
+      ></a>
+      <a
+        class="sidebarBtn"
+        href="#/process"
+        data-normal="👤 进程管理"
+        data-mini="👤"
+        aria-label="进程管理"
+        name="linkToProcess"
+      ></a>
+      <a
+        class="sidebarBtn"
+        href="https://github.com/inveta/peer-stream"
+        target="_blank"
+        rel="noopener"
+        data-normal="📦 Github 源码"
+        data-mini="📦"
+        aria-label="Github 源码"
+      ></a>
+      <checkUpdate
+        class="sidebarBtn"
+        data-normal="🔍 检查更新 1.16"
+        data-mini="🔍"
+        onclick="handleCheckUpdate()"
+      ></checkUpdate>
+      <div class="fill"></div>
+    </aside>
+    <main class="router-view"></main>
+
+    <script type="text/javascript">
+      const execTemp = `
         <item class="common-input exec">
           <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
           <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
         </item>
       `;
-    const config = `
+      const config = `
         <form id="configForm">
           <item id="auth-input">
             <label for="auth">用户验证</label>
@@ -413,7 +457,7 @@
           </div>
         </form> 
       `;
-    const runningServer = `
+      const runningServer = `
         <div id="runningServers-container">
           <video is="peer-stream" audio> </video>
 
@@ -421,7 +465,7 @@
           <pre id="stats">Not connected</pre>
         </div>
       `;
-    const process = `
+      const process = `
         <table id="process" onclick="tableClick(event)">
           <thead>
             <tr>
@@ -435,632 +479,594 @@
           <tbody></tbody>
         </table>
       `;
-    // DOM查询缓存
-    const $ = (selector) => document.querySelector(selector);
-    const $$ = (selector) => document.querySelectorAll(selector);
-    //更新成功提示
-    const handleUpdateSuccess = (btn) => {
-      let normal = btn.getAttribute('data-normal')
-      let mini = btn.getAttribute('data-mini')
-      btn.setAttribute('data-normal', '✅ 更新成功');
-      btn.setAttribute('data-mini', '✅');
-      btn.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: 200,
-        iterations: 3,
-        easing: 'steps(2, jump-none)',
-      });
-      setTimeout(() => {
-        btn.setAttribute('data-normal', normal);
-        btn.setAttribute('data-mini', mini);
-      }, 1000);
-    };
-
- 
-
-    const handleCheckUpdate = async () => {
-      const writeFiles = (
-        SignalHtmlContent,
-        SignalJSContent,
-        PeerStreamContent
-      ) => {
-        const contents = [
-          { content: SignalHtmlContent, path: '/signal.html' },
-          { content: SignalJSContent, path: '/signal.js' },
-          { content: PeerStreamContent, path: '/peer-stream.js' },
-        ];
-        let fetchPromises = [];
-
-        contents.forEach(({ content, path }) => {
-          if (content) {
-            fetchPromises.push(
-              fetch('./write', {
-                method: 'POST',
-                headers: {
-                  write: path,
-                },
-                body: content,
-              })
-            );
-          }
+      // DOM查询缓存
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => document.querySelectorAll(selector);
+      //更新成功提示
+      const handleUpdateSuccess = (btn) => {
+        let normal = btn.getAttribute("data-normal");
+        let mini = btn.getAttribute("data-mini");
+        btn.setAttribute("data-normal", "✅ 更新成功");
+        btn.setAttribute("data-mini", "✅");
+        btn.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 200,
+          iterations: 3,
+          easing: "steps(2, jump-none)",
         });
-
-        if (fetchPromises.length > 0) {
-          Promise.all(fetchPromises)
-            .then((responses) =>
-              Promise.all(
-                responses.map((response) => {
-                  if (!response.ok) {
-                    throw new Error(`${response}`);
-                  }
-                  handleUpdateSuccess($('checkUpdate'));
-                  window.location.reload();
-                })
-              )
-            )
-            .catch((error) => {
-              alert(`❌ 更新失败: ${error}`);
-              console.error('Update error:', error);
-            });
-        } else {
-          console.log('No file to upload.');
-        }
+        setTimeout(() => {
+          btn.setAttribute("data-normal", normal);
+          btn.setAttribute("data-mini", mini);
+        }, 1000);
       };
 
-      let SignalHtmlContent,
-        SignalJSContent,
-        PeerStreamContent = '';
+      async function handleCheckUpdate() {
+        const writeFiles = (SignalHtmlContent, SignalJSContent, PeerStreamContent) => {
+          const contents = [
+            { content: SignalHtmlContent, path: "/signal.html" },
+            { content: SignalJSContent, path: "/signal.js" },
+            { content: PeerStreamContent, path: "/peer-stream.js" },
+          ];
+          let fetchPromises = [];
 
-      const checkUpdate = $('checkUpdate');
-      checkUpdate.setAttribute('data-normal', '⏳ 更新中...');
-      checkUpdate.setAttribute('data-mini', '⏳');
-      //先通过github仓库尝试获取，如果失败，允许用户本地上传
-      Promise.all([
-        fetch('https://inveta.github.io/peer-stream/signal.html'),
-        fetch('https://inveta.github.io/peer-stream/signal.js'),
-        fetch('https://inveta.github.io/peer-stream/peer-stream.js'),
-      ])
-        .then((responses) =>
-          Promise.all(
-            responses.map((response) => {
-              if (!response.ok)
-                throw new Error(
-                  `Network response for ${response.url} was not ok`
-                );
-              return response.text();
-            })
+          contents.forEach(({ content, path }) => {
+            if (content) {
+              fetchPromises.push(
+                fetch("./write", {
+                  method: "POST",
+                  headers: {
+                    write: path,
+                  },
+                  body: content,
+                })
+              );
+            }
+          });
+
+          if (fetchPromises.length > 0) {
+            Promise.all(fetchPromises)
+              .then((responses) =>
+                Promise.all(
+                  responses.map((response) => {
+                    if (!response.ok) {
+                      throw new Error(`${response}`);
+                    }
+                    handleUpdateSuccess($("checkUpdate"));
+                    window.location.reload();
+                  })
+                )
+              )
+              .catch((error) => {
+                alert(`❌ 更新失败: ${error}`);
+                console.error("Update error:", error);
+              });
+          } else {
+            console.log("No file to upload.");
+          }
+        };
+
+        let SignalHtmlContent,
+          SignalJSContent,
+          PeerStreamContent = "";
+
+        const checkUpdate = $("checkUpdate");
+        checkUpdate.setAttribute("data-normal", "⏳ 更新中...");
+        checkUpdate.setAttribute("data-mini", "⏳");
+        // 先通过github仓库尝试获取，如果失败，允许用户本地上传
+        // https://github.com/inveta/peer-stream/settings/pages
+        Promise.all([
+          fetch("https://inveta.github.io/peer-stream/signal.html"),
+          fetch("https://inveta.github.io/peer-stream/signal.js"),
+          fetch("https://inveta.github.io/peer-stream/peer-stream.js"),
+        ])
+          .then((responses) =>
+            Promise.all(
+              responses.map((response) => {
+                if (!response.ok)
+                  throw new Error(`Network response for ${response.url} was not ok`);
+                return response.text();
+              })
+            )
           )
-        )
-        .then((files) => {
-          writeFiles(...files);
-        })
-        .catch((error) => {
-          let inputElement = document.createElement('input');
-          inputElement.type = 'file';
-          inputElement.multiple = true;
-          inputElement.style.display = 'none';
+          .then((files) => {
+            writeFiles(...files);
+          })
+          .catch((error) => {
+            let inputElement = document.createElement("input");
+            inputElement.type = "file";
+            inputElement.multiple = true;
+            inputElement.style.display = "none";
 
-          const readFile = (file) => {
-            return new Promise((resolve, reject) => {
-              const reader = new FileReader();
+            const readFile = (file) => {
+              return new Promise((resolve, reject) => {
+                const reader = new FileReader();
 
-              reader.onload = (e) => {
-                resolve(e.target.result);
-              };
+                reader.onload = (e) => {
+                  resolve(e.target.result);
+                };
 
-              reader.onerror = (e) => {
-                reject(e);
-              };
+                reader.onerror = (e) => {
+                  reject(e);
+                };
 
-              reader.readAsText(file);
-            });
-          };
-
-          inputElement.addEventListener('change', (event) => {
-            const files = event.target.files;
-            const fileList = {
-              'signal.html:text/html': (content) =>
-                (SignalHtmlContent = content),
-              'signal.js:text/javascript': (content) =>
-                (SignalJSContent = content),
-              'peer-stream.js:text/javascript': (content) =>
-                (PeerStreamContent = content),
+                reader.readAsText(file);
+              });
             };
 
-            if (files.length > 3) {
-              checkUpdate.setAttribute('data-normal', '🔍 检查更新 12.15');
-              checkUpdate.setAttribute('data-mini', '🔍');
-              alert('❌ 选择文件数量应小于等于3个！！！');
-              return;
-            }
+            inputElement.addEventListener("change", (event) => {
+              const files = event.target.files;
+              const fileList = {
+                "signal.html:text/html": (content) => (SignalHtmlContent = content),
+                "signal.js:text/javascript": (content) => (SignalJSContent = content),
+                "peer-stream.js:text/javascript": (content) => (PeerStreamContent = content),
+              };
 
-            let readPromises = [];
+              if (files.length > 3) {
+                checkUpdate.setAttribute("data-normal", "🔍 检查更新 12.15");
+                checkUpdate.setAttribute("data-mini", "🔍");
+                alert("❌ 选择文件数量应小于等于3个！！！");
+                return;
+              }
 
-            Array.from(files).forEach((file) => {
-              const fileKey = `${file.name}:${file.type}`;
-              fileList[fileKey]
-                ? readPromises.push(readFile(file).then(fileList[fileKey]))
-                : alert(
-                  '请上传 signal.html、signal.js 或 peer-stream.js 文件'
-                );
-            });
-            Promise.all(readPromises)
-              .then(() => {
-                writeFiles(
-                  SignalHtmlContent,
-                  SignalJSContent,
-                  PeerStreamContent
-                );
-              })
-              .catch((e) => {
-                console.error('Error reading file:', e);
+              let readPromises = [];
+
+              Array.from(files).forEach((file) => {
+                const fileKey = `${file.name}:${file.type}`;
+                fileList[fileKey]
+                  ? readPromises.push(readFile(file).then(fileList[fileKey]))
+                  : alert("请上传 signal.html、signal.js 或 peer-stream.js 文件");
               });
+              Promise.all(readPromises)
+                .then(() => {
+                  writeFiles(SignalHtmlContent, SignalJSContent, PeerStreamContent);
+                })
+                .catch((e) => {
+                  console.error("Error reading file:", e);
+                });
+            });
+            inputElement.click();
           });
-          inputElement.click();
-        });
-    };
-    $('checkUpdate').addEventListener('click', handleCheckUpdate);
-    //渲染页面主内容
-    const renderPageContent = async (pageHash) => {
+      }
+
+      //渲染页面主内容
       const actions = {
-        '/config': async () => {
-          $('.router-view').innerHTML = config;
+        "#/config": async () => {
+          $(".router-view").innerHTML = config;
           await renderConfigForm();
-          $('#auth').addEventListener('focus', () => toggleAuthInfo(event));
-          $('#auth').addEventListener('blur', () => toggleAuthInfo(event));
-          $('#http-auth').addEventListener('click', () => toggleAuthInput());
-          $('#configForm').addEventListener('change', () => submitConfig(event));
-          $('[name = linkToConfig]').classList.add('highlighted');
-          if (typeof ps !== 'undefined') window.clearTimeout(ps.timeout);
+          $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
+          $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
+          $("#http-auth").addEventListener("click", () => toggleAuthInput());
+          $("#configForm").addEventListener("change", () => submitConfig(event));
+          $("[name = linkToConfig]").classList.add("highlighted");
+          if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
         },
-        '': () => {
-          $('.router-view').innerHTML = runningServer;
-          ps.addEventListener('playing', aggregateStats, {
+        "": () => {
+          $(".router-view").innerHTML = runningServer;
+          ps.addEventListener("playing", aggregateStats, {
             once: true,
           });
-          ps.addEventListener('message', (e) => { });
-          ps.addEventListener('suspend', (e) => { });
-          ps.addEventListener('playerdisconnected', (e) => {
-            console.log('playerdisconnected');
+          ps.addEventListener("message", (e) => {});
+          ps.addEventListener("suspend", (e) => {});
+          ps.addEventListener("playerdisconnected", (e) => {
+            console.log("playerdisconnected");
           });
-          $('[name = linkToServer]').classList.add('highlighted');
+          $("[name = linkToServer]").classList.add("highlighted");
         },
-        "/process": () => {
-          $('.router-view').innerHTML = process;
-          $('[name = linkToProcess]').classList.add('highlighted');
+        "#/process": () => {
+          $(".router-view").innerHTML = process;
+          $("[name = linkToProcess]").classList.add("highlighted");
           getProcess();
-        }
+          if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
+        },
       };
 
-      $$('[name^="linkTo"]').forEach((element) => {
-        element.classList.remove('highlighted');
-      });
-      actions[pageHash].call();
-    };
-    //开关http验证
-    const toggleAuthInput = () => {
-      $('#auth-input').style.display = $('#http-auth').checked
-        ? 'flex'
-        : 'none';
-      $('#auth').focus();
-    };
-    //切换用户验证按钮显示方式
-    const toggleAuthInfo = (event) => {
-      const authStatus = {
-        focus: 'text',
-        blur: 'password',
+      //开关http验证
+      const toggleAuthInput = () => {
+        $("#auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
+        $("#auth").focus();
       };
-      $('#auth').type = authStatus[event.type];
-    };
-    const updateInputValue = (selector, value, isCheckbox = false) => {
-      const input = $(selector);
-      if (input) isCheckbox ? (input.checked = value) : (input.value = value);
-    };
-    //读取signal.json中的参数，对参数配置表单进行初始化渲染
-    const renderConfigForm = () => {
-      //对解析后的UE5字符串进行解析并渲染
-      const updateUE5Info = (value) => {
-        //解析UE5参数字符串
-        const parseUE5 = (UE5) => {
-          const toCamelCase = (str) =>
-            str.charAt(1).toLowerCase() + str.slice(2); //将大驼峰命名转为小驼峰命名
-          const params = UE5.split(' ');
-          const exec = {
-            unattended: false,
-            renderOffScreen: false,
-            audioMixer: false,
-            GPUFile: params[1],
+      //切换用户验证按钮显示方式
+      const toggleAuthInfo = (event) => {
+        const authStatus = {
+          focus: "text",
+          blur: "password",
+        };
+        $("#auth").type = authStatus[event.type];
+      };
+      const updateInputValue = (selector, value, isCheckbox = false) => {
+        const input = $(selector);
+        if (input) isCheckbox ? (input.checked = value) : (input.value = value);
+      };
+      //读取signal.json中的参数，对参数配置表单进行初始化渲染
+      const renderConfigForm = () => {
+        //对解析后的UE5字符串进行解析并渲染
+        const updateUE5Info = (value) => {
+          //解析UE5参数字符串
+          const parseUE5 = (UE5) => {
+            const toCamelCase = (str) => str.charAt(1).toLowerCase() + str.slice(2); //将大驼峰命名转为小驼峰命名
+            const params = UE5.split(" ");
+            const exec = {
+              unattended: false,
+              renderOffScreen: false,
+              audioMixer: false,
+              GPUFile: params[1],
+            };
+            let boolParams = ["-Unattended", "-RenderOffScreen", "-AudioMixer"];
+
+            for (const param of params) {
+              if (param.startsWith("-")) {
+                const [key, value] = param.split("=");
+                exec[toCamelCase(key)] = boolParams.includes(key) ? true : value;
+              }
+            }
+            const { resX, resY, ...rest } = exec;
+            return { ...rest, resolution: `${resX}*${resY}` };
           };
-          let boolParams = ['-Unattended', '-RenderOffScreen', '-AudioMixer'];
 
-          for (const param of params) {
-            if (param.startsWith('-')) {
-              const [key, value] = param.split('=');
-              exec[toCamelCase(key)] = boolParams.includes(key)
-                ? true
-                : value;
+          if (value.length <= 0) {
+            updateInputValue(`[name = GPUNumber]`, 0);
+            return;
+          }
+          const shareInfo = parseUE5(value[0]);
+          //获取每个GPU下运行的进程数量和GPU数量
+          shareInfo.graphicsAdapter = new Map();
+          value.forEach((exec) => {
+            const { graphicsAdapter } = parseUE5(exec);
+            shareInfo.graphicsAdapter.set(
+              graphicsAdapter,
+              (shareInfo.graphicsAdapter.get(graphicsAdapter) || 0) + 1
+            );
+          });
+          shareInfo.GPUNumber = shareInfo.graphicsAdapter.size;
+          //渲染UE5部分的参数
+          for (const item in shareInfo) {
+            if (item === "graphicsAdapter") {
+              $$(".exec").forEach((exec) => {
+                $("#exec-container").removeChild(exec);
+              });
+              for (const gpuInfo of shareInfo.graphicsAdapter) {
+                let exec = new DOMParser()
+                  .parseFromString(
+                    execTemp
+                      .replaceAll("graphicsAdapter", gpuInfo[0])
+                      .replaceAll("GPUNumber", gpuInfo[1]),
+                    "text/html"
+                  )
+                  .querySelector(".exec");
+                $("#exec-container").appendChild(exec);
+              }
+            } else {
+              updateInputValue(
+                `[name="${item}"]`,
+                shareInfo[`${item}`],
+                $(`[name="${item}"]`)?.type === "checkbox"
+              );
             }
           }
-          const { resX, resY, ...rest } = exec;
-          return { ...rest, resolution: `${resX}*${resY}` };
+        };
+        const processSignal = (data) => {
+          //对获取到的部分signal.json参数要进行特殊处理
+          const handlers = {
+            UE5: (value) => updateUE5Info(value),
+            iceServers: (value) =>
+              updateInputValue("[name=iceServers]", JSON.stringify(value, null, "\t")),
+            auth: (value) => {
+              if (typeof value === "string") {
+                updateInputValue("#auth", value);
+                updateInputValue("#http-auth", true, true);
+              } else if (typeof value === "boolean") {
+                updateInputValue("#http-auth", value, true);
+                toggleAuthInput();
+              }
+            },
+            UEVersion: (value) => updateInputValue("[name=UEVersion]", value === 4.27, true),
+          };
+
+          Object.keys(data).forEach((key) => {
+            handlers[key]
+              ? handlers[key](data[key])
+              : updateInputValue(
+                  `[name="${key}"]`,
+                  data[key],
+                  $(`[name="${key}"]`)?.type === "checkbox"
+                );
+          });
         };
 
-        if (value.length <= 0) {
-          updateInputValue(`[name = GPUNumber]`, 0);
-          return;
-        }
-        const shareInfo = parseUE5(value[0]);
-        //获取每个GPU下运行的进程数量和GPU数量
-        shareInfo.graphicsAdapter = new Map();
-        value.forEach((exec) => {
-          const { graphicsAdapter } = parseUE5(exec);
-          shareInfo.graphicsAdapter.set(
-            graphicsAdapter,
-            (shareInfo.graphicsAdapter.get(graphicsAdapter) || 0) + 1
-          );
-        });
-        shareInfo.GPUNumber = shareInfo.graphicsAdapter.size;
-        //渲染UE5部分的参数
-        for (const item in shareInfo) {
-          if (item === 'graphicsAdapter') {
-            $$('.exec').forEach((exec) => {
-              $('#exec-container').removeChild(exec);
-            });
-            for (const gpuInfo of shareInfo.graphicsAdapter) {
-              let exec = new DOMParser()
-                .parseFromString(
-                  execTemp
-                    .replaceAll('graphicsAdapter', gpuInfo[0])
-                    .replaceAll('GPUNumber', gpuInfo[1]),
-                  'text/html'
-                )
-                .querySelector('.exec');
-              $('#exec-container').appendChild(exec);
+        return fetch("./signal.json")
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+          })
+          .then((data) => {
+            processSignal(data);
+          })
+          .catch((error) => {
+            alert(error);
+          });
+      };
+      //上传处理后的signal参数
+      const handleConfigUpdate = async (config, PORT_new) => {
+        try {
+          fetch("./signal", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              signal: encodeURIComponent(JSON.stringify(config)),
+            },
+          }).then(async (response) => {
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(errorText);
             }
-          } else {
-            updateInputValue(
-              `[name="${item}"]`,
-              shareInfo[`${item}`],
-              $(`[name="${item}"]`)?.type === 'checkbox'
-            );
-          }
+            handleUpdateSuccess($(`[name = linkToConfig]`));
+            if (PORT_new) {
+              const url = new URL(window.location);
+              url.port = PORT_new;
+              window.location.replace(url);
+            }
+          });
+        } catch (error) {
+          alert(`❌ 更新失败: ${error}`);
+          renderConfigForm();
+          console.error("updating config", error);
         }
       };
-      const processSignal = (data) => {
-        //对获取到的部分signal.json参数要进行特殊处理
+      //对需要上传的signal参数进行处理并准备上传
+      const submitConfig = async (event) => {
+        //对UE5中的输入参数进行获取并处理写入config中
+        const createUE5Config = () => {
+          const getValue = (name) => $(`[name=${name}]`).value;
+          const isChecked = (name) => $(`[name=${name}]`).checked;
+
+          const startCmds = {
+            exe: "start",
+            sh: "sh",
+          };
+
+          const filePath = getValue("GPUFile");
+          const startCmd = startCmds[filePath.slice(((filePath.lastIndexOf(".") - 1) >>> 0) + 2)];
+          let config = [];
+          let [resX, resY] = getValue("resolution").split("*");
+          let pixelStreamingURL = window.location.host;
+
+          $$("[name=processNumber]").forEach((processNumber) => {
+            for (let i = 0; i < processNumber.value; i++) {
+              config.push(
+                `${startCmd} ${filePath} ${isChecked("unattended") ? "-Unattended " : ""}` +
+                  `${isChecked("renderOffScreen") ? "-RenderOffScreen " : ""}${
+                    isChecked("audioMixer") ? "-AudioMixer " : ""
+                  }` +
+                  `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id.slice(
+                    4
+                  )} -ForceRes ` +
+                  `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${getValue(
+                    "pixelStreamingWebRTCFps"
+                  )}`
+              );
+            }
+          });
+          return config;
+        };
+
+        //加入一个UE5中的GPU进程数量输入框
+        const appendExecElements = (gpuNumber, execElements) => {
+          for (let i = execElements.length; i < gpuNumber; i++) {
+            let exec = new DOMParser()
+              .parseFromString(
+                execTemp.replaceAll("graphicsAdapter", i).replaceAll("GPUNumber", 0),
+                "text/html"
+              )
+              .querySelector(".exec");
+            $("#exec-container").appendChild(exec);
+          }
+        };
+        //移除多余UE5中的GPU进程数量输入框，且如果移除的输入框中，值不为0，就需要进行更新，删除多余的参数
+        const removeExecElements = (gpuNumber, execElements) => {
+          const excessElements = Array.from(execElements).slice(gpuNumber);
+          let needToupdate = true;
+          excessElements.forEach((exec) => {
+            if (exec.querySelector(`[name = processNumber]`).value > 0) needToupdate = false;
+            exec.remove();
+          });
+          return needToupdate;
+        };
+
         const handlers = {
-          UE5: (value) => updateUE5Info(value),
-          iceServers: (value) =>
-            updateInputValue(
-              '[name=iceServers]',
-              JSON.stringify(value, null, '\t')
-            ),
+          GPUNumber: (value) => {
+            const gpuNumber = parseInt(value, 10);
+            if (gpuNumber < 0) {
+              alert("GPU 数量不能小于0");
+              renderConfigForm();
+              return true;
+            }
+            const execElements = $$(".exec");
+            let needsUpdate = true;
+            console.log(gpuNumber);
+            console.log(execElements);
+            execElements.length < gpuNumber
+              ? appendExecElements(gpuNumber, execElements)
+              : (needsUpdate = removeExecElements(gpuNumber, execElements));
+            return needsUpdate;
+          },
+          "http-auth": (value) => {
+            return value;
+          },
           auth: (value) => {
-            if (typeof value === 'string') {
-              updateInputValue('#auth', value);
-              updateInputValue('#http-auth', true, true);
-            } else if (typeof value === 'boolean') {
-              updateInputValue('#http-auth', value, true);
-              toggleAuthInput();
+            if (!/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/.test(value)) {
+              alert("请输入正确的用户名和密码格式，例如：username:password。");
+              return true;
+            }
+            return false;
+          },
+          iceServers: (value) => {
+            try {
+              JSON.parse(value);
+              return false;
+            } catch (error) {
+              alert("iceServers格式有误！");
+              renderConfigForm();
+              return true;
             }
           },
-          UEVersion: (value) =>
-            updateInputValue('[name=UEVersion]', value === 4.27, true),
         };
 
-        Object.keys(data).forEach((key) => {
-          handlers[key]
-            ? handlers[key](data[key])
-            : updateInputValue(
-              `[name="${key}"]`,
-              data[key],
-              $(`[name="${key}"]`)?.type === 'checkbox'
-            );
-        });
+        let config = {};
+        let value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
+        let PORT_new = null;
+
+        if (handlers[event.target.id] && handlers[event.target.id](value)) return;
+        //对UE5内的参数修改要特殊处理
+        if ($("#exec-container").contains(event.target)) {
+          config["UE5"] = createUE5Config();
+        } else {
+          switch (event.target.type) {
+            case "number":
+              config[event.target.id] = parseFloat(value);
+              if (event.target.id === "PORT" && value !== window.location.port) PORT_new = value;
+              break;
+            case "checkbox":
+              config[event.target.id === "http-auth" ? "auth" : event.target.id] =
+                event.target.id === "UEVersion" ? (value ? 4.27 : 5) : value;
+              break;
+            default:
+              config[event.target.id] =
+                event.target.name === "iceServers" ? JSON.parse(value) : value;
+          }
+        }
+
+        await handleConfigUpdate(config, PORT_new);
       };
 
-      return fetch('./signal.json')
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          processSignal(data);
-        })
-        .catch((error) => {
-          alert('获取signal.json失败！！！');
-          console.log('fetch signal.json failed ', error);
-        });
-    };
-    //上传处理后的signal参数
-    const handleConfigUpdate = async (config, PORT_new) => {
-      try {
-        fetch('./signal', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            signal: encodeURIComponent(JSON.stringify(config)),
-          },
-        }).then(async (response) => {
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
-          }
-          handleUpdateSuccess($(`[name = linkToConfig]`));
-          if (PORT_new) {
-            const url = new URL(window.location);
-            url.port = PORT_new;
-            window.location.replace(url);
-          }
-        });
-      } catch (error) {
-        alert(`❌ 更新失败: ${error}`);
-        renderConfigForm();
-        console.error('updating config', error);
-      }
-    };
-    //对需要上传的signal参数进行处理并准备上传
-    const submitConfig = async (event) => {
-      //对UE5中的输入参数进行获取并处理写入config中
-      const createUE5Config = () => {
-        const getValue = (name) => $(`[name=${name}]`).value;
-        const isChecked = (name) => $(`[name=${name}]`).checked;
-
-        const startCmds = {
-          'exe': 'start',
-          'sh': 'sh'
+      const getProcess = () => {
+        const ws = new WebSocket(`ws://${location.host}/Process`, `exec-ue`);
+        ws.onopen = function () {
+          console.info("✅", ws);
         };
 
-        const filePath = getValue('GPUFile');
-        const startCmd = startCmds[filePath.slice(((filePath.lastIndexOf(".") - 1) >>> 0) + 2)];
-        let config = [];
-        let [resX, resY] = getValue('resolution').split('*');
-        let pixelStreamingURL = window.location.host;
-
-        $$('[name=processNumber]').forEach((processNumber) => {
-          for (let i = 0; i < processNumber.value; i++) {
-            config.push(
-              `${startCmd} ${filePath} ${isChecked('unattended') ? '-Unattended ' : ''}` +
-              `${isChecked('renderOffScreen') ? '-RenderOffScreen ' : ''}${isChecked('audioMixer') ? '-AudioMixer ' : ''}` +
-              `-PixelStreamingURL=ws://${pixelStreamingURL}/ -GraphicsAdapter=${processNumber.id.slice(4)} -ForceRes ` +
-              `-ResX=${resX} -ResY=${resY} -PixelStreamingWebRTCFps=${getValue('pixelStreamingWebRTCFps')}`
-            );
-          }
-        });
-        return config;
-      };
-
-      //加入一个UE5中的GPU进程数量输入框
-      const appendExecElements = (gpuNumber, execElements) => {
-        for (let i = execElements.length; i < gpuNumber; i++) {
-          let exec = new DOMParser()
-            .parseFromString(
-              execTemp
-                .replaceAll('graphicsAdapter', i)
-                .replaceAll('GPUNumber', 0),
-              'text/html'
-            )
-            .querySelector('.exec');
-          $('#exec-container').appendChild(exec);
-        }
-      };
-      //移除多余UE5中的GPU进程数量输入框，且如果移除的输入框中，值不为0，就需要进行更新，删除多余的参数
-      const removeExecElements = (gpuNumber, execElements) => {
-        const excessElements = Array.from(execElements).slice(gpuNumber);
-        let needToupdate = true;
-        excessElements.forEach((exec) => {
-          if (exec.querySelector(`[name = processNumber]`).value > 0)
-            needToupdate = false;
-          exec.remove();
-        });
-        return needToupdate;
-      };
-
-      const handlers = {
-        GPUNumber: (value) => {
-          const gpuNumber = parseInt(value, 10);
-          if (gpuNumber < 0) {
-            alert('GPU 数量不能小于0');
-            renderConfigForm();
-            return true;
-          }
-          const execElements = $$('.exec');
-          let needsUpdate = true;
-          console.log(gpuNumber);
-          console.log(execElements);
-          execElements.length < gpuNumber
-            ? appendExecElements(gpuNumber, execElements)
-            : (needsUpdate = removeExecElements(gpuNumber, execElements));
-          return needsUpdate;
-        },
-        'http-auth': (value) => {
-          return value;
-        },
-        auth: (value) => {
-          if (!/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/.test(value)) {
-            alert(
-              '请输入正确的用户名和密码格式，例如：username:password。'
-            );
-            return true;
-          }
-          return false;
-        },
-        iceServers: (value) => {
-          try {
-            JSON.parse(value);
-            return false;
-          } catch (error) {
-            alert('iceServers格式有误！');
-            renderConfigForm();
-            return true;
-          }
-        },
-      };
-
-      let config = {};
-      let value =
-        event.target.type === 'checkbox'
-          ? event.target.checked
-          : event.target.value;
-      let PORT_new = null;
-
-      if (handlers[event.target.id] && handlers[event.target.id](value))
-        return;
-      //对UE5内的参数修改要特殊处理
-      if ($('#exec-container').contains(event.target)) {
-        config['UE5'] = createUE5Config();
-      } else {
-        switch (event.target.type) {
-          case 'number':
-            config[event.target.id] = parseFloat(value);
-            if (event.target.id === 'PORT' && value !== window.location.port)
-              PORT_new = value;
-            break;
-          case 'checkbox':
-            config[
-              event.target.id === 'http-auth' ? 'auth' : event.target.id
-            ] = event.target.id === 'UEVersion' ? (value ? 4.27 : 5) : value;
-            break;
-          default:
-            config[event.target.id] =
-              event.target.name === 'iceServers' ? JSON.parse(value) : value;
-        }
-      }
-
-      await handleConfigUpdate(config, PORT_new);
-    };
-
-    const getProcess = () => {
-      const ws = new WebSocket(`ws://${location.host}/Process`, `exec-ue`)
-      ws.onopen = function () {
-        console.info("✅", ws);
-      }
-
-      ws.onmessage = function (e) {
-        let logs = JSON.parse(e.data);
-        logs = logs.map(a=>`
+        ws.onmessage = function (e) {
+          let logs = JSON.parse(e.data);
+          logs = logs
+            .map(
+              (a) => `
           <tr>
             <td>${a.type}</td>
             <td>${a.address}</td>
             <td>${a.PORT}</td>
             <td>${a.path}</td>
             <td>断开</td>
-          </tr>  `).join('');
-        $('table#process tbody').innerHTML = logs;
-      }
+          </tr>  `
+            )
+            .join("");
+          $("table#process tbody").innerHTML = logs;
+        };
 
-      ws.onclose = function (e) {
-        console.warn(e);
-      }
-      
-    }
+        ws.onclose = function (e) {
+          console.warn(e);
+        };
+      };
 
-    async function tableClick(event){
-      if(event.target.innerHTML==='断开'){
-        const process = event.target.parentElement.children
-        const PORT = process[2].innerText
-        const eval = {
-          'signal.js':'process.exit(0)',
-          'Unreal Engine':`killUE(${PORT})`,
-          '	Peer Stream':`killPlayer(${PORT})`
-        }[process[0].innerText]
+      async function tableClick(event) {
+        if (event.target.innerHTML === "断开") {
+          const process = event.target.parentElement.children;
+          const PORT = process[2].innerText;
+          const eval = {
+            "signal.js": "process.exit(0)",
+            "Unreal Engine": `killUE(${PORT})`,
+            "	Peer Stream": `killPlayer(${PORT})`,
+          }[process[0].innerText];
 
-        await fetch('./eval', {
-          method:'POST',
-          headers: {
-            eval: encodeURIComponent(eval),
-          },
-        }).then(r=>{
-          if(!r.ok) throw(r.headers.get('error'))
-          handleUpdateSuccess($(`[name = linkToProcess]`));
-        }).catch(err=>{
-          alert(err)
-        })
-      }
-    }
-
-    const aggregateStats = async () => {
-      const statsReport = await ps.pc.getStats(null);
-      stats.innerText = '';
-
-      // most < 27
-      if (ps.VideoEncoderQP < 27) {
-        stats.style.color = 'lime';
-      } else if (ps.VideoEncoderQP < 36) {
-        stats.style.color = 'orange';
-        stats.innerText += `\n Spotty Network !`;
-      } else {
-        stats.style.color = 'red';
-        stats.innerText += `\n Bad Network !!`;
-      }
-
-      stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
-      statsReport.forEach((stat) => {
-        switch (stat.type) {
-          case 'data-channel': {
-            stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
-            stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
-            break;
-          }
-          case 'inbound-rtp': {
-            if (stat.mediaType === 'video')
-              stats.innerText += [
-                ``,
-                `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
-                `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
-                `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
-                `	FPS: ${stat.framesPerSecond} Hz`,
-                `	Frames Dropped: ${stat.framesDropped}`,
-                `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
-              ].join('\n');
-            else if (stat.mediaType === 'audio')
-              stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
-            break;
-          }
-          case 'candidate-pair': {
-            if (stat.state === 'succeeded')
-              stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
-            break;
-          }
-          case 'remote-candidate': {
-            stats.innerText +=
-              `\n ` + stat.protocol + ':// ' + stat.ip + ': ' + stat.port;
-            break;
-          }
-          case 'transport': {
-            const bitrate = ~~(
-              ((stat.bytesReceived - this.bytesReceived) /
-                (stat.timestamp - this.timestamp)) *
-              (1000 * 8)
-            );
-
-            stats.innerText += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
-
-            this.bytesReceived = stat.bytesReceived;
-            this.timestamp = stat.timestamp;
-            break;
-          }
-          default: {
-          }
+          await fetch("./eval", {
+            method: "POST",
+            headers: {
+              eval: encodeURIComponent(eval),
+            },
+          })
+            .then((r) => {
+              if (!r.ok) throw r.headers.get("error");
+              handleUpdateSuccess($(`[name = linkToProcess]`));
+            })
+            .catch((err) => {
+              alert(err);
+            });
         }
-      });
+      }
 
-      stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
+      const aggregateStats = async () => {
+        const statsReport = await ps.pc.getStats(null);
+        stats.innerText = "";
 
-      ps.timeout = setTimeout(aggregateStats, 1000);
-    };
+        // most < 27
+        if (ps.VideoEncoderQP < 27) {
+          stats.style.color = "lime";
+        } else if (ps.VideoEncoderQP < 36) {
+          stats.style.color = "orange";
+          stats.innerText += `\n Spotty Network !`;
+        } else {
+          stats.style.color = "red";
+          stats.innerText += `\n Bad Network !!`;
+        }
 
-    const navigateBasedOnHash = () => {
-      const pageHash = window.location.hash.slice(1);
-      renderPageContent(pageHash);
-    };
-    // // 页面加载和变化事件
-    window.onload = () => {
-      navigateBasedOnHash();
-    };
-    window.onhashchange = () => {
-      navigateBasedOnHash();
-    };
-  </script>
-</body>
+        stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
+        statsReport.forEach((stat) => {
+          switch (stat.type) {
+            case "data-channel": {
+              stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
+              stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+              break;
+            }
+            case "inbound-rtp": {
+              if (stat.mediaType === "video")
+                stats.innerText += [
+                  ``,
+                  `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
+                  `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
+                  `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
+                  `	FPS: ${stat.framesPerSecond} Hz`,
+                  `	Frames Dropped: ${stat.framesDropped}`,
+                  `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
+                ].join("\n");
+              else if (stat.mediaType === "audio")
+                stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+              break;
+            }
+            case "candidate-pair": {
+              if (stat.state === "succeeded")
+                stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
+              break;
+            }
+            case "remote-candidate": {
+              stats.innerText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+              break;
+            }
+            case "transport": {
+              const bitrate = ~~(
+                ((stat.bytesReceived - this.bytesReceived) / (stat.timestamp - this.timestamp)) *
+                (1000 * 8)
+              );
 
+              stats.innerText += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
+
+              this.bytesReceived = stat.bytesReceived;
+              this.timestamp = stat.timestamp;
+              break;
+            }
+            default: {
+            }
+          }
+        });
+
+        stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
+
+        ps.timeout = setTimeout(aggregateStats, 1000);
+      };
+
+      // 页面加载和变化
+      window.onload = window.onhashchange = () => {
+        $$('[name^="linkTo"]').forEach((element) => {
+          element.classList.remove("highlighted");
+        });
+        actions[location.hash].call();
+      };
+    </script>
+  </body>
 </html>
