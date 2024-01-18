@@ -308,7 +308,7 @@
     <a class="sidebarBtn" href="./signal.json" target="_blank" download="signal.json" data-normal="⬇️ 下载 signal.json"
       data-mini="⬇️" aria-label="下载 signal.json"></a>
     <!-- <rebootWindow class="sidebarBtn" data-normal="🔄 重启电脑" data-mini="🔄"></rebootWindow> -->
-    <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal>
+    <!-- <shutdownSignal class="sidebarBtn" data-normal="❎ 退出 signal.js" data-mini="❎"></shutdownSignal> -->
     <a class="sidebarBtn" href="#/config" data-normal="⚙️ 系统配置" data-mini="⚙️" aria-label="系统配置"
       name="linkToConfig"></a>
     <a class="sidebarBtn" href=" " data-normal="▶️ 进入应用" data-mini="▶️" aria-label="进入应用" name="linkToServer"></a>
@@ -455,17 +455,7 @@
       }, 1000);
     };
 
-    const handleShutdownSignal = async () => {
-      try {
-        await fetch('./eval', {
-          headers: {
-            eval: encodeURIComponent('process.exit(0)'),
-          },
-        });
-      } catch (error) {
-        console.log('shutdown signal failed', error);
-      }
-    };
+ 
 
     const handleCheckUpdate = async () => {
       const writeFiles = (
@@ -608,7 +598,6 @@
           inputElement.click();
         });
     };
-    $('shutdownSignal').addEventListener('click', handleShutdownSignal);
     $('checkUpdate').addEventListener('click', handleCheckUpdate);
     //渲染页面主内容
     const renderPageContent = async (pageHash) => {
@@ -976,6 +965,7 @@
         }[process[0].innerText]
 
         await fetch('./eval', {
+          method:'POST',
           headers: {
             eval: encodeURIComponent(eval),
           },

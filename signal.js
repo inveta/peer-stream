@@ -636,7 +636,7 @@ global.killUE=async function(port){
 			res(PID)
 		})
 	})
-
+  if(!PID)throw 'process ID not found'
 	command = `taskkill /PID ${PID} /F`;
 	await new Promise((res,rej)=>{
 		child_process.exec(command, (err, stdout, stderr) => {
