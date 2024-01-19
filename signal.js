@@ -442,7 +442,7 @@ global.address = Object.values(nets).flat()
   .find(a => a.family === 'IPv4' && !a.internal)?.address
 
 child_process.exec(
-  `start http://${address}:${PORT}/signal.html#/config`
+  `start http://${address}:${PORT}/signal.html#config`
 );
 
 // 打印映射关系
