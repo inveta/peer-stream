@@ -1,11 +1,11 @@
 {
 	"env": false,
-	"PORT": 88,
+	"PORT": 99,
 	"auth": false,
 	"one2one": false,
 	"UE5": [
-		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
-		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://localhost:88/ -GraphicsAdapter=1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
+		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://10.0.20.236:88/ -GraphicsAdapter=0 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30",
+		"start C:\\Users\\admin\\Desktop\\gza\\Windows\\gza.exe -Unattended -RenderOffScreen -PixelStreamingURL=ws://10.0.20.236:88/ -GraphicsAdapter=1 -ForceRes -ResX=600 -ResY=400 -PixelStreamingWebRTCFps=30"
 	],
 	"preload": 0,
 	"exeUeCoolTime": 60,
@@ -22,5 +22,5 @@
 		}
 	],
 	"boot": true,
-	"comment": "INVETA官网：https://inveta.cn\nGITHUB源码：https://github.com/inveta"
+	"comment": "INVETA官网：inveta.cn\nGITHUB仓库：github.com/inveta\nQQ交流群：681464378"
 }

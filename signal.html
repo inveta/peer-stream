@@ -16,10 +16,6 @@
         --btn-icon-input-color: #ff7f50;
       }
 
-      html {
-        font-size: calc(14px + (100vw - 480px) * (3 / 720));
-      }
-
       html::-webkit-scrollbar,
       textarea::-webkit-scrollbar {
         display: none;
@@ -42,7 +38,6 @@
         left: 0;
         height: 100%;
         width: 3rem;
-        font-size: 1rem;
         z-index: 4;
         color: #000000;
       }
@@ -72,7 +67,7 @@
         color: var(--font-color-dark);
       }
 
-      .fill {
+      aside > :last-child {
         background-color: var(--sidabar-bg-color-dark);
         flex: 100%;
         height: 100%;
@@ -121,7 +116,6 @@
       form {
         height: 98%;
         color: var(--font-color-dark);
-        font-size: 1rem;
         display: flex;
         flex-wrap: wrap;
       }
@@ -207,7 +201,6 @@
         pointer-events: none;
         margin: 1rem;
         text-shadow: var(--btn-color-dark) 0 0 0.3em;
-        font-size: 1rem;
         color: var(--font-color-dark);
       }
 
@@ -222,6 +215,7 @@
         /* border-collapse: collapse; */
         color: #fff;
         white-space: pre-wrap;
+        word-break: break-all;
       }
 
       thead,
@@ -242,7 +236,7 @@
 
       @media (max-width: 480px) {
         html {
-          font-size: 14px;
+          /* font-size: 14px; */
         }
       }
 
@@ -286,7 +280,7 @@
 
       @media (min-width: 1200px) {
         html {
-          font-size: 16px;
+          /* font-size: 16px; */
         }
 
         .common-input,
@@ -322,8 +316,8 @@
       ></a>
       <a
         class="sidebarBtn"
-        href="#config"
-        id="config"
+        href="#signal.json"
+        id="signal.json"
         data-normal="⚙️ 系统配置"
         data-mini="⚙️"
         aria-label="系统配置"
@@ -338,8 +332,8 @@
       ></a>
       <a
         class="sidebarBtn"
-        href="#process"
-        id="process"
+        href="#signal.js"
+        id="signal.js"
         data-normal="👤 进程管理"
         data-mini="👤"
         aria-label="进程管理"
@@ -359,7 +353,7 @@
         data-mini="🔍"
         onclick="handleCheckUpdate()"
       ></checkUpdate>
-      <div class="fill"></div>
+      <div></div>
     </aside>
 
     <main></main>
@@ -764,7 +758,7 @@
           .then((response) => {
             if (!response.ok) throw response.headers.get("error");
 
-            handleUpdateSuccess($(`#config`));
+            handleUpdateSuccess($(`:target`));
             if (PORT_new) location.port = PORT_new;
           })
           .catch((error) => {
@@ -949,7 +943,7 @@
           })
             .then((r) => {
               if (!r.ok) throw r.headers.get("error");
-              handleUpdateSuccess($(`#process`));
+              handleUpdateSuccess($(`:target`));
             })
             .catch((error) => alert(error));
         }
@@ -1027,7 +1021,7 @@
       // 页面加载和变化
       window.onload = window.onhashchange = async () => {
         switch (location.hash) {
-          case "#config": {
+          case "#signal.json": {
             $("main").innerHTML = config;
             await renderConfigForm();
             $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
@@ -1044,7 +1038,7 @@
             window.addEventListener("hashchange", (e) => clearTimeout(ps.timeout), { once: true });
             break;
           }
-          case "#process": {
+          case "#signal.js": {
             $("main").innerHTML = process;
             getProcess();
             break;
