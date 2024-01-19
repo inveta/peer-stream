@@ -67,7 +67,7 @@
         content: attr(data-mini);
       }
 
-      .highlighted {
+      :target {
         background-color: var(--main-bg-color-dark);
         color: var(--font-color-dark);
       }
@@ -78,11 +78,11 @@
         height: 100%;
       }
 
-      :has(+ .highlighted) {
+      :has(+ :target) {
         border-bottom-right-radius: 1rem;
       }
 
-      .highlighted + * {
+      :target + * {
         border-top-right-radius: 1rem;
       }
 
@@ -211,7 +211,7 @@
         color: var(--font-color-dark);
       }
 
-      #process {
+      table {
         position: absolute;
         top: 1rem;
         right: 1rem;
@@ -279,7 +279,7 @@
           width: 94%;
         }
 
-        #process {
+        table {
           width: calc(100% - 13rem);
         }
       }
@@ -322,27 +322,27 @@
       ></a>
       <a
         class="sidebarBtn"
-        href="#/config"
+        href="#config"
+        id="config"
         data-normal="⚙️ 系统配置"
         data-mini="⚙️"
         aria-label="系统配置"
-        name="linkToConfig"
       ></a>
       <a
         class="sidebarBtn"
-        href=" "
+        href="#peer-stream"
+        id="peer-stream"
         data-normal="▶️ 进入应用"
         data-mini="▶️"
         aria-label="进入应用"
-        name="linkToServer"
       ></a>
       <a
         class="sidebarBtn"
-        href="#/process"
+        href="#process"
+        id="process"
         data-normal="👤 进程管理"
         data-mini="👤"
         aria-label="进程管理"
-        name="linkToProcess"
       ></a>
       <a
         class="sidebarBtn"
@@ -457,14 +457,14 @@
       `;
       const runningServer = `
         <peer-stream>
-          <video is="peer-stream" audio> </video>
+          <video is="peer-stream" audio id="ws://${location.host + location.pathname}"> </video>
 
           <!-- WebRTC monitor -->
           <pre id="stats">Not connected</pre>
         </peer-stream>
       `;
       const process = `
-        <table id="process" onclick="tableClick(event)">
+        <table onclick="tableClick(event)">
           <thead>
             <tr>
               <th>进程</th>
@@ -527,7 +527,7 @@
                 Promise.all(
                   responses.map((response) => {
                     if (!response.ok) {
-                      throw response.headers.get('error');
+                      throw response.headers.get("error");
                     }
                     handleUpdateSuccess($("checkUpdate"));
                     // window.location.reload();
@@ -628,29 +628,25 @@
 
       //渲染页面主内容
       const actions = {
-        "#/config": async () => {
+        "#config": async () => {
           $(".router-view").innerHTML = config;
           await renderConfigForm();
           $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
           $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
           $("#http-auth").addEventListener("click", () => toggleAuthInput());
           $("#configForm").addEventListener("change", () => submitConfig(event));
-          $("[name = linkToConfig]").classList.add("highlighted");
           if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
         },
-        "": () => {
+        "#peer-stream": () => {
           $(".router-view").innerHTML = runningServer;
           ps.addEventListener("playing", aggregateStats, {
             once: true,
           });
           ps.addEventListener("message", (e) => {});
           ps.addEventListener("suspend", (e) => {});
-
-          $("[name = linkToServer]").classList.add("highlighted");
         },
-        "#/process": () => {
+        "#process": () => {
           $(".router-view").innerHTML = process;
-          $("[name = linkToProcess]").classList.add("highlighted");
           getProcess();
           if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
         },
@@ -793,7 +789,7 @@
           .then((response) => {
             if (!response.ok) throw response.headers.get("error");
 
-            handleUpdateSuccess($(`[name = linkToConfig]`));
+            handleUpdateSuccess($(`#config`));
             if (PORT_new) location.port = PORT_new;
           })
           .catch((error) => {
@@ -932,6 +928,7 @@
         const ws = new WebSocket(`ws://${location.host}/Process`, `exec-ue`);
         ws.onopen = function () {
           console.info("✅", ws);
+          window.addEventListener("hashchange", () => ws.close(), { once: true });
         };
 
         ws.onmessage = function (e) {
@@ -948,7 +945,7 @@
           </tr>  `
             )
             .join("");
-          $("table#process tbody").innerHTML = logs;
+          $("table tbody").innerHTML = logs;
         };
 
         ws.onclose = function (e) {
@@ -974,7 +971,7 @@
           })
             .then((r) => {
               if (!r.ok) throw r.headers.get("error");
-              handleUpdateSuccess($(`[name = linkToProcess]`));
+              handleUpdateSuccess($(`#process`));
             })
             .catch((err) => {
               alert(err);
@@ -1053,9 +1050,6 @@
 
       // 页面加载和变化
       window.onload = window.onhashchange = () => {
-        $$('[name^="linkTo"]').forEach((element) => {
-          element.classList.remove("highlighted");
-        });
         actions[location.hash].call();
       };
     </script>
