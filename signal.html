@@ -355,7 +355,7 @@
       ></a>
       <checkUpdate
         class="sidebarBtn"
-        data-normal="🔍 检查更新 1.16"
+        data-normal="🔍 检查更新 1.17"
         data-mini="🔍"
         onclick="handleCheckUpdate()"
       ></checkUpdate>
@@ -626,31 +626,6 @@
             inputElement.click();
           });
       }
-
-      //渲染页面主内容
-      const actions = {
-        "#config": async () => {
-          $("main").innerHTML = config;
-          await renderConfigForm();
-          $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
-          $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
-          $("#http-auth").addEventListener("click", () => toggleAuthInput());
-          $("form").addEventListener("change", () => submitConfig(event));
-        },
-        "#peer-stream": () => {
-          $("main").innerHTML = runningServer;
-          ps.addEventListener("playing", aggregateStats, {
-            once: true,
-          });
-          ps.addEventListener("message", (e) => {});
-          window.addEventListener("hashchange", (e) => clearTimeout(ps.timeout), { once: true });
-        },
-        "#process": () => {
-          $("main").innerHTML = process;
-          getProcess();
-        },
-        "": () => {},
-      };
 
       //开关http验证
       const toggleAuthInput = () => {
@@ -925,7 +900,8 @@
       };
 
       const getProcess = () => {
-        const ws = new WebSocket(`ws://${location.host}/${navigator.platform}`, `exec-ue`);
+        let ws = `ws://${location.host}/${navigator.platform}/${navigator.vendor}`;
+        ws = new WebSocket(ws, `exec-ue`);
         ws.onopen = function () {
           console.info("✅", ws);
           window.addEventListener("hashchange", () => ws.close(), { once: true });
@@ -936,13 +912,13 @@
           logs = logs
             .map(
               (a) => `
-          <tr>
-            <td>${a.type}</td>
-            <td>${a.address}</td>
-            <td>${a.PORT}</td>
-            <td>${a.path}</td>
-            <td>断开</td>
-          </tr>  `
+				<tr>
+				  <td>${a.type}</td>
+				  <td>${a.address}</td>
+				  <td>${a.PORT}</td>
+				  <td>${a.path}</td>
+				  <td>断开</td>
+				</tr>  `
             )
             .join("");
           $("table tbody").innerHTML = logs;
@@ -958,7 +934,7 @@
           const process = event.target.parentElement.children;
           const PORT = process[2].innerText;
           let eval = {
-            "signal.js": "process.exit(0)",
+            "signal.js": "setTimeout(()=>process.exit(0),1),''",
             "Unreal Engine": `killUE(${PORT})`,
             "	Peer Stream": `killPlayer(${PORT})`,
           };
@@ -975,9 +951,7 @@
               if (!r.ok) throw r.headers.get("error");
               handleUpdateSuccess($(`#process`));
             })
-            .catch((err) => {
-              alert(err);
-            });
+            .catch((error) => alert(error));
         }
       }
 
@@ -1051,8 +1025,33 @@
       };
 
       // 页面加载和变化
-      window.onload = window.onhashchange = () => {
-        actions[location.hash].call();
+      window.onload = window.onhashchange = async () => {
+        switch (location.hash) {
+          case "#config": {
+            $("main").innerHTML = config;
+            await renderConfigForm();
+            $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
+            $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
+            $("#http-auth").addEventListener("click", () => toggleAuthInput());
+            $("form").addEventListener("change", () => submitConfig(event));
+            break;
+          }
+          case "#peer-stream": {
+            $("main").innerHTML = runningServer;
+            ps.addEventListener("playing", aggregateStats, {
+              once: true,
+            });
+            window.addEventListener("hashchange", (e) => clearTimeout(ps.timeout), { once: true });
+            break;
+          }
+          case "#process": {
+            $("main").innerHTML = process;
+            getProcess();
+            break;
+          }
+          default: {
+          }
+        }
       };
     </script>
   </body>

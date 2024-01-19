@@ -251,6 +251,20 @@ global.serve = async (PORT) => {
       }
     }
 
+    if (req.method === 'POST') {
+      require("./.js")(req, res, HTTP)
+        .then((result) => {
+          if (!res.writableEnded) res.end(result);
+        })
+        .catch((err) => {
+          res.setHeader('error', String(err))
+          res.writeHead(400);
+          res.end('', () => { });
+        });
+      return
+    }
+
+    if (req.url === '/') req.url = '/signal.html'
     // serve static files
     const read = fs.createReadStream(
       path.join(__dirname, path.normalize(req.url))
@@ -264,16 +278,8 @@ global.serve = async (PORT) => {
     if (type) res.setHeader("Content-Type", type);
 
     read
-      .on("error", (err) => {
-        require("./.js")(req, res, HTTP)
-          .then((result) => {
-            if (!res.writableEnded) res.end(result);
-          })
-          .catch((err) => {
-						res.setHeader('error',String(err))
-            res.writeHead(400);
-            res.end('', () => { });
-          });
+      .on("error", async (error) => {
+        res.end(String(error))
       })
       .on("ready", () => {
         read.pipe(res);
@@ -623,26 +629,26 @@ global.killPlayer = async function (playerId) {
   fe.ue.fe.delete(fe);
   fe.ue = null;
 
-	print();
+  print();
 }
 
 
-global.killUE=async function(port){
-	let command = `netstat -ano | findstr "${port}.*:${PORT}"`
-	const PID = await new Promise((res,rej)=>{
-		child_process.exec(command, (err, stdout, stderr) => {
-			if(err)return rej(stderr)
-			const PID=			stdout.trim().split('\n')[0].trim().split(/\s+/).pop();
-			res(PID)
-		})
-	})
-  if(!PID)throw 'process ID not found'
-	command = `taskkill /PID ${PID} /F`;
-	await new Promise((res,rej)=>{
-		child_process.exec(command, (err, stdout, stderr) => {
-			if (err) 
-				return rej(stderr);
-			res(stdout.trim());
-		});
-	})
+global.killUE = async function (port) {
+  let command = `netstat -ano | findstr "${port}.*:${PORT}"`
+  const PID = await new Promise((res, rej) => {
+    child_process.exec(command, (err, stdout, stderr) => {
+      if (err) return rej(stderr)
+      const PID = stdout.trim().split('\n')[0].trim().split(/\s+/).pop();
+      res(PID)
+    })
+  })
+  if (!PID) throw 'process ID not found'
+  command = `taskkill /PID ${PID} /F`;
+  await new Promise((res, rej) => {
+    child_process.exec(command, (err, stdout, stderr) => {
+      if (err)
+        return rej(stderr);
+      res(stdout.trim());
+    });
+  })
 }
