@@ -32,7 +32,7 @@
         background-color: var(--main-bg-color-dark);
       }
 
-      .router-view {
+      main {
         margin-left: 3rem;
       }
 
@@ -118,7 +118,7 @@
         background: var(--btn-icon-input-color);
       }
 
-      #configForm {
+      form {
         height: 98%;
         color: var(--font-color-dark);
         font-size: 1rem;
@@ -300,7 +300,7 @@
           width: calc(50% / 4);
         }
 
-        .router-view {
+        main {
           margin-left: 11rem;
         }
       }
@@ -361,7 +361,8 @@
       ></checkUpdate>
       <div class="fill"></div>
     </aside>
-    <main class="router-view"></main>
+
+    <main></main>
 
     <script type="text/javascript">
       const execTemp = `
@@ -371,7 +372,7 @@
         </item>
       `;
       const config = `
-        <form id="configForm">
+        <form>
           <item id="auth-input">
             <label for="auth">用户验证</label>
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
@@ -629,27 +630,26 @@
       //渲染页面主内容
       const actions = {
         "#config": async () => {
-          $(".router-view").innerHTML = config;
+          $("main").innerHTML = config;
           await renderConfigForm();
           $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
           $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
           $("#http-auth").addEventListener("click", () => toggleAuthInput());
-          $("#configForm").addEventListener("change", () => submitConfig(event));
-          if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
+          $("form").addEventListener("change", () => submitConfig(event));
         },
         "#peer-stream": () => {
-          $(".router-view").innerHTML = runningServer;
+          $("main").innerHTML = runningServer;
           ps.addEventListener("playing", aggregateStats, {
             once: true,
           });
           ps.addEventListener("message", (e) => {});
-          ps.addEventListener("suspend", (e) => {});
+          window.addEventListener("hashchange", (e) => clearTimeout(ps.timeout), { once: true });
         },
         "#process": () => {
-          $(".router-view").innerHTML = process;
+          $("main").innerHTML = process;
           getProcess();
-          if (typeof ps !== "undefined") window.clearTimeout(ps.timeout);
         },
+        "": () => {},
       };
 
       //开关http验证
@@ -925,7 +925,7 @@
       };
 
       const getProcess = () => {
-        const ws = new WebSocket(`ws://${location.host}/Process`, `exec-ue`);
+        const ws = new WebSocket(`ws://${location.host}/${navigator.platform}`, `exec-ue`);
         ws.onopen = function () {
           console.info("✅", ws);
           window.addEventListener("hashchange", () => ws.close(), { once: true });
@@ -948,8 +948,8 @@
           $("table tbody").innerHTML = logs;
         };
 
-        ws.onclose = function (e) {
-          console.warn(e);
+        ws.onclose = (e) => {
+          console.log(e);
         };
       };
 
@@ -957,16 +957,18 @@
         if (event.target.innerHTML === "断开") {
           const process = event.target.parentElement.children;
           const PORT = process[2].innerText;
-          const eval = {
+          let eval = {
             "signal.js": "process.exit(0)",
             "Unreal Engine": `killUE(${PORT})`,
             "	Peer Stream": `killPlayer(${PORT})`,
-          }[process[0].innerText];
+          };
+
+          eval = encodeURIComponent(eval[process[0].innerText]);
 
           await fetch("./eval", {
             method: "POST",
             headers: {
-              eval: encodeURIComponent(eval),
+              eval,
             },
           })
             .then((r) => {
