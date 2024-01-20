@@ -29,35 +29,42 @@
       }
 
       main {
-        margin-left: 3rem;
+        /* margin-left: 3rem; */
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: calc(100vw - 3rem);
+        padding: 1rem;
+        box-sizing: border-box;
       }
 
-      .sidebar {
+      aside {
         position: fixed;
         top: 0;
         left: 0;
         height: 100%;
         width: 3rem;
-        z-index: 4;
+        /* z-index: 4; */
         color: #000000;
       }
 
-      .sidebarBtn {
+      aside > * {
         height: 64px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        line-height: 64px;
+        display: block;
         background-color: var(--sidabar-bg-color-dark);
         text-decoration: none;
         color: black;
         cursor: pointer;
+        text-align: center;
       }
 
-      .sidebarBtn:hover {
+      aside > *:hover {
         color: var(--btn-icon-input-color);
       }
 
-      .sidebarBtn::before {
+      aside > *::before {
         filter: sepia(100%) hue-rotate(312deg) saturate(300%);
         content: attr(data-mini);
       }
@@ -71,6 +78,7 @@
         background-color: var(--sidabar-bg-color-dark);
         flex: 100%;
         height: 100%;
+        cursor: default;
       }
 
       :has(+ :target) {
@@ -114,7 +122,7 @@
       }
 
       form {
-        height: 98%;
+        /* height: 98%; */
         color: var(--font-color-dark);
         display: flex;
         flex-wrap: wrap;
@@ -185,15 +193,12 @@
       }
 
       peer-stream {
-        display: flex;
-        height: 100%;
       }
 
       video {
         overflow: hidden;
         height: calc(100vh - 2rem);
         width: 100%;
-        margin: 1rem;
       }
 
       #stats {
@@ -205,13 +210,9 @@
       }
 
       table {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        width: calc(100% - 5rem);
-      }
-
-      table {
+        /* top: 1rem; */
+        /* right: 1rem; */
+        width: 100%;
         /* border-collapse: collapse; */
         color: #fff;
         white-space: pre-wrap;
@@ -234,13 +235,10 @@
         color: var(--btn-icon-input-color);
       }
 
-      @media (max-width: 480px) {
-        html {
-          /* font-size: 14px; */
-        }
+      @media (max-width: 600px) {
       }
 
-      @media screen and (min-width: 480px) {
+      @media (min-aspect-ratio: 1/1) {
         .switch-input {
           width: calc(100% / 4);
         }
@@ -250,19 +248,17 @@
           margin-left: 0;
           margin-right: 0;
         }
-      }
 
-      @media screen and (min-width: 768px) {
-        .sidebar {
+        aside {
           width: 11rem;
         }
 
-        .sidebarBtn {
+        aside > * {
           padding-left: 1rem;
-          justify-content: left;
+          text-align: left;
         }
 
-        .sidebarBtn::before {
+        aside > *::before {
           content: attr(data-normal);
         }
 
@@ -273,12 +269,12 @@
           width: 94%;
         }
 
-        table {
-          width: calc(100% - 13rem);
+        main {
+          width: calc(100% - 11rem);
         }
       }
 
-      @media (min-width: 1200px) {
+      @media (min-aspect-ratio: 3/2) {
         html {
           /* font-size: 16px; */
         }
@@ -304,9 +300,8 @@
   <body>
     <script type="text/javascript" src="./peer-stream.js"></script>
 
-    <aside class="sidebar">
+    <aside>
       <a
-        class="sidebarBtn"
         href="./signal.json"
         target="_blank"
         download="signal.json"
@@ -315,7 +310,6 @@
         aria-label="下载 signal.json"
       ></a>
       <a
-        class="sidebarBtn"
         href="#signal.json"
         id="signal.json"
         data-normal="⚙️ 系统配置"
@@ -323,7 +317,6 @@
         aria-label="系统配置"
       ></a>
       <a
-        class="sidebarBtn"
         href="#peer-stream"
         id="peer-stream"
         data-normal="▶️ 进入应用"
@@ -331,7 +324,6 @@
         aria-label="进入应用"
       ></a>
       <a
-        class="sidebarBtn"
         href="#signal.js"
         id="signal.js"
         data-normal="👤 进程管理"
@@ -339,7 +331,6 @@
         aria-label="进程管理"
       ></a>
       <a
-        class="sidebarBtn"
         href="https://github.com/inveta/peer-stream"
         target="_blank"
         rel="noopener"
@@ -348,7 +339,6 @@
         aria-label="Github 源码"
       ></a>
       <checkUpdate
-        class="sidebarBtn"
         data-normal="🔍 检查更新 1.17"
         data-mini="🔍"
         onclick="handleCheckUpdate()"
@@ -452,12 +442,15 @@
       `;
       const runningServer = `
         <peer-stream>
-          <video is="peer-stream" audio id="ws://${location.host + location.pathname}/signal.html"> </video>
+          <video is="peer-stream" audio id="ws://${
+            location.host + location.pathname
+          }/signal.html"> </video>
 
           <!-- WebRTC monitor -->
           <pre id="stats">Not connected</pre>
         </peer-stream>
       `;
+      // <table>会根据内容长短，自动分配列的宽度
       const process = `
         <table onclick="tableClick(event)">
           <thead>
