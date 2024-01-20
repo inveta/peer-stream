@@ -40,7 +40,6 @@
       }
 
       aside {
-        /* top: 0; */
         /* left: 0; */
         height: 100%;
         width: 3rem;
@@ -96,6 +95,7 @@
         cursor: pointer;
         background-color: white;
         border: 0.125rem solid #dddddd;
+        padding: 0;
       }
 
       input[type="checkbox"]:before {
@@ -133,8 +133,9 @@
       textarea {
         color: var(--font-color-dark);
         background-color: var(--main-bg-color-dark);
-        border: 1px solid var(--sidabar-bg-color-dark);
+        border: 1px solid white;
         border-radius: 0.5rem;
+        padding: 1rem;
       }
 
       input:focus,
@@ -143,42 +144,36 @@
         outline: none;
       }
 
-      item {
-        margin: 0.5rem 0;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        position: relative;
+      label {
+        display: block;
+        margin-bottom: 0.7rem;
+        line-height: 1rem;
       }
 
       .common-input input,
       #auth-input input {
         width: 100%;
-        margin: 0.7rem 0;
-        height: 2.5rem;
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         box-sizing: border-box;
       }
 
-      .switch-input {
-        align-items: center;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .switch-input input {
-        margin: 0.5rem 0 0 0;
-      }
-
       .textarea-container {
-        display: flex;
-        flex-direction: column;
+        /* display: flex; */
+        position: relative;
+      }
+
+      .textarea-container label {
+        position: absolute;
+        background: var(--main-bg-color-dark);
+        left: 1rem;
+        /* top: -0.5rem; */
+        padding: 0.5rem 1rem;
+        translate: 0 -50%;
       }
 
       .textarea-container textarea {
         height: 100%;
         width: 100%;
-        margin: 0.7rem 0;
         box-sizing: border-box;
       }
 
@@ -261,12 +256,6 @@
 
         form {
           grid-template-columns: 1fr 1fr 1fr 1fr;
-        }
-
-        .common-input,
-        #auth-input,
-        .textarea-container {
-          margin: 0.5rem 1%;
         }
       }
     </style>
@@ -594,7 +583,8 @@
 
       //开关http验证
       const toggleAuthInput = () => {
-        $("#auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
+        // $("#auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
+        $("#auth-input").toggleAttribute("hidden");
         $("#auth").focus();
       };
       //切换用户验证按钮显示方式
