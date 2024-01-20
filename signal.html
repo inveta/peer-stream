@@ -45,13 +45,12 @@
       }
 
       aside > * {
-        /* height: 64px; */
-        line-height: 64px;
+        line-height: 4rem;
         background-color: var(--sidabar-bg-color-dark);
         text-decoration: none;
         color: black;
         cursor: pointer;
-        text-align: center;
+        /* text-align: left; */
         white-space: nowrap;
         padding: 0 1rem;
       }
@@ -72,7 +71,6 @@
       }
 
       aside > :last-child {
-        background-color: var(--sidabar-bg-color-dark);
         flex-grow: 1;
         cursor: default;
       }
@@ -121,12 +119,11 @@
 
       form {
         display: grid;
-        grid-auto-rows: 10rem;
+        grid-auto-rows: 9rem;
         grid-auto-flow: dense;
         gap: 2rem;
         grid-template-columns: 1fr 1fr;
         color: var(--font-color-dark);
-        /* flex-wrap: wrap; */
       }
 
       input,
@@ -150,25 +147,33 @@
         line-height: 1rem;
       }
 
-      .common-input input,
-      #auth-input input {
+      inline input {
         width: 100%;
         font-size: 1.3rem;
         box-sizing: border-box;
       }
 
+      check-box {
+        text-align: center;
+      }
+
+      inline,
       text-area {
-        /* display: flex; */
         position: relative;
       }
 
+      inline label,
       text-area label {
         position: absolute;
-        background: var(--main-bg-color-dark);
-        left: 1rem;
-        /* top: -0.5rem; */
-        padding: 0.5rem 1rem;
-        translate: 0 -50%;
+        background: black;
+        left: 0;
+        right: 0;
+        top: -0.5rem;
+        width: fit-content;
+        margin: auto;
+        padding: 0 1rem 0.5rem 1rem;
+        font-size: larger;
+        /* translate: 0 -50%; */
       }
 
       text-area textarea {
@@ -205,7 +210,7 @@
 
       td,
       th {
-        padding: 4px;
+        padding: 0.5rem;
       }
 
       td:last-child:hover {
@@ -224,16 +229,6 @@
           grid-template-columns: 1fr 1fr 1fr;
         }
 
-        .switch-input {
-          margin-left: 0;
-          margin-right: 0;
-        }
-
-        aside > * {
-          padding-left: 1rem;
-          text-align: left;
-        }
-
         aside > *::before {
           content: attr(data-normal);
         }
@@ -249,7 +244,6 @@
   </head>
 
   <body>
-    <script type="text/javascript" src="./peer-stream.js"></script>
 
     <aside>
       <a
@@ -299,54 +293,61 @@
 
     <main></main>
 
+    <script type="text/javascript" src="./peer-stream.js"></script>
+
     <script type="text/javascript">
       const execTemp = `
-        <item class="common-input exec">
+        <inline class="exec">
           <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
           <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
-        </item>
+        </inline>
       `;
       const config = `
         <form>
-          <item id="auth-input" style="    grid-column: span 2;">
-            <label for="auth">用户验证</label>
+          <inline id="auth-input" style="    grid-column: span 2;">
+            <label for="auth">用户名:密码</label>
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
-          </item>
-          <item class="common-input">
+          </inline>
+
+          <inline>
             <label for="PORT">端口号</label>
             <input type="number" id="PORT" name="PORT" required />
-          </item>
-          <item class="common-input">
+          </inline>
+
+          <inline>
             <label for="preload">预加载个数</label>
             <input type="number" name="preload" id="preload" required />
-          </item>
-          <item class="common-input">
+          </inline>
+
+          <inline>
             <label for="exeUeCoolTime">冷却时间 (s) </label>
             <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
-          </item>
-          <item class="switch-input">
+          </inline>
+
+          <check-box>
             <label for="auth">http 认证</label>
             <input type="checkbox" id="http-auth" name="http-auth" />
-          </item>
-          <item class="switch-input">
+          </check-box>
+          <check-box>
             <label for="one2one">一对一模式</label>
             <input type="checkbox" id="one2one" name="one2one" />
-          </item>
-          <item class="switch-input">
+          </check-box>
+          <check-box>
             <label for="boot">开机自启动</label>
             <input type="checkbox" id="boot" name="boot" />
-          </item>
-          <item class="switch-input">
+          </check-box>
+          <check-box>
             <label for="UEVersion">旧版 UE4</label>
             <input type="checkbox" id="UEVersion" name="UEVersion" />
-          </item>
+          </check-box>
 
 
-          <item class="common-input" style="    grid-column: span 2;">
+          <inline style="    grid-column: span 2;">
             <label for="GPUFile">UE启动进程</label>
             <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
-          </item>
-          <item class="common-input">
+          </inline>
+
+          <inline>
             <label for="resolution">分辨率</label>
             <input name="resolution" list="resolutionList" id="resolution"
               placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
@@ -358,29 +359,32 @@
               <option value="800*600"></option>
               <option value="640*480"></option>
             </datalist>
-          </item>
-          <item class="common-input">
+          </inline>
+
+          <inline>
             <label for="pixelStreamingWebRTCFps">渲染帧率</label>
             <input type="number" name="pixelStreamingWebRTCFps" id="pixelStreamingWebRTCFps"
               placeholder="填入所需渲染出的帧率(应为数字)" />
-          </item>
-          <item class="common-input" id="GPU">
+          </inline>
+
+          <inline id="GPU">
             <label for="GPUNumber">GPU数量</label>
             <input type="number" name="GPUNumber" id="GPUNumber"
               placeholder="请填入需要的GPU数量"/>
-          </item>
-          <item class="switch-input">
+          </inline>
+
+          <check-box>
             <label for="unattended">忽略错误弹窗</label>
             <input type="checkbox" name="unattended" id="unattended" />
-          </item>
-          <item class="switch-input">
+          </check-box>
+          <check-box>
             <label for="renderOffScreen">后台渲染UE</label>
             <input type="checkbox" name="renderOffScreen" id="renderOffScreen" />
-          </item>
-          <item class="switch-input">
+          </check-box>
+          <check-box>
             <label for="audioMixer">传输音频</label>
             <input type="checkbox" name="audioMixer" id="audioMixer" />
-          </item>
+          </check-box>
  
 
           <text-area  style="    grid-column: span 2;">
@@ -571,7 +575,6 @@
 
       //开关http验证
       const toggleAuthInput = () => {
-        // $("#auth-input").style.display = $("#http-auth").checked ? "flex" : "none";
         $("#auth-input").toggleAttribute("hidden");
         $("#auth").focus();
       };
