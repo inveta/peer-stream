@@ -120,10 +120,13 @@
       }
 
       form {
-        /* height: 98%; */
+        display: grid;
+        grid-auto-rows: 10rem;
+        grid-auto-flow: dense;
+        gap: 2rem;
+        grid-template-columns: 1fr 1fr;
         color: var(--font-color-dark);
-        display: flex;
-        flex-wrap: wrap;
+        /* flex-wrap: wrap; */
       }
 
       input,
@@ -148,24 +151,17 @@
         position: relative;
       }
 
-      .common-input,
-      #auth-input,
-      .textarea-container {
-        margin: 0.5rem 4%;
-        width: 92%;
-      }
-
       .common-input input,
       #auth-input input {
-        width: auto;
+        width: 100%;
         margin: 0.7rem 0;
-        height: 1.6rem;
-        font-size: 1.2rem;
+        height: 2.5rem;
+        font-size: 1.4rem;
+        box-sizing: border-box;
       }
 
       .switch-input {
         align-items: center;
-        width: calc(100% / 2);
         display: flex;
         flex-direction: column;
       }
@@ -174,19 +170,13 @@
         margin: 0.5rem 0 0 0;
       }
 
-      #exec-container {
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-      }
-
       .textarea-container {
         display: flex;
         flex-direction: column;
       }
 
       .textarea-container textarea {
-        height: 10rem;
+        height: 100%;
         margin: 0.7rem 0;
       }
 
@@ -240,12 +230,11 @@
       }
 
       @media (min-aspect-ratio: 1/1) {
-        .switch-input {
-          width: calc(100% / 4);
+        form {
+          grid-template-columns: 1fr 1fr 1fr;
         }
 
-        #exec-container .switch-input {
-          width: calc(52% / 3);
+        .switch-input {
           margin-left: 0;
           margin-right: 0;
         }
@@ -262,33 +251,22 @@
         aside > *::before {
           content: attr(data-normal);
         }
-
-        .common-input,
-        #auth-input,
-        .textarea-container {
-          margin: 0.5rem 3%;
-          width: 94%;
-        }
-
-        main {
-          /* width: calc(100% - 11rem); */
-        }
       }
 
+      /* 最宽 */
       @media (min-aspect-ratio: 3/2) {
         html {
           /* font-size: 16px; */
+        }
+
+        form {
+          grid-template-columns: 1fr 1fr 1fr 1fr;
         }
 
         .common-input,
         #auth-input,
         .textarea-container {
           margin: 0.5rem 1%;
-          width: 48%;
-        }
-
-        .switch-input {
-          width: calc(50% / 4);
         }
       }
     </style>
@@ -354,7 +332,7 @@
       `;
       const config = `
         <form>
-          <item id="auth-input">
+          <item id="auth-input" style="    grid-column: span 2;">
             <label for="auth">用户验证</label>
             <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
           </item>
@@ -386,52 +364,55 @@
             <label for="UEVersion">旧版 UE4</label>
             <input type="checkbox" id="UEVersion" name="UEVersion" />
           </item>
-          <div id="exec-container">
-            <item class="common-input">
-              <label for="GPUFile">UE启动进程</label>
-              <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
-            </item>
-            <item class="common-input">
-              <label for="resolution">分辨率</label>
-              <input name="resolution" list="resolutionList" id="resolution"
-                placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
-              <datalist id="resolutionList">
-                <option value="1920*1080"></option>
-                <option value="1600*900"></option>
-                <option value="1366*768"></option>
-                <option value="1280*720"></option>
-                <option value="800*600"></option>
-                <option value="640*480"></option>
-              </datalist>
-            </item>
-            <item class="common-input">
-              <label for="pixelStreamingWebRTCFps">渲染帧率</label>
-              <input type="number" name="pixelStreamingWebRTCFps" id="pixelStreamingWebRTCFps"
-                placeholder="填入所需渲染出的帧率(应为数字)" />
-            </item>
-            <item class="common-input">
-              <label for="GPUNumber">GPU数量</label>
-              <input type="number" name="GPUNumber" id="GPUNumber"
-                placeholder="请填入需要的GPU数量"/>
-            </item>
-            <item class="switch-input">
-              <label for="unattended">忽略错误弹窗</label>
-              <input type="checkbox" name="unattended" id="unattended" />
-            </item>
-            <item class="switch-input">
-              <label for="renderOffScreen">后台渲染UE</label>
-              <input type="checkbox" name="renderOffScreen" id="renderOffScreen" />
-            </item>
-            <item class="switch-input">
-              <label for="audioMixer">传输音频</label>
-              <input type="checkbox" name="audioMixer" id="audioMixer" />
-            </item>
-          </div>
-          <div class="textarea-container">
+
+
+          <item class="common-input" style="    grid-column: span 2;">
+            <label for="GPUFile">UE启动进程</label>
+            <input type="text" name="GPUFile" id="GPUFile" placeholder="填入GPU服务器中的文件(需要填入绝对地址)" />
+          </item>
+          <item class="common-input">
+            <label for="resolution">分辨率</label>
+            <input name="resolution" list="resolutionList" id="resolution"
+              placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
+            <datalist id="resolutionList">
+              <option value="1920*1080"></option>
+              <option value="1600*900"></option>
+              <option value="1366*768"></option>
+              <option value="1280*720"></option>
+              <option value="800*600"></option>
+              <option value="640*480"></option>
+            </datalist>
+          </item>
+          <item class="common-input">
+            <label for="pixelStreamingWebRTCFps">渲染帧率</label>
+            <input type="number" name="pixelStreamingWebRTCFps" id="pixelStreamingWebRTCFps"
+              placeholder="填入所需渲染出的帧率(应为数字)" />
+          </item>
+          <item class="common-input" id="GPU">
+            <label for="GPUNumber">GPU数量</label>
+            <input type="number" name="GPUNumber" id="GPUNumber"
+              placeholder="请填入需要的GPU数量"/>
+          </item>
+          <item class="switch-input">
+            <label for="unattended">忽略错误弹窗</label>
+            <input type="checkbox" name="unattended" id="unattended" />
+          </item>
+          <item class="switch-input">
+            <label for="renderOffScreen">后台渲染UE</label>
+            <input type="checkbox" name="renderOffScreen" id="renderOffScreen" />
+          </item>
+          <item class="switch-input">
+            <label for="audioMixer">传输音频</label>
+            <input type="checkbox" name="audioMixer" id="audioMixer" />
+          </item>
+ 
+
+          <div class="textarea-container" style="    grid-column: span 2;">
             <label for="iceServers">iceServers</label>
             <textarea id="iceServers" name="iceServers"></textarea>
           </div>
-          <div class="textarea-container">
+
+          <div class="textarea-container" style="    grid-row: span 2;">
             <label for="comment">备注</label>
             <textarea id="comment" name="comment"></textarea>
           </div>
@@ -673,7 +654,8 @@
           for (const item in shareInfo) {
             if (item === "graphicsAdapter") {
               $$(".exec").forEach((exec) => {
-                $("#exec-container").removeChild(exec);
+                //  $("#exec-container").removeChild(exec);
+                exec.remove();
               });
               for (const gpuInfo of shareInfo.graphicsAdapter) {
                 let exec = new DOMParser()
@@ -684,7 +666,8 @@
                     "text/html"
                   )
                   .querySelector(".exec");
-                $("#exec-container").appendChild(exec);
+                // $("#exec-container").appendChild(exec);
+                $("#GPU").after(exec);
               }
             } else {
               updateInputValue(
@@ -803,7 +786,8 @@
                 "text/html"
               )
               .querySelector(".exec");
-            $("#exec-container").appendChild(exec);
+            // $("#exec-container").appendChild(exec);
+            $("#GPU").after(exec);
           }
         };
         //移除多余UE5中的GPU进程数量输入框，且如果移除的输入框中，值不为0，就需要进行更新，删除多余的参数
@@ -862,7 +846,18 @@
 
         if (handlers[event.target.id] && handlers[event.target.id](value)) return;
         //对UE5内的参数修改要特殊处理
-        if ($("#exec-container").contains(event.target)) {
+        // if ($("#exec-container").contains(event.target)) {
+        if (
+          [
+            "GPUFile",
+            "resolution",
+            "pixelStreamingWebRTCFps",
+            "GPUNumber",
+            "unattended",
+            "renderOffScreen",
+            "audioMixer",
+          ].includes(event.target.id)
+        ) {
           config["UE5"] = createUE5Config();
         } else {
           switch (event.target.type) {
