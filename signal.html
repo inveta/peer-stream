@@ -22,7 +22,6 @@
       }
 
       body {
-        /* position: fixed; */
         display: flex;
         height: 100vh;
         width: 100vw;
@@ -40,7 +39,7 @@
 
       aside {
         /* height: 100%; */
-        width: 3rem;
+        /* width: auto; */
         display: flex;
         flex-direction: column;
       }
@@ -53,6 +52,8 @@
         color: black;
         cursor: pointer;
         text-align: center;
+        white-space: nowrap;
+        padding: 0 1rem;
       }
 
       aside > *:hover {
@@ -228,10 +229,6 @@
           margin-right: 0;
         }
 
-        aside {
-          width: 11rem;
-        }
-
         aside > * {
           padding-left: 1rem;
           text-align: left;
@@ -403,8 +400,8 @@
           <pre id="stats">Not connected</pre>
            
           <video is="peer-stream" audio id="ws://${
-             location.host + location.pathname
-           }/signal.html"> </video>
+            location.host + location.pathname
+          }/signal.html"> </video>
 
        `;
 
