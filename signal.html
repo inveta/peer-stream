@@ -10,10 +10,9 @@
     />
     <style>
       :root {
-        --main-bg-color-dark: #000000;
+        --gray: #9e9e9e;
         --font-color-dark: #ffffff;
-        --sidabar-bg-color-dark: #9e9e9e;
-        --btn-icon-input-color: #ff4400;
+        --theme-color: #ff4400;
       }
 
       html::-webkit-scrollbar,
@@ -26,15 +25,13 @@
         height: 100vh;
         width: 100vw;
         margin: 0;
-        background-color: var(--main-bg-color-dark);
+        background-color: black;
       }
 
       main {
-        height: 100%;
-        width: 100%;
         overflow-y: scroll;
         padding: 1rem;
-        box-sizing: border-box;
+        flex-grow: 1;
       }
 
       aside {
@@ -46,7 +43,7 @@
 
       aside > * {
         line-height: 4rem;
-        background-color: var(--sidabar-bg-color-dark);
+        background-color: var(--gray);
         text-decoration: none;
         color: black;
         cursor: pointer;
@@ -56,7 +53,7 @@
       }
 
       aside > *:hover {
-        /* color: var(--btn-icon-input-color); */
+        /* color: var(--theme-color); */
         font-weight: bold;
       }
 
@@ -65,14 +62,15 @@
         content: attr(data-mini);
       }
 
-      :target {
-        background-color: var(--main-bg-color-dark);
-        color: var(--font-color-dark);
-      }
-
       aside > :last-child {
         flex-grow: 1;
         cursor: default;
+      }
+
+      /* 当前标签页 */
+      :target {
+        background-color: black;
+        color: var(--font-color-dark);
       }
 
       :has(+ :target) {
@@ -92,29 +90,29 @@
         border-radius: 1rem;
         cursor: pointer;
         background-color: white;
-        border: 0.125rem solid #dddddd;
-        padding: 0;
+        border: 2px solid var(--gray);
       }
 
       input[type="checkbox"]:before {
         content: "";
         position: absolute;
-        width: 1.6rem;
-        height: 1.6rem;
-        background: #dddddd;
-        left: 0.15rem;
-        top: 0.075rem;
+        aspect-ratio: 1;
+        background-color: var(--gray);
+        left: 2px;
+        top: 2px;
+        bottom: 2px;
         border-radius: 50%;
         /* transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s; */
       }
 
       input[type="checkbox"]:checked {
-        border-color: var(--btn-icon-input-color);
+        border-color: var(--theme-color);
       }
 
       input[type="checkbox"]:checked:before {
-        left: 2rem;
-        background: var(--btn-icon-input-color);
+        left: unset;
+        right: 2px;
+        background: var(--theme-color);
       }
 
       form {
@@ -127,40 +125,34 @@
         color: var(--font-color-dark);
       }
 
-      input,
+      inline input,
       textarea {
         color: var(--font-color-dark);
-        background-color: var(--main-bg-color-dark);
+        background-color: black;
         border: 1px solid white;
         border-radius: 0.5rem;
         padding: 1rem;
+        width: 100%;
+        font-size: large;
+        box-sizing: border-box;
       }
 
-      input:focus,
+      inline input:focus,
       textarea:focus {
-        border: 1px solid var(--btn-icon-input-color);
+        border: 1px solid var(--theme-color);
         outline: none;
       }
 
       label {
         display: block;
-        margin-bottom: 0.7rem;
-        line-height: 1rem;
-      }
-
-      input[type="text"],
-      input[type="number"],
-      input[type="password"] {
-        width: 100%;
-        font-size: 1.2rem;
-        box-sizing: border-box;
+        line-height: 2rem;
       }
 
       check-box {
         text-align: center;
       }
 
-      inline,
+      /* inline, */
       text-area {
         position: relative;
       }
@@ -171,18 +163,15 @@
         background: black;
         left: 0;
         right: 0;
-        top: -0.5rem;
+        top: -1rem;
         width: fit-content;
         margin: auto;
         padding: 0 1rem;
         font-size: large;
-        /* translate: 0 -50%; */
       }
 
       text-area textarea {
         height: 100%;
-        width: 100%;
-        box-sizing: border-box;
       }
 
       video {
@@ -218,7 +207,7 @@
 
       td:last-child:hover {
         cursor: pointer;
-        color: var(--btn-icon-input-color);
+        color: var(--theme-color);
       }
 
       @media (max-aspect-ratio: 1/2) {
