@@ -121,7 +121,8 @@
         display: grid;
         grid-auto-rows: 9rem;
         grid-auto-flow: dense;
-        gap: 2rem;
+        row-gap: 2rem;
+        column-gap: 1rem;
         grid-template-columns: 1fr 1fr;
         color: var(--font-color-dark);
       }
@@ -147,9 +148,11 @@
         line-height: 1rem;
       }
 
-      inline input {
+      input[type="text"],
+      input[type="number"],
+      input[type="password"] {
         width: 100%;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         box-sizing: border-box;
       }
 
@@ -162,7 +165,7 @@
         position: relative;
       }
 
-      inline label,
+      /* inline label, */
       text-area label {
         position: absolute;
         background: black;
@@ -171,8 +174,8 @@
         top: -0.5rem;
         width: fit-content;
         margin: auto;
-        padding: 0 1rem 0.5rem 1rem;
-        font-size: larger;
+        padding: 0 1rem;
+        font-size: large;
         /* translate: 0 -50%; */
       }
 
@@ -244,7 +247,6 @@
   </head>
 
   <body>
-
     <aside>
       <a
         href="./signal.json"
@@ -298,7 +300,7 @@
     <script type="text/javascript">
       const execTemp = `
         <inline class="exec">
-          <label for="GPU_graphicsAdapter">GPU graphicsAdapter 进程个数</label>
+          <label for="GPU_graphicsAdapter">GPU graphicsAdapter 承载量</label>
           <input name="processNumber" id="GPU_graphicsAdapter" type="number" value="GPUNumber" placeholder="请输入需要的进程个数"/>
         </inline>
       `;
@@ -320,7 +322,7 @@
           </inline>
 
           <inline>
-            <label for="exeUeCoolTime">冷却时间 (s) </label>
+            <label for="exeUeCoolTime">冷却期 (s)</label>
             <input type="number" name="exeUeCoolTime" id="exeUeCoolTime" required>
           </inline>
 
@@ -328,14 +330,17 @@
             <label for="auth">http 认证</label>
             <input type="checkbox" id="http-auth" name="http-auth" />
           </check-box>
+
           <check-box>
             <label for="one2one">一对一模式</label>
             <input type="checkbox" id="one2one" name="one2one" />
           </check-box>
+
           <check-box>
             <label for="boot">开机自启动</label>
             <input type="checkbox" id="boot" name="boot" />
           </check-box>
+
           <check-box>
             <label for="UEVersion">旧版 UE4</label>
             <input type="checkbox" id="UEVersion" name="UEVersion" />
@@ -349,7 +354,7 @@
 
           <inline>
             <label for="resolution">分辨率</label>
-            <input name="resolution" list="resolutionList" id="resolution"
+            <input type="text" name="resolution" list="resolutionList" id="resolution"
               placeholder="填入所需分辨率(请使用标准分辨率格式，如：1920*1080)" />
             <datalist id="resolutionList">
               <option value="1920*1080"></option>
