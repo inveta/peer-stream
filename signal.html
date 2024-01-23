@@ -84,23 +84,20 @@
         appearance: none;
         width: 4rem;
         height: 2rem;
-        position: relative;
         border-radius: 1rem;
-        cursor: pointer;
-        background-color: white;
         border: 2px solid var(--gray);
+        background-color: white;
+        padding: 2px;
+        cursor: pointer;
       }
 
       input[type="checkbox"]:before {
         content: "";
-        position: absolute;
+        height: 100%;
         aspect-ratio: 1;
-        background-color: var(--gray);
-        left: 2px;
-        top: 2px;
-        bottom: 2px;
         border-radius: 50%;
-        /* transition: left cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s; */
+        background-color: var(--gray);
+        float: left;
       }
 
       input[type="checkbox"]:checked {
@@ -108,8 +105,7 @@
       }
 
       input[type="checkbox"]:checked:before {
-        left: unset;
-        right: 2px;
+        float: right;
         background: var(--theme-color);
       }
 
@@ -180,7 +176,7 @@
       #stats {
         position: absolute;
         pointer-events: none;
-        text-shadow: var(--btn-color-dark) 0 0 0.3em;
+        text-shadow: black 0 0 0.3em;
       }
 
       table {
@@ -257,8 +253,8 @@
       <a
         href="#signal.js"
         id="signal.js"
-        data-normal="👤 进程管理"
-        data-mini="👤"
+        data-normal="📊 进程管理"
+        data-mini="📊"
         aria-label="进程管理"
       ></a>
       <a

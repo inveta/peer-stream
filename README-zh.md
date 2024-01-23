@@ -196,6 +196,7 @@ ps.addEventListener('事件名称', e => {
 ## signal.html 配置页面
 
 - 文件体积 30+KB。
+- 在线预览：https://inveta.github.io/peer-stream/signal.html#signal.json
 - 在线可视化配置signal.json，实时生效。
 - 端口号与信令共享。
 - 在线预览peer-stream.js视频流。
