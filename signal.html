@@ -50,11 +50,6 @@
         padding: 0 1rem;
       }
 
-      aside > *:hover {
-        /* color: var(--theme-color); */
-        font-weight: bold;
-      }
-
       aside > *::before {
         filter: sepia(100%) hue-rotate(312deg) saturate(300%);
         content: attr(data-mini);
@@ -108,6 +103,12 @@
         float: right;
         background: var(--theme-color);
       }
+
+      /* input[type="checkbox"]:after {
+        content: "你好世界";
+        line-height: 2rem;
+        color: white;
+      } */
 
       form {
         display: grid;
@@ -286,10 +287,6 @@
       `;
       const config = `
         <form>
-          <inline id="auth-input" style="    grid-column: span 2;">
-            <label for="auth">用户名:密码</label>
-            <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
-          </inline>
 
           <inline>
             <label for="PORT">端口号</label>
@@ -310,6 +307,11 @@
             <label for="http-auth">http 认证</label>
             <input type="checkbox" id="http-auth" name="http-auth" />
           </check-box>
+
+          <inline style="    grid-column: span 2;">
+            <label for="auth">用户名:密码</label>
+            <input type="password" id="auth" name="auth" pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/" autocomplete="off" value="admin:000000"/>
+          </inline>
 
           <check-box>
             <label for="one2one">一对一模式</label>
@@ -560,7 +562,7 @@
 
       //开关http验证
       const toggleAuthInput = () => {
-        $("#auth-input").toggleAttribute("hidden");
+        $("#auth").parentElement.toggleAttribute("hidden");
         $("#auth").focus();
       };
       //切换用户验证按钮显示方式
@@ -571,10 +573,7 @@
         };
         $("#auth").type = authStatus[event.type];
       };
-      const updateInputValue = (selector, value, isCheckbox = false) => {
-        const input = $(selector);
-        if (input) isCheckbox ? (input.checked = value) : (input.value = value);
-      };
+
       //读取signal.json中的参数，对参数配置表单进行初始化渲染
       const renderConfigForm = () => {
         //对解析后的UE5字符串进行解析并渲染
@@ -602,7 +601,7 @@
           };
 
           if (value.length <= 0) {
-            updateInputValue(`[name = GPUNumber]`, 0);
+            $(`[name = GPUNumber]`).value = 0;
             return;
           }
           const shareInfo = parseUE5(value[0]);
@@ -636,50 +635,48 @@
                 $("#GPU").after(exec);
               }
             } else {
-              updateInputValue(
-                `[name="${item}"]`,
-                shareInfo[`${item}`],
-                $(`[name="${item}"]`)?.type === "checkbox"
-              );
+              const input = $(`[name="${item}"]`);
+              // console.log(item,input)
+              if (input) {
+                if (input.type === "checkbox") input.checked = shareInfo[`${item}`];
+                else input.value = shareInfo[`${item}`];
+              }
             }
           }
-        };
-        const processSignal = (data) => {
-          //对获取到的部分signal.json参数要进行特殊处理
-          const handlers = {
-            UE5: (value) => updateUE5Info(value),
-            iceServers: (value) =>
-              updateInputValue("[name=iceServers]", JSON.stringify(value, null, "\t")),
-            auth: (value) => {
-              if (typeof value === "string") {
-                updateInputValue("#auth", value);
-                updateInputValue("#http-auth", true, true);
-              } else if (typeof value === "boolean") {
-                updateInputValue("#http-auth", value, true);
-                toggleAuthInput();
-              }
-            },
-            UEVersion: (value) => updateInputValue("[name=UEVersion]", value === 4.27, true),
-          };
-
-          Object.keys(data).forEach((key) => {
-            handlers[key]
-              ? handlers[key](data[key])
-              : updateInputValue(
-                  `[name="${key}"]`,
-                  data[key],
-                  $(`[name="${key}"]`)?.type === "checkbox"
-                );
-          });
         };
 
         return fetch("./signal.json")
           .then((res) => {
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            if (!res.ok) throw res.status;
             return res.json();
           })
           .then((data) => {
-            processSignal(data);
+            //对获取到的部分signal.json参数要进行特殊处理
+            const handlers = {
+              UE5: (value) => updateUE5Info(value),
+              iceServers: (value) =>
+                ($("[name=iceServers]").value = JSON.stringify(value, null, "\t")),
+              auth: (value) => {
+                if (typeof value === "string") {
+                  $("#auth").value = value;
+                  $("#http-auth").checked = true;
+                } else if (typeof value === "boolean") {
+                  $("#http-auth").checked = value;
+                  toggleAuthInput();
+                }
+              },
+              UEVersion: (value) => ($("[name=UEVersion]").checked = value === 4.27),
+            };
+
+            Object.keys(data).forEach((key) => {
+              if (handlers[key]) {
+                handlers[key](data[key]);
+              } else {
+                const input = $(`[name="${key}"]`);
+                if (input.type === "checkbox") input.checked = data[key];
+                else input.value = data[key];
+              }
+            });
           })
           .catch((error) => {
             alert(error);
