@@ -70,6 +70,7 @@
         color: white;
       }
 
+      /* chrome 105+ */
       :has(+ :target) {
         border-bottom-right-radius: 1rem;
       }
@@ -97,6 +98,8 @@
         background-color: white;
         padding: 2px;
         cursor: pointer;
+        position: relative;
+        margin: 0 auto;
       }
 
       input[type="checkbox"]:before {
@@ -119,9 +122,13 @@
 
       input[type="checkbox"]:after {
         content: attr(title);
-        line-height: 3rem;
         color: white;
         font-size: large;
+        left: 50%;
+        transform: translate(-50%, 2rem);
+        /* chrome 104+ */
+        /* translate: -50% 2rem; */
+        position: absolute;
         white-space: nowrap;
       }
 
@@ -308,8 +315,8 @@
             pattern="/^[a-zA-Z0-9]+:[a-zA-Z0-9]+$/"
             autocomplete="off"
             value="admin:000000"
-            onblur="toggleAuthInfo(event)"
-            onfocus="toggleAuthInfo(event)"
+            onblur="this.type='password'"
+            onfocus="this.type='text'"
           />
         </inline>
 
@@ -374,7 +381,7 @@
           <textarea id="iceServers" name="iceServers"></textarea>
         </text-area>
 
-        <text-area style="grid-row: span 2">
+        <text-area>
           <label for="comment">备 注</label>
           <textarea id="comment" name="comment"></textarea>
         </text-area>
@@ -558,15 +565,6 @@
             inputElement.click();
           });
       }
-
-      //切换用户验证按钮显示方式
-      const toggleAuthInfo = (event) => {
-        const authStatus = {
-          focus: "text",
-          blur: "password",
-        };
-        $("#auth").type = authStatus[event.type];
-      };
 
       //读取signal.json中的参数，对参数配置表单进行初始化渲染
       const renderConfigForm = () => {
@@ -967,8 +965,6 @@
             // $("main").innerHTML = config;
             $("main").prepend($("form"));
             await renderConfigForm();
-            // $("#auth").addEventListener("focus", () => toggleAuthInfo(event));
-            // $("#auth").addEventListener("blur", () => toggleAuthInfo(event));
             // $("form").addEventListener("change", () => submitConfig(event));
             break;
           }
