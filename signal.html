@@ -49,14 +49,13 @@
         text-decoration: none;
         color: black;
         cursor: pointer;
-        /* text-align: left; */
         white-space: nowrap;
         padding: 0 1rem;
       }
 
       aside > *::before {
         filter: sepia(100%) hue-rotate(312deg) saturate(300%);
-        content: attr(data-mini);
+        content: attr(icon);
       }
 
       aside > :last-child {
@@ -226,8 +225,8 @@
           grid-template-columns: 1fr 1fr 1fr;
         }
 
-        aside > *::before {
-          content: attr(data-normal);
+        aside > *::after {
+          content: " " attr(title);
         }
       }
 
@@ -246,44 +245,22 @@
         href="./signal.json"
         target="_blank"
         download="signal.json"
-        data-normal="⬇️ 下载 signal.json"
-        data-mini="⬇️"
+        title="下载 signal.json"
+        icon="⬇️"
         aria-label="下载 signal.json"
       ></a>
-      <a
-        href="#signal.json"
-        id="signal.json"
-        data-normal="⚙️ 系统配置"
-        data-mini="⚙️"
-        aria-label="系统配置"
-      ></a>
-      <a
-        href="#peer-stream"
-        id="peer-stream"
-        data-normal="▶️ 进入应用"
-        data-mini="▶️"
-        aria-label="进入应用"
-      ></a>
-      <a
-        href="#signal.js"
-        id="signal.js"
-        data-normal="📊 进程管理"
-        data-mini="📊"
-        aria-label="进程管理"
-      ></a>
+      <a href="#signal.json" id="signal.json" title="系统配置" icon="⚙️" aria-label="系统配置"></a>
+      <a href="#peer-stream" id="peer-stream" title="进入应用" icon="▶️" aria-label="进入应用"></a>
+      <a href="#signal.js" id="signal.js" title="进程管理" icon="📊" aria-label="进程管理"></a>
       <a
         href="https://github.com/inveta/peer-stream"
         target="_blank"
         rel="noopener"
-        data-normal="📦 Github 源码"
-        data-mini="📦"
+        title="Github 源码"
+        icon="📦"
         aria-label="Github 源码"
       ></a>
-      <checkUpdate
-        data-normal="🔍 检查更新 1.17"
-        data-mini="🔍"
-        onclick="handleCheckUpdate()"
-      ></checkUpdate>
+      <checkUpdate title="检查更新 1.24" icon="🔍" onclick="handleCheckUpdate()"></checkUpdate>
       <div></div>
     </aside>
 
@@ -423,18 +400,18 @@
       //更新成功提示
       const handleUpdateSuccess = (btn) => {
         // btn.getAnimations()[0]?.finish();
-        let normal = btn.getAttribute("data-normal");
-        let mini = btn.getAttribute("data-mini");
-        btn.setAttribute("data-normal", "✅ 更新成功");
-        btn.setAttribute("data-mini", "✅");
+        let normal = btn.getAttribute("title");
+        let mini = btn.getAttribute("icon");
+        btn.setAttribute("title", "更新成功");
+        btn.setAttribute("icon", "✅");
         btn.animate([{ opacity: 0 }, { opacity: 1 }], {
           duration: 200,
           iterations: 3,
           easing: "steps(2, jump-none)",
         });
         setTimeout(() => {
-          btn.setAttribute("data-normal", normal);
-          btn.setAttribute("data-mini", mini);
+          btn.setAttribute("title", normal);
+          btn.setAttribute("icon", mini);
         }, 1000);
       };
 
@@ -488,8 +465,8 @@
           PeerStreamContent = "";
 
         const checkUpdate = $("checkUpdate");
-        checkUpdate.setAttribute("data-normal", "⏳ 更新中...");
-        checkUpdate.setAttribute("data-mini", "⏳");
+        checkUpdate.setAttribute("title", "更新中...");
+        checkUpdate.setAttribute("icon", "⏳");
         // 先通过github仓库尝试获取，如果失败，允许用户本地上传
         // https://github.com/inveta/peer-stream/settings/pages
         Promise.all([
@@ -540,8 +517,8 @@
               };
 
               if (files.length > 3) {
-                checkUpdate.setAttribute("data-normal", "🔍 检查更新 12.15");
-                checkUpdate.setAttribute("data-mini", "🔍");
+                checkUpdate.setAttribute("title", "检查更新 12.15");
+                checkUpdate.setAttribute("icon", "🔍");
                 alert("❌ 选择文件数量应小于等于3个！！！");
                 return;
               }
