@@ -892,18 +892,16 @@
         statsReport.forEach((stat) => {
           switch (stat.type) {
             case "data-channel": {
-              cue += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
-              cue += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+              cue += `\n Data Channel ⏫ ${stat.bytesSent.toLocaleString()} B ⏬ ${stat.bytesReceived.toLocaleString()} B`;
               break;
             }
             case "inbound-rtp": {
               if (stat.mediaType === "video")
                 cue += [
                   ``,
-                  `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
+                  `	【${stat.frameWidth} x ${stat.frameHeight}】【${stat.framesPerSecond} FPS】`,
                   `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
                   `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
-                  `	FPS: ${stat.framesPerSecond} Hz`,
                   `	Frames Dropped: ${stat.framesDropped}`,
                   `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
                 ].join("\n");
