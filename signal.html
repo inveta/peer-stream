@@ -12,6 +12,7 @@
       :root {
         --gray: #9e9e9e;
         --theme-color: #ff4400;
+        --cue: black;
       }
 
       html::-webkit-scrollbar,
@@ -181,15 +182,16 @@
       }
 
       video {
-        /* overflow: hidden; */
         height: 100%;
         width: 100%;
       }
 
-      #stats {
-        position: absolute;
-        pointer-events: none;
+      video::cue {
+        font-size: medium;
+        /* line-height: 2 !important; */
+        background-color: transparent;
         text-shadow: black 0 0 0.3em;
+        color: var(--cue);
       }
 
       table {
@@ -364,10 +366,9 @@
         </text-area>
       </form>
 
-      <peer-stream>
-        <!-- WebRTC monitor -->
-        <pre id="stats">Not connected</pre>
-      </peer-stream>
+      <video is="peer-stream">
+        <track default kind="captions" srclang="en" />
+      </video>
 
       <!-- <table>会根据内容长短，自动分配列的宽度 -->
       <table onclick="tableClick(event)">
@@ -384,9 +385,9 @@
       </table>
     </main>
 
-    <script type="text/javascript" src="./peer-stream.js"></script>
+    <!-- <script type="text/javascript" src="./peer-stream.js"></script> -->
 
-    <script type="text/javascript">
+    <script type="text/javascript" type="module">
       const execTemp = `
         <inline class="exec">
           <label for="GPU_graphicsAdapter">GPU graphicsAdapter 承载量</label>
@@ -868,30 +869,36 @@
 
       const aggregateStats = async () => {
         const statsReport = await ps.pc.getStats(null);
-        stats.innerText = "";
+        for (let cue of ps.textTracks[0].cues) {
+          ps.textTracks[0].removeCue(cue);
+        }
+        let cue = "";
 
         // most < 27
         if (ps.VideoEncoderQP < 27) {
-          stats.style.color = "lime";
+          // stats.style.color = "lime";
+          document.documentElement.style.setProperty("--cue", "lime");
         } else if (ps.VideoEncoderQP < 36) {
-          stats.style.color = "orange";
-          stats.innerText += `\n Spotty Network !`;
+          // stats.style.color = "orange";
+          document.documentElement.style.setProperty("--cue", "orange");
+          cue += `\n Spotty Network !`;
         } else {
-          stats.style.color = "red";
-          stats.innerText += `\n Bad Network !!`;
+          // stats.style.color = "red";
+          document.documentElement.style.setProperty("--cue", "red");
+          cue += `\n Bad Network !!`;
         }
 
-        stats.innerText += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
+        cue += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
         statsReport.forEach((stat) => {
           switch (stat.type) {
             case "data-channel": {
-              stats.innerText += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
-              stats.innerText += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+              cue += `\n ✉ Data Channel ↑↑ ${stat.bytesSent.toLocaleString()} B`;
+              cue += `\n ✉ Data Channel ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
               break;
             }
             case "inbound-rtp": {
               if (stat.mediaType === "video")
-                stats.innerText += [
+                cue += [
                   ``,
                   `	Size: ${stat.frameWidth} x ${stat.frameHeight}`,
                   `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
@@ -901,16 +908,16 @@
                   `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
                 ].join("\n");
               else if (stat.mediaType === "audio")
-                stats.innerText += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+                cue += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
               break;
             }
             case "candidate-pair": {
               if (stat.state === "succeeded")
-                stats.innerText += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
+                cue += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
               break;
             }
             case "remote-candidate": {
-              stats.innerText += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+              cue += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
               break;
             }
             case "transport": {
@@ -919,7 +926,7 @@
                 (1000 * 8)
               );
 
-              stats.innerText += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
+              cue += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
 
               this.bytesReceived = stat.bytesReceived;
               this.timestamp = stat.timestamp;
@@ -930,7 +937,11 @@
           }
         });
 
-        stats.innerText += `\n ⏲ Current Time: ${ps.currentTime} s`;
+        cue += `\n ⏲ Current Time: ${ps.currentTime} s`;
+
+        cue = new VTTCue(0, Number.MAX_SAFE_INTEGER, cue);
+        cue.align = "start";
+        ps.textTracks[0].addCue(cue);
 
         ps.timeout = setTimeout(aggregateStats, 1000);
       };
@@ -942,20 +953,18 @@
             // $("main").innerHTML = config;
             $("main").prepend($("form"));
             await renderConfigForm();
-            // $("form").addEventListener("change", () => submitConfig(event));
             break;
           }
           case "#peer-stream": {
-            // $("main").innerHTML = runningServer;
-            if (!window.ps) window.ps = document.createElement("video", { is: "peer-stream" });
-            ps.id = `ws://${location.host + location.pathname}/signal.html`;
+            $("main").prepend($("video") || ps);
+            $("video").addEventListener("playing", aggregateStats, { once: true });
 
-            $("peer-stream").append(window.ps);
-            $("main").prepend($("peer-stream"));
+            if (!window.ps) {
+              $("video").id = `ws://${location.host + location.pathname}/signal.html`;
+              await import("./peer-stream.js");
+              // ps.textTracks[0].addCue(new VTTCue(0, Number.MAX_SAFE_INTEGER,'hello world\n 你好世界'))
+            }
 
-            ps.addEventListener("playing", aggregateStats, {
-              once: true,
-            });
             window.addEventListener(
               "hashchange",
               (e) => {
