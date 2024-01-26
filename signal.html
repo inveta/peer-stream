@@ -184,6 +184,7 @@
       video {
         height: 100%;
         width: 100%;
+        display: block;
       }
 
       video::cue {
@@ -385,7 +386,7 @@
       </table>
     </main>
 
-    <!-- <script type="text/javascript" src="./peer-stream.js"></script> -->
+    <!-- type="text/javascript" src="./peer-stream.js" -->
 
     <script type="text/javascript" type="module">
       const execTemp = `
@@ -868,10 +869,10 @@
       }
 
       const aggregateStats = async () => {
+        if (ps.pc.connectionState !== "connected") return;
+
         const statsReport = await ps.pc.getStats(null);
-        for (let cue of ps.textTracks[0].cues) {
-          ps.textTracks[0].removeCue(cue);
-        }
+
         let cue = "";
 
         // most < 27
@@ -899,7 +900,7 @@
               if (stat.mediaType === "video")
                 cue += [
                   ``,
-                  `	【${stat.frameWidth} x ${stat.frameHeight}】【${stat.framesPerSecond} FPS】`,
+                  `	📐 ${stat.frameWidth} x ${stat.frameHeight} 🎞️ ${stat.framesPerSecond} FPS`,
                   `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
                   `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
                   `	Frames Dropped: ${stat.framesDropped}`,
@@ -939,6 +940,11 @@
 
         cue = new VTTCue(0, Number.MAX_SAFE_INTEGER, cue);
         cue.align = "start";
+        // cue.line = 0;
+
+        for (const cue of ps.textTracks[0].cues) {
+          ps.textTracks[0].removeCue(cue);
+        }
         ps.textTracks[0].addCue(cue);
 
         ps.timeout = setTimeout(aggregateStats, 1000);
@@ -955,19 +961,17 @@
           }
           case "#peer-stream": {
             $("main").prepend($("video") || ps);
-            $("video").addEventListener("playing", aggregateStats, { once: true });
 
             if (!window.ps) {
               $("video").id = `ws://${location.host + location.pathname}/signal.html`;
+              $("video").onplaying = aggregateStats;
+
               await import("./peer-stream.js");
-              // ps.textTracks[0].addCue(new VTTCue(0, Number.MAX_SAFE_INTEGER,'hello world\n 你好世界'))
             }
 
             window.addEventListener(
               "hashchange",
               (e) => {
-                clearTimeout(ps.timeout);
-
                 ps.remove();
               },
               { once: true }
