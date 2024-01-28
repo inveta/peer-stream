@@ -21,6 +21,15 @@ const MouseButton = {
 	FifthButton: 4, // Browser Forward button.
 };
 
+// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons#value
+const MouseButtonsMask={
+	1:0,
+	2:2,
+	4:1,
+	8:3,
+	16:4
+}
+
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
 const RECEIVE = {
 	QualityControlOwnership: 0,
@@ -653,8 +662,12 @@ class PeerStream extends HTMLVideoElement {
 
 		this.onmouseleave = (e) => {
 			if (this.dc.readyState === "open") this.dc.send(new Uint8Array([SEND.MouseLeave]));
-			this.emitMouseUp(MouseButton.MainButton, 0, 0)
-			this.emitMouseUp(MouseButton.SecondaryButton, 0, 0)
+			// 释放掉
+			for(let i =1;i<=16;i*=2){
+				if(e.buttons & i){
+					this.emitMouseUp(MouseButtonsMask[i], 0, 0)
+				}
+			}
 		};
 	}
 
