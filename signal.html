@@ -890,24 +890,24 @@
         }
 
         cue += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
+
+        let bytesReceived = "";
+
         statsReport.forEach((stat) => {
           switch (stat.type) {
             case "data-channel": {
-              cue += `\n Data Channel ⏫ ${stat.bytesSent.toLocaleString()} B ⏬ ${stat.bytesReceived.toLocaleString()} B`;
+              cue += `\n Data Channel 🢁 ${stat.bytesSent.toLocaleString()} B 🢃 ${stat.bytesReceived.toLocaleString()} B`;
               break;
             }
             case "inbound-rtp": {
-              if (stat.mediaType === "video")
-                cue += [
-                  ``,
-                  `	📐 ${stat.frameWidth} x ${stat.frameHeight} 🎞️ ${stat.framesPerSecond} FPS`,
-                  `	Frames Decoded: ${stat.framesDecoded.toLocaleString()}`,
-                  `	Packets Lost: ${stat.packetsLost.toLocaleString()}`,
-                  `	Frames Dropped: ${stat.framesDropped}`,
-                  `	Video ↓↓ ${stat.bytesReceived.toLocaleString()} B`,
-                ].join("\n");
-              else if (stat.mediaType === "audio")
-                cue += `\n ♬ Audio ↓↓ ${stat.bytesReceived.toLocaleString()} B`;
+              if (stat.mediaType === "video") {
+                cue += `\n 📐 ${stat.frameWidth} x ${stat.frameHeight} 🎞️ ${stat.framesPerSecond} FPS`;
+                cue += `\n Frames Decoded: ${stat.framesDecoded.toLocaleString()}`;
+                cue += `\n ${stat.packetsLost.toLocaleString()} packets lost, ${stat.framesDropped} frames dropped`;
+
+                bytesReceived += ` video ${stat.bytesReceived.toLocaleString()} B 🢃`;
+              } else if (stat.mediaType === "audio")
+                bytesReceived += ` audio ${stat.bytesReceived.toLocaleString()} B 🢃`;
               break;
             }
             case "candidate-pair": {
@@ -925,7 +925,7 @@
                 (1000 * 8)
               );
 
-              cue += `\n ⇌ Bitrate: ${bitrate.toLocaleString()} bps`;
+              cue += `\n Bitrate 🢃 ${bitrate.toLocaleString()} bps`;
 
               this.bytesReceived = stat.bytesReceived;
               this.timestamp = stat.timestamp;
@@ -935,6 +935,8 @@
             }
           }
         });
+
+        cue += "\n" + bytesReceived;
 
         cue += `\n ⏲ Current Time: ${ps.currentTime} s`;
 
