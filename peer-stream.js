@@ -22,12 +22,12 @@ const MouseButton = {
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons#value
-const MouseButtonsMask={
-	1:0,
-	2:2,
-	4:1,
-	8:3,
-	16:4
+const MouseButtonsMask = {
+	1: 0,
+	2: 2,
+	4: 1,
+	8: 3,
+	16: 4
 }
 
 // Must be kept in sync with PixelStreamingProtocol::EToClientMsg C++ enum.
@@ -153,7 +153,7 @@ class PeerStream extends HTMLVideoElement {
 
 		this.ws.onclose = (e) => {
 			console.warn(e);
-      		this.dispatchEvent(new CustomEvent("playerdisconnected",{}));
+			this.dispatchEvent(new CustomEvent("playerdisconnected", {}));
 			clearTimeout(this.reconnect);
 			this.reconnect = setTimeout(() => this.connectedCallback(), 3000);
 		};
@@ -212,27 +212,27 @@ class PeerStream extends HTMLVideoElement {
 			await this.pc.addIceCandidate(candidate);
 		} else if (msg.type === "answer") {
 			const answer = new RTCSessionDescription(msg)
-      await this.pc.setRemoteDescription(answer)
-      console.log('↓↓ answer:', answer)
-      for (const receiver of this.pc.getReceivers()) {
-        receiver.playoutDelayHint = 0
-      }
-		} else if (msg.type === "playerqueue"){
-      this.dispatchEvent(new CustomEvent("playerqueue",{ detail: msg }));
-      console.log("↓↓ playerqueue:",msg);
-    } else if (msg.type === "seticeServers"){
-      iceServers = msg.iceServers
-      console.log("↓↓ seticeServers:",msg);
-    } else if (msg.type === 'playerConnected') {
-      console.log('↓↓ playerConnected:', msg)
-      this.setupPeerConnection_ue4()
-      this.setupDataChannel_ue4()
-    } else if (msg.type === "ping"){
-      console.log("↓↓ ping:",msg);
-      msg.type = "pong"
-      this.ws.send(JSON.stringify(msg));
-    } 
-    else {
+			await this.pc.setRemoteDescription(answer)
+			console.log('↓↓ answer:', answer)
+			for (const receiver of this.pc.getReceivers()) {
+				receiver.playoutDelayHint = 0
+			}
+		} else if (msg.type === "playerqueue") {
+			this.dispatchEvent(new CustomEvent("playerqueue", { detail: msg }));
+			console.log("↓↓ playerqueue:", msg);
+		} else if (msg.type === "seticeServers") {
+			iceServers = msg.iceServers
+			console.log("↓↓ seticeServers:", msg);
+		} else if (msg.type === 'playerConnected') {
+			console.log('↓↓ playerConnected:', msg)
+			this.setupPeerConnection_ue4()
+			this.setupDataChannel_ue4()
+		} else if (msg.type === "ping") {
+			console.log("↓↓ ping:", msg);
+			msg.type = "pong"
+			this.ws.send(JSON.stringify(msg));
+		}
+		else {
 			console.warn("↓↓", msg);
 		}
 	}
@@ -352,7 +352,7 @@ class PeerStream extends HTMLVideoElement {
 			// }, 500);
 		};
 
-    
+
 
 		this.dc.onclose = (e) => {
 			console.info("❌ data channel closed");
@@ -367,35 +367,35 @@ class PeerStream extends HTMLVideoElement {
 		};
 	}
 
-  setupDataChannel_ue4(label = 'hello') {
-    // See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
-    this.dc = this.pc.createDataChannel(label, { ordered: true })
-    // Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
-    this.dc.binaryType = 'arraybuffer'
+	setupDataChannel_ue4(label = 'hello') {
+		// See https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for values (this is needed for Firefox to be consistent with Chrome.)
+		this.dc = this.pc.createDataChannel(label, { ordered: true })
+		// Inform browser we would like binary data as an ArrayBuffer (FF chooses Blob by default!)
+		this.dc.binaryType = 'arraybuffer'
 
-    this.dc.onopen = (e) => {
-      console.log('✅ data channel connected:', label)
-      this.style.pointerEvents = 'auto'
-      this.dc.send(new Uint8Array([SEND.RequestInitialSettings]))
-      this.dc.send(new Uint8Array([SEND.RequestQualityControl]))
-    }
+		this.dc.onopen = (e) => {
+			console.log('✅ data channel connected:', label)
+			this.style.pointerEvents = 'auto'
+			this.dc.send(new Uint8Array([SEND.RequestInitialSettings]))
+			this.dc.send(new Uint8Array([SEND.RequestQualityControl]))
+		}
 
-    this.dc.onclose = (e) => {
-      console.info('❌ data channel closed:', label)
-      this.style.pointerEvents = 'none'
-    }
+		this.dc.onclose = (e) => {
+			console.info('❌ data channel closed:', label)
+			this.style.pointerEvents = 'none'
+		}
 
-    this.dc.onmessage = (e) => {
-      this.onDataChannelMessage(e.data)
-    }
-  }
+		this.dc.onmessage = (e) => {
+			this.onDataChannelMessage(e.data)
+		}
+	}
 
 	setupPeerConnection() {
 		this.pc.close();
 		this.pc = new RTCPeerConnection({
 			sdpSemantics: "unified-plan",
 			bundlePolicy: "balanced",
-			iceServers:iceServers
+			iceServers: iceServers
 		});
 
 		this.pc.ontrack = (e) => {
@@ -423,60 +423,60 @@ class PeerStream extends HTMLVideoElement {
 		};
 	}
 
-  setupPeerConnection_ue4() {
-    this.pc.close()
-    this.pc = new RTCPeerConnection({
-      sdpSemantics: 'unified-plan',
-      bundlePolicy: 'balanced',
-      iceServers:iceServers
-    })
+	setupPeerConnection_ue4() {
+		this.pc.close()
+		this.pc = new RTCPeerConnection({
+			sdpSemantics: 'unified-plan',
+			bundlePolicy: 'balanced',
+			iceServers: iceServers
+		})
 
-    this.pc.ontrack = (e) => {
-      console.log(`↓↓ ${e.track.kind} track:`, e)
-      if (e.track.kind === 'video') {
-        this.srcObject = e.streams[0]
-      } else if (e.track.kind === 'audio') {
-        this.audio = document.createElement('audio')
-        this.audio.autoplay = true
-        this.audio.srcObject = e.streams[0]
-      }
-    }
-    this.pc.onicecandidate = (e) => {
-      // firefox
-      if (e.candidate?.candidate) {
-        console.log('↑↑ candidate:', e.candidate)
-        this.ws.send(
-          JSON.stringify({ type: 'iceCandidate', candidate: e.candidate })
-        )
-      } else {
-        // Notice that the end of negotiation is detected here when the event"s candidate property is null.
-      }
-    }
-    this.pc.onnegotiationneeded = (e) => {
-      this.setupOffer()
-    }
-  }
+		this.pc.ontrack = (e) => {
+			console.log(`↓↓ ${e.track.kind} track:`, e)
+			if (e.track.kind === 'video') {
+				this.srcObject = e.streams[0]
+			} else if (e.track.kind === 'audio') {
+				this.audio = document.createElement('audio')
+				this.audio.autoplay = true
+				this.audio.srcObject = e.streams[0]
+			}
+		}
+		this.pc.onicecandidate = (e) => {
+			// firefox
+			if (e.candidate?.candidate) {
+				console.log('↑↑ candidate:', e.candidate)
+				this.ws.send(
+					JSON.stringify({ type: 'iceCandidate', candidate: e.candidate })
+				)
+			} else {
+				// Notice that the end of negotiation is detected here when the event"s candidate property is null.
+			}
+		}
+		this.pc.onnegotiationneeded = (e) => {
+			this.setupOffer()
+		}
+	}
 
-  async setupOffer() {
-    // this.pc.addTransceiver("video", { direction: "recvonly" });
+	async setupOffer() {
+		// this.pc.addTransceiver("video", { direction: "recvonly" });
 
-    const offer = await this.pc.createOffer({
-      offerToReceiveAudio: +this.hasAttribute('audio'),
-      offerToReceiveVideo: 1,
-      voiceActivityDetection: false,
-    })
+		const offer = await this.pc.createOffer({
+			offerToReceiveAudio: +this.hasAttribute('audio'),
+			offerToReceiveVideo: 1,
+			voiceActivityDetection: false,
+		})
 
-    // this indicate we support stereo (Chrome needs this)
-    offer.sdp = offer.sdp.replace(
-      'useinbandfec=1',
-      'useinbandfec=1;stereo=1;sprop-maxcapturerate=48000'
-    )
+		// this indicate we support stereo (Chrome needs this)
+		offer.sdp = offer.sdp.replace(
+			'useinbandfec=1',
+			'useinbandfec=1;stereo=1;sprop-maxcapturerate=48000'
+		)
 
-    this.pc.setLocalDescription(offer)
+		this.pc.setLocalDescription(offer)
 
-    this.ws.send(JSON.stringify(offer))
-    console.log('↓↓ sending offer:', offer)
-  }
+		this.ws.send(JSON.stringify(offer))
+		console.log('↓↓ sending offer:', offer)
+	}
 
 	registerKeyboardEvents() {
 		this.onkeydown = (e) => {
@@ -558,37 +558,37 @@ class PeerStream extends HTMLVideoElement {
 		};
 
 		this.ontouchend = (e) => {
-      // filtering multi finger touch events temporarily
-      if (finger) {
-        for (const touch of e.changedTouches) {
-          if (touch.identifier === finger.id) {
-            const x = touch.clientX - left;
-            const y = touch.clientY - top;
-            this.emitMouseUp(MouseButton.MainButton, x, y);
-            // Hack: Manual mouse leave event.
-            this.onmouseleave(e);
-            finger = undefined;
-            break;
-          }
-        }
-      }
+			// filtering multi finger touch events temporarily
+			if (finger) {
+				for (const touch of e.changedTouches) {
+					if (touch.identifier === finger.id) {
+						const x = touch.clientX - left;
+						const y = touch.clientY - top;
+						this.emitMouseUp(MouseButton.MainButton, x, y);
+						// Hack: Manual mouse leave event.
+						this.onmouseleave(e);
+						finger = undefined;
+						break;
+					}
+				}
+			}
 			e.preventDefault();
 		};
 
 		this.ontouchmove = (e) => {
-      // filtering multi finger touch events temporarily
-      if (finger) {
-        for (const touch of e.touches) {
-          if (touch.identifier === finger.id) {
-            const x = touch.clientX - left;
-            const y = touch.clientY - top;
-            this.emitMouseMove(x, y, x - finger.x, y - finger.y);
-            finger.x = x;
-            finger.y = y;
-            break;
-          }
-        }
-      }
+			// filtering multi finger touch events temporarily
+			if (finger) {
+				for (const touch of e.touches) {
+					if (touch.identifier === finger.id) {
+						const x = touch.clientX - left;
+						const y = touch.clientY - top;
+						this.emitMouseMove(x, y, x - finger.x, y - finger.y);
+						finger.x = x;
+						finger.y = y;
+						break;
+					}
+				}
+			}
 			e.preventDefault();
 		};
 	}
@@ -663,8 +663,8 @@ class PeerStream extends HTMLVideoElement {
 		this.onmouseleave = (e) => {
 			if (this.dc.readyState === "open") this.dc.send(new Uint8Array([SEND.MouseLeave]));
 			// 释放掉
-			for(let i =1;i<=16;i*=2){
-				if(e.buttons & i){
+			for (let i = 1; i <= 16; i *= 2) {
+				if (e.buttons & i) {
 					this.emitMouseUp(MouseButtonsMask[i], 0, 0)
 				}
 			}
