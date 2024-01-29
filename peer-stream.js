@@ -478,16 +478,21 @@ class PeerStream extends HTMLVideoElement {
 		console.log('↓↓ sending offer:', offer)
 	}
 
+	keysDown = new Set()
+
 	registerKeyboardEvents() {
 		this.onkeydown = (e) => {
-			this.dc.send(new Uint8Array([SEND.KeyDown, SpecialKeyCodes[e.code] || e.keyCode, e.repeat]));
+			const keyCode = SpecialKeyCodes[e.code] || e.keyCode
+			this.dc.send(new Uint8Array([SEND.KeyDown, keyCode, e.repeat]));
+			this.keysDown.add(keyCode)
 			// whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 			// e.preventDefault();
 		};
 
 		this.onkeyup = (e) => {
-			this.dc.send(new Uint8Array([SEND.KeyUp, SpecialKeyCodes[e.code] || e.keyCode]));
-			// e.preventDefault();
+			const keyCode = SpecialKeyCodes[e.code] || e.keyCode
+			this.dc.send(new Uint8Array([SEND.KeyUp, keyCode]));
+			this.keysDown.delete(keyCode)
 		};
 
 		this.onkeypress = (e) => {
@@ -495,8 +500,14 @@ class PeerStream extends HTMLVideoElement {
 			data.setUint8(0, SEND.KeyPress);
 			data.setUint16(1, SpecialKeyCodes[e.code] || e.keyCode, true);
 			this.dc.send(data);
-			// e.preventDefault();
 		};
+
+		this.onblur = e => {
+			this.keysDown.forEach(keyCode => {
+				this.dc.send(new Uint8Array([SEND.KeyUp, keyCode]));
+			})
+			this.keysDown.clear()
+		}
 	}
 
 	registerTouchEvents() {
