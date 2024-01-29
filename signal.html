@@ -268,6 +268,8 @@
     </aside>
 
     <main>
+      <empty></empty>
+
       <form onchange="submitConfig(event)">
         <inline>
           <label for="PORT">端口号</label>
@@ -903,7 +905,9 @@
               if (stat.mediaType === "video") {
                 cue += `\n 📐 ${stat.frameWidth} x ${stat.frameHeight} 🎞️ ${stat.framesPerSecond} FPS`;
                 cue += `\n Frames Decoded: ${stat.framesDecoded.toLocaleString()}`;
-                cue += `\n ${stat.packetsLost.toLocaleString()} packets lost, ${stat.framesDropped} frames dropped`;
+                cue += `\n ${stat.packetsLost.toLocaleString()} packets lost, ${
+                  stat.framesDropped
+                } frames dropped`;
 
                 bytesReceived += ` video ${stat.bytesReceived.toLocaleString()} B 🢃`;
               } else if (stat.mediaType === "audio")
