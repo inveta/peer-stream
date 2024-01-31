@@ -191,7 +191,7 @@
         font-size: medium;
         /* line-height: 2 !important; */
         background-color: transparent;
-        text-shadow: black 0 0 0.3em;
+        text-shadow: black 0 0 3px;
         color: var(--cue);
       }
 
@@ -369,7 +369,7 @@
         </text-area>
       </form>
 
-      <video is="peer-stream">
+      <video is="peer-stream" onplaying="getStats()">
         <track default kind="captions" srclang="en" />
       </video>
 
@@ -870,30 +870,28 @@
         }
       }
 
-      const aggregateStats = async () => {
+      async function getStats() {
         if (ps.pc.connectionState !== "connected") return;
 
         const statsReport = await ps.pc.getStats(null);
 
-        let cue = "";
+        let cue = ` Current Time: ${ps.currentTime} s`;
 
         // most < 27
         if (ps.VideoEncoderQP < 27) {
-          // stats.style.color = "lime";
           document.documentElement.style.setProperty("--cue", "lime");
         } else if (ps.VideoEncoderQP < 36) {
-          // stats.style.color = "orange";
           document.documentElement.style.setProperty("--cue", "orange");
           cue += `\n Spotty Network !`;
         } else {
-          // stats.style.color = "red";
           document.documentElement.style.setProperty("--cue", "red");
           cue += `\n Bad Network !!`;
         }
 
         cue += `\n Video Quantization Parameter: ${ps.VideoEncoderQP}`;
 
-        let bytesReceived = "";
+        let bytesReceived = "\n";
+        let codec = "\n";
 
         statsReport.forEach((stat) => {
           switch (stat.type) {
@@ -903,7 +901,7 @@
             }
             case "inbound-rtp": {
               if (stat.mediaType === "video") {
-                cue += `\n 📐 ${stat.frameWidth} x ${stat.frameHeight} 🎞️ ${stat.framesPerSecond} FPS`;
+                cue += `\n 💻 ${stat.frameWidth} x ${stat.frameHeight} 📷 ${stat.framesPerSecond} FPS`;
                 cue += `\n Frames Decoded: ${stat.framesDecoded.toLocaleString()}`;
                 cue += `\n ${stat.packetsLost.toLocaleString()} packets lost, ${
                   stat.framesDropped
@@ -914,13 +912,17 @@
                 bytesReceived += ` audio ${stat.bytesReceived.toLocaleString()} B 🢃`;
               break;
             }
-            case "candidate-pair": {
-              if (stat.state === "succeeded")
-                cue += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
-              break;
-            }
-            case "remote-candidate": {
-              cue += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+            // case "candidate-pair": {
+            //   if (stat.state === "succeeded")
+            //     cue += `\n Latency(RTT): ${stat.currentRoundTripTime} s`;
+            //   break;
+            // }
+            // case "remote-candidate": {
+            //   cue += `\n ` + stat.protocol + ":// " + stat.ip + ": " + stat.port;
+            //   break;
+            // }
+            case "codec": {
+              codec += " " + stat.mimeType;
               break;
             }
             case "transport": {
@@ -940,9 +942,8 @@
           }
         });
 
-        cue += "\n" + bytesReceived;
-
-        cue += `\n ⏲ Current Time: ${ps.currentTime} s`;
+        cue += bytesReceived;
+        cue += codec;
 
         cue = new VTTCue(0, Number.MAX_SAFE_INTEGER, cue);
         cue.align = "start";
@@ -953,8 +954,8 @@
         }
         ps.textTracks[0].addCue(cue);
 
-        ps.timeout = setTimeout(aggregateStats, 1000);
-      };
+        ps.timeout = setTimeout(getStats, 1000);
+      }
 
       // 页面加载和变化
       window.onload = window.onhashchange = async () => {
@@ -970,7 +971,7 @@
 
             if (!window.ps) {
               $("video").id = `ws://${location.host + location.pathname}/signal.html`;
-              $("video").onplaying = aggregateStats;
+              // $("video").onplaying = getStats;
 
               await import("./peer-stream.js");
             }
