@@ -44,8 +44,6 @@ start http://localhost:88/signal.html
 - 自动嗅探网络IP地址。
 - 向下兼容UE4。
 - 支持Windows和Linux下的开机自启动。
-- 支持在线用户剔除。
-- 可视化GUI配置界面。
   
 ### signal.json 启动参数
 
@@ -204,6 +202,7 @@ ps.addEventListener('事件名称', e => {
 - 在线预览peer-stream.js视频流。
 - 后台进程监控。
 - 实时监控所有用户和UE进程。
+- 支持在线用户剔除。
 
 ## IOS端Safari兼容
 
