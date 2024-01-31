@@ -188,6 +188,10 @@ ENGINE.on("connection", (ue, req) => {
 
   // 认领空闲的前端们
   for (const fe of PLAYER.clients) {
+    if(fe.killPlayer)
+    {
+      continue
+    }
     if (!fe.ue) {
       PLAYER.emit("connection", fe, fe.req);
     }
@@ -368,18 +372,20 @@ PLAYER.on("connection", (fe, req) => {
   print();
 
   fe.onmessage = (msg) => {
+    msg = JSON.parse(msg.data);
+    if (msg.type === "pong") {
+      fe.isAlive = true;
+      return
+    } 
+
     if (!fe.ue) {
       fe.send(`! Engine not ready`);
       return;
     }
 
-    msg = JSON.parse(msg.data);
-
     msg.playerId = req.socket.remotePort;
     if (["offer", "answer", "iceCandidate"].includes(msg.type)) {
       fe.ue.send(JSON.stringify(msg));
-    } else if (msg.type === "pong") {
-      fe.isAlive = true;
     } else {
       fe.send("? " + msg.type);
     }
@@ -397,6 +403,10 @@ PLAYER.on("connection", (fe, req) => {
     }
     // 当用户连接数大于ue实例的时候，有用户退出意味着可以，认领空闲的前端们
     for (const fe of PLAYER.clients) {
+      if(fe.killPlayer)
+      {
+        continue
+      }
       if (!fe.ue) {
         PLAYER.emit("connection", fe, fe.req);
       }
@@ -628,7 +638,17 @@ global.killPlayer = async function (playerId) {
   )
   fe.ue.fe.delete(fe);
   fe.ue = null;
-
+  fe.killPlayer = true
+  // 当用户连接数大于ue实例的时候，有用户退出意味着可以，认领空闲的前端们
+  for (const fe of PLAYER.clients) {
+    if(fe.killPlayer)
+    {
+      continue
+    }
+    if (!fe.ue) {
+      PLAYER.emit("connection", fe, fe.req);
+    }
+  }
   print();
 }
 
