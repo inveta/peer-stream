@@ -44,7 +44,9 @@ start http://localhost:88/signal.html
 - 自动嗅探网络IP地址。
 - 向下兼容UE4。
 - 支持Windows和Linux下的开机自启动。
-
+- 支持在线用户剔除。
+- 可视化GUI配置界面。
+  
 ### signal.json 启动参数
 
 | 参数          | 类型       | 默认值 | 功能                             |
