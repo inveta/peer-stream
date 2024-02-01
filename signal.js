@@ -422,7 +422,7 @@ global.serve = async (PORT) => {
 
 		read
 			.on("error", async (error) => {
-				res.end(String(error))
+				res.end('')
 			})
 			.on("ready", () => {
 				read.pipe(res);
