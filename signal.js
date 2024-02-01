@@ -293,6 +293,7 @@ async function Signal(request, response, HTTP) {
 
 	}
 
+	delete require.cache[require.resolve('./signal.json')]
 	let signal = require('./signal.json');
 
 	Object.assign(signal, newSignal);
