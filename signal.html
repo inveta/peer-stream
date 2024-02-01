@@ -794,7 +794,7 @@
             "unattended",
             "renderOffScreen",
             "audioMixer",
-          ].includes(event.target.id)
+          ].includes(event.target.id) || event.target.id.includes("GPU_")
         ) {
           config["UE5"] = createUE5Config();
         } else {
