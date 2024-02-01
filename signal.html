@@ -873,8 +873,6 @@
       async function getStats() {
         if (ps.pc.connectionState !== "connected") return;
 
-        const statsReport = await ps.pc.getStats(null);
-
         let cue = ` Current Time: ${ps.currentTime} s`;
 
         // most < 27
@@ -893,7 +891,9 @@
         let bytesReceived = "\n";
         let codec = "\n";
 
-        statsReport.forEach((stat) => {
+        const stats = await ps.pc.getStats(null);
+
+        stats.forEach((stat) => {
           switch (stat.type) {
             case "data-channel": {
               cue += `\n Data Channel 🢁 ${stat.bytesSent.toLocaleString()} B 🢃 ${stat.bytesReceived.toLocaleString()} B`;
