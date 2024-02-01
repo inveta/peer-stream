@@ -261,7 +261,8 @@ global.serve = async (PORT) => {
           if (!res.writableEnded) res.end(result);
         })
         .catch((err) => {
-          res.setHeader('error', String(err))
+          // A string to be encoded as a URI component (a path, query string, fragment, etc.). Other values are converted to strings.
+          res.setHeader('error', encodeURIComponent(err))
           res.writeHead(400);
           res.end('', () => { });
         });
@@ -468,7 +469,7 @@ function print() {
   const feList = [...PLAYER.clients].filter((fe) => !fe.ue).concat(...EXECUE.clients);
   feList.forEach((fe) => {
     logs.push({
-      type: '	Peer Stream',
+      type: fe.req.headers["sec-websocket-protocol"],
       address: fe.req.socket.remoteAddress,
       PORT: fe.req.socket.remotePort,
       path: fe.req.url
@@ -484,7 +485,7 @@ function print() {
     })
     ue.fe.forEach((fe) => {
       logs.push({
-        type: '	Peer Stream',
+        type: fe.req.headers["sec-websocket-protocol"],
         address: fe.req.socket.remoteAddress,
         PORT: fe.req.socket.remotePort,
         path: fe.req.url
