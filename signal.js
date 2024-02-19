@@ -260,7 +260,7 @@ async function POST(request, response, HTTP) {
 		case "/exec": {
 			return new Promise((res, rej) => {
 
-				require('child_process').exec(
+				child_process.exec(
 					decodeURIComponent(request.headers['exec']),
 					(error, stdout, stderr) => {
 						if (error) {
@@ -310,7 +310,7 @@ async function Signal(request, response, HTTP) {
 		await global.Boot()
 	}
 
-	await require('fs').promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
+	await fs.promises.writeFile(__dirname + '/signal.json', JSON.stringify(signal, null, '\t'));
 
 	await new Promise(res => {
 		response.end(JSON.stringify(newSignal), res);
@@ -343,31 +343,13 @@ async function Write(req, res, HTTP) {
 		})
 	})
 
-	await require('fs').promises.writeFile(__dirname + decodeURIComponent(req.headers['write']), body)
+	await fs.promises.writeFile(__dirname + decodeURIComponent(req.headers['write']), body)
 
 	return ('updated');
 
 
 
 }
-
-
-
-global.restartProcess = function () {
-	HTTP.closeAllConnections()
-	HTTP.close(() => {
-		console.log(1111)
-		require('child_process').spawn(
-			process.argv[0],
-			[process.argv[1], ...process.argv.slice(2)], {
-			stdio: 'inherit',
-			detached: true
-		}).unref();
-		process.exit();
-	});
-}
-
-
 
 
 
