@@ -485,6 +485,13 @@ class PeerStream extends HTMLVideoElement {
 			const keyCode = SpecialKeyCodes[e.code] || e.keyCode
 			this.dc.send(new Uint8Array([SEND.KeyDown, keyCode, e.repeat]));
 			this.keysDown.add(keyCode)
+
+			// Backspace is not considered a keypress in JavaScript but we need it
+        	        // to be so characters may be deleted in a UE text entry field.
+        	        if (e.keyCode === SpecialKeyCodes.Backspace) {
+            	        	this.onkeypress({
+				keyCode: SpecialKeyCodes.Backspace});
+        	        }
 			// whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 			// e.preventDefault();
 		};
