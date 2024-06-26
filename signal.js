@@ -614,7 +614,8 @@ function print() {
 	});
 
 	EXECUE.clients.forEach(a => {
-		a.send(JSON.stringify(logs))
+		if(a.req.url.endsWith('admin'))
+			a.send(JSON.stringify(logs))
 	})
 	console.clear();
 	console.table(logs)

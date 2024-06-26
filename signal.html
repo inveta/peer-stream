@@ -817,7 +817,7 @@
       };
 
       const getProcess = () => {
-        let ws = `ws://${location.host}/${navigator.platform}/${navigator.vendor}`;
+        let ws = `ws://${location.host}/${navigator.platform}/admin`;
         ws = new WebSocket(ws, `exec-ue`);
         ws.onopen = function () {
           console.info("✅", ws);
