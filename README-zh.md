@@ -9,6 +9,10 @@
  | signal.json    | 1 KB  | signal.js 的启动参数。           |
  | signal.html    | 30+KB | 在线 GUI 配置页面。              |
 
+# PeerStream企业版
+团队另外推出了企业版，可以帮助大家更好的使用像素流，欢迎试用。  
+https://github.com/inveta/PeerStreamEnterprise
+
 ## 示例
 
 ```s
