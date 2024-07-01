@@ -10,7 +10,8 @@
  | signal.html    | 30+KB | 在线 GUI 配置页面。              |
 
 # PeerStream企业版
-团队另外推出了企业版，可以帮助大家更好的使用像素流，欢迎试用。  
+团队另外推出了企业版，可以帮助大家更好的使用像素流，欢迎试用。 
+软件可以免费使用，我们会一直维护，源码需要联系微信 g0415shenw  
 https://github.com/inveta/PeerStreamEnterprise
 
 ## 示例
