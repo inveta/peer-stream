@@ -213,3 +213,5 @@ ps.addEventListener('事件名称', e => {
 
 由于IOS端Safari不支持自定义内置元素（customized built-in element），需要在peer-stream.js之前引入兼容包：https://github.com/ungap/custom-elements 。除此之外，IOS微信内置浏览器（小程序）禁止video自动播放，必须由用户行为（点击）触发调用ps.play()来播放视频流。
 
+## 更新记录
+1 2024-07-21 增加了对webrtc协议支持的检测，并进行提示  

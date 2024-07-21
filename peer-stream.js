@@ -92,7 +92,7 @@ const SEND = {
 	GamepadAnalog: 92,
 };
 
-let iceServers = undefined
+let iceServers = undefined;
 
 class PeerStream extends HTMLVideoElement {
 	constructor() {
@@ -126,9 +126,59 @@ class PeerStream extends HTMLVideoElement {
 
 		// this.setupPeerConnection();
 	}
+	checkWebRTCSupport() {
+		// Step 1: Check for getUserMedia
+		const getUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+		if (!getUserMedia) {
+			console.warn('checkWebRTCSupport getUserMedia not supported');
+			return false
+		}
+		// Step 2: Check for RTCPeerConnection
+		const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+		if (!RTCPeerConnection) {
+			console.warn('checkWebRTCSupport RTCPeerConnection not supported');
+			return false
+		}
+		 // Step 3: Check for DataChannel
+		 let dataChannelSupported = false;
+		 let pc = null;
+		 if (RTCPeerConnection) {
+			 try {
+				 pc = new RTCPeerConnection();
+				 const dc = pc.createDataChannel('test');
+				 dataChannelSupported = !!dc;
+				 dc.close(); // Close the DataChannel when done
+				 pc.close()
+			 } catch (e) {
+				 console.error(e)
+				 console.warn('checkWebRTCSupport dataChannelSupported not supported');
+				 return false
+			 }
+			 if (!dataChannelSupported) {
+				console.warn('checkWebRTCSupport DataChannel not supported');
+				return false
+			 }
+		 }
+		 return true
+
+	}
 
 	// setupWebsocket
 	async connectedCallback() {
+		if(false == this.checkWebRTCSupport()){
+			const overlayDiv = document.createElement('div');
+			overlayDiv.innerHTML  = '你的浏览器版本过低!<br>推荐使用谷歌100以上版本浏览器!!';
+            overlayDiv.style.position = 'absolute';
+            overlayDiv.style.top = '50%';
+            overlayDiv.style.left = '50%';
+            overlayDiv.style.transform = 'translate(-50%, -50%)';
+            overlayDiv.style.background = 'rgba(255, 255, 255, 0.8)';
+            overlayDiv.style.padding = '10px';
+            overlayDiv.style.borderRadius = '5px';
+            overlayDiv.style.display = 'block'; // Initially hidden
+			this.parentNode.appendChild(overlayDiv)
+		}
+
 		// This will happen each time the node is moved, and may happen before the element"s contents have been fully parsed. may be called once your element is no longer connected
 		if (!this.isConnected) return;
 		if (this.pc.connectionState === "connected" && this.dc.readyState === "open" && this.ws.readyState === 1) {
@@ -172,7 +222,6 @@ class PeerStream extends HTMLVideoElement {
 
 	adoptedCallback() { }
 
-	static observedAttributes = ["id"];
 	attributeChangedCallback(name, oldValue, newValue) {
 		if (!this.isConnected) return;
 		// fired before connectedCallback when startup
@@ -487,11 +536,12 @@ class PeerStream extends HTMLVideoElement {
 			this.keysDown.add(keyCode)
 
 			// Backspace is not considered a keypress in JavaScript but we need it
-        	        // to be so characters may be deleted in a UE text entry field.
-        	        if (e.keyCode === SpecialKeyCodes.Backspace) {
-            	        	this.onkeypress({
-				keyCode: SpecialKeyCodes.Backspace});
-        	        }
+			// to be so characters may be deleted in a UE text entry field.
+			if (e.keyCode === SpecialKeyCodes.Backspace) {
+				this.onkeypress({
+					keyCode: SpecialKeyCodes.Backspace
+				});
+			}
 			// whether to prevent browser"s default behavior when keyboard/mouse have inputs, like F1~F12 and Tab
 			// e.preventDefault();
 		};
