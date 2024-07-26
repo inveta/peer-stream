@@ -127,12 +127,6 @@ class PeerStream extends HTMLVideoElement {
 		// this.setupPeerConnection();
 	}
 	checkWebRTCSupport() {
-		// Step 1: Check for getUserMedia
-		const getUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-		if (!getUserMedia) {
-			console.warn('checkWebRTCSupport getUserMedia not supported');
-			return false
-		}
 		// Step 2: Check for RTCPeerConnection
 		const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
 		if (!RTCPeerConnection) {
