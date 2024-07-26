@@ -275,6 +275,10 @@ class PeerStream extends HTMLVideoElement {
 			msg.type = "pong"
 			this.ws.send(JSON.stringify(msg));
 		}
+		else if (msg.type === "ueDisConnected") {
+			this.dispatchEvent(new CustomEvent("ueDisConnected", { detail: msg }));
+			console.log("↓↓ ueDisConnected:", msg);
+		}
 		else {
 			console.warn("↓↓", msg);
 		}
