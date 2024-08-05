@@ -44,6 +44,7 @@ const RECEIVE = {
 	FileMimeType: 9,
 	FileContents: 10,
 	InputControlOwnership: 12,
+	CompositionStart: 64,
 	Protocol: 255
 };
 
@@ -72,6 +73,8 @@ const SEND = {
 	KeyDown: 60,
 	KeyUp: 61,
 	KeyPress: 62,
+	FindFocus: 63,
+	CompositionEnd:64,
 
 	// Mouse Input Messages. Range = 70..79.
 	MouseEnter: 70,
@@ -305,6 +308,32 @@ class PeerStream extends HTMLVideoElement {
 				console.info("↓↓ command:", command);
 				if (command.command === "onScreenKeyboard") {
 					console.info("You should setup a on-screen keyboard");
+					if(command.showOnScreenKeyboard){
+						if(this.enableChinese){
+							let input = document.createElement('input');
+							input.style.position = 'fixed';
+							input.style.zIndex = -1;
+							input.autofocus = true;
+							document.body.append(input);
+							input.focus();
+							input.addEventListener('compositionend', e => {
+								console.log(e.data)
+								this.emitMessage(e.data,SEND.CompositionEnd)
+							})
+							input.addEventListener('blue', e => {
+								input.remove()
+							})
+							input.addEventListener('keydown',e=>{
+								this.onkeydown(e)
+							})
+							input.addEventListener('keyup',e=>{
+								this.onkeyup(e)
+							})
+							input.addEventListener('keypress',e=>{
+								this.onkeypress(e)
+							})
+						}
+					}
 				}
 				break;
 			}
@@ -758,6 +787,9 @@ class PeerStream extends HTMLVideoElement {
 		data.setUint16(2, coord.x, true);
 		data.setUint16(4, coord.y, true);
 		this.dc.send(data);
+		if(this.enableChinese){
+			this.dc.send(new Uint8Array([SEND.FindFocus]))
+		}
 	}
 
 	emitMouseUp(button, x, y) {
