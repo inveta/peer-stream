@@ -74,7 +74,7 @@ const SEND = {
 	KeyUp: 61,
 	KeyPress: 62,
 	FindFocus: 63,
-	CompositionEnd:64,
+	CompositionEnd: 64,
 
 	// Mouse Input Messages. Range = 70..79.
 	MouseEnter: 70,
@@ -136,43 +136,43 @@ class PeerStream extends HTMLVideoElement {
 			console.warn('checkWebRTCSupport RTCPeerConnection not supported');
 			return false
 		}
-		 // Step 3: Check for DataChannel
-		 let dataChannelSupported = false;
-		 let pc = null;
-		 if (RTCPeerConnection) {
-			 try {
-				 pc = new RTCPeerConnection();
-				 const dc = pc.createDataChannel('test');
-				 dataChannelSupported = !!dc;
-				 dc.close(); // Close the DataChannel when done
-				 pc.close()
-			 } catch (e) {
-				 console.error(e)
-				 console.warn('checkWebRTCSupport dataChannelSupported not supported');
-				 return false
-			 }
-			 if (!dataChannelSupported) {
+		// Step 3: Check for DataChannel
+		let dataChannelSupported = false;
+		let pc = null;
+		if (RTCPeerConnection) {
+			try {
+				pc = new RTCPeerConnection();
+				const dc = pc.createDataChannel('test');
+				dataChannelSupported = !!dc;
+				dc.close(); // Close the DataChannel when done
+				pc.close()
+			} catch (e) {
+				console.error(e)
+				console.warn('checkWebRTCSupport dataChannelSupported not supported');
+				return false
+			}
+			if (!dataChannelSupported) {
 				console.warn('checkWebRTCSupport DataChannel not supported');
 				return false
-			 }
-		 }
-		 return true
+			}
+		}
+		return true
 
 	}
 
 	// setupWebsocket
 	async connectedCallback() {
-		if(false == this.checkWebRTCSupport()){
+		if (false == this.checkWebRTCSupport()) {
 			const overlayDiv = document.createElement('div');
-			overlayDiv.innerHTML  = '你的浏览器版本过低!<br>推荐使用谷歌100以上版本浏览器!!';
-            overlayDiv.style.position = 'absolute';
-            overlayDiv.style.top = '50%';
-            overlayDiv.style.left = '50%';
-            overlayDiv.style.transform = 'translate(-50%, -50%)';
-            overlayDiv.style.background = 'rgba(255, 255, 255, 0.8)';
-            overlayDiv.style.padding = '10px';
-            overlayDiv.style.borderRadius = '5px';
-            overlayDiv.style.display = 'block'; // Initially hidden
+			overlayDiv.innerHTML = '你的浏览器版本过低!<br>推荐使用谷歌100以上版本浏览器!!';
+			overlayDiv.style.position = 'absolute';
+			overlayDiv.style.top = '50%';
+			overlayDiv.style.left = '50%';
+			overlayDiv.style.transform = 'translate(-50%, -50%)';
+			overlayDiv.style.background = 'rgba(255, 255, 255, 0.8)';
+			overlayDiv.style.padding = '10px';
+			overlayDiv.style.borderRadius = '5px';
+			overlayDiv.style.display = 'block'; // Initially hidden
 			this.parentNode.appendChild(overlayDiv)
 		}
 
@@ -277,10 +277,23 @@ class PeerStream extends HTMLVideoElement {
 			console.log("↓↓ ping:", msg);
 			msg.type = "pong"
 			this.ws.send(JSON.stringify(msg));
+
+			if (this.mouseReleaseTime) {
+				let now = new Date()
+				if ((now - this.lastmouseTime) > this.mouseReleaseTime * 1000) {
+					msg.type = "mouseRelease"
+					this.ws.send(JSON.stringify(msg));
+				}
+			}
 		}
 		else if (msg.type === "ueDisConnected") {
 			this.dispatchEvent(new CustomEvent("ueDisConnected", { detail: msg }));
 			console.log("↓↓ ueDisConnected:", msg);
+		}
+		else if (msg.type === "setmouseReleaseTime") {
+			this.mouseReleaseTime = msg.mouseReleaseTime
+			this.lastmouseTime = new Date()
+			console.log("↓↓ setmouseReleaseTime:", msg);
 		}
 		else {
 			console.warn("↓↓", msg);
@@ -308,8 +321,8 @@ class PeerStream extends HTMLVideoElement {
 				console.info("↓↓ command:", command);
 				if (command.command === "onScreenKeyboard") {
 					console.info("You should setup a on-screen keyboard");
-					if(command.showOnScreenKeyboard){
-						if(this.enableChinese){
+					if (command.showOnScreenKeyboard) {
+						if (this.enableChinese) {
 							let input = document.createElement('input');
 							input.style.position = 'fixed';
 							input.style.zIndex = -1;
@@ -318,18 +331,18 @@ class PeerStream extends HTMLVideoElement {
 							input.focus();
 							input.addEventListener('compositionend', e => {
 								console.log(e.data)
-								this.emitMessage(e.data,SEND.CompositionEnd)
+								this.emitMessage(e.data, SEND.CompositionEnd)
 							})
 							input.addEventListener('blue', e => {
 								input.remove()
 							})
-							input.addEventListener('keydown',e=>{
+							input.addEventListener('keydown', e => {
 								this.onkeydown(e)
 							})
-							input.addEventListener('keyup',e=>{
+							input.addEventListener('keyup', e => {
 								this.onkeyup(e)
 							})
-							input.addEventListener('keypress',e=>{
+							input.addEventListener('keypress', e => {
 								this.onkeypress(e)
 							})
 						}
@@ -777,6 +790,7 @@ class PeerStream extends HTMLVideoElement {
 		data.setInt16(5, deltaX, true);
 		data.setInt16(7, deltaY, true);
 		this.dc.send(data);
+		this.lastmouseTime = new Date()
 	}
 
 	emitMouseDown(button, x, y) {
@@ -787,7 +801,7 @@ class PeerStream extends HTMLVideoElement {
 		data.setUint16(2, coord.x, true);
 		data.setUint16(4, coord.y, true);
 		this.dc.send(data);
-		if(this.enableChinese){
+		if (this.enableChinese) {
 			this.dc.send(new Uint8Array([SEND.FindFocus]))
 		}
 	}
