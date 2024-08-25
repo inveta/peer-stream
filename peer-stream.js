@@ -295,9 +295,50 @@ class PeerStream extends HTMLVideoElement {
 			this.lastmouseTime = new Date()
 			console.log("↓↓ setmouseReleaseTime:", msg);
 		}
+		else if (msg.type === "getStatus") {
+			console.log("↓↓ getStatus:", msg);
+			this.handleGetStatus(msg)
+		}
 		else {
 			console.warn("↓↓", msg);
 		}
+	}
+	handleGetStatus(msg) {
+		if (false == (this.pc instanceof RTCPeerConnection)) {
+			msg.videoencoderqp = null
+			msg.netrate = null
+			this.ws.send(JSON.stringify(msg));
+			console.log("↑↑ handleGetStatus:", msg);
+			return
+		}
+		let initialBytesReceived = 0;
+		// 获取初始统计信息
+		this.pc.getStats(null).then(stats => {
+			stats.forEach(report => {
+				if (report.type === "transport") {
+					initialBytesReceived = report.bytesReceived;
+				}
+			});
+		});
+		// 等待指定的时间间隔后再次获取统计信息
+		let durationInSeconds = 0.2
+		setTimeout(() => {
+			this.pc.getStats(null).then(stats => {
+				stats.forEach(report => {
+					if (report.type === "transport") {
+						const finalBytesReceived = report.bytesReceived;
+						const bytesReceived = finalBytesReceived - initialBytesReceived;
+	
+						// 计算平均带宽（单位：字节/秒）
+						const averageReceiveBandwidth = (bytesReceived / durationInSeconds)*8/1000/1000;
+						msg.videoencoderqp = this.VideoEncoderQP
+						msg.netrate = averageReceiveBandwidth.toFixed(2)
+						this.ws.send(JSON.stringify(msg));
+						console.log("↑↑ handleGetStatus:", msg);
+					}
+				});
+			});
+		}, durationInSeconds * 1000);
 	}
 
 	onDataChannelMessage(data) {
