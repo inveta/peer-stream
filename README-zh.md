@@ -197,7 +197,7 @@ ps.addEventListener('事件名称', e => {
 - "pointerlockchange":	沉浸式鼠标切换时。
 - "playerqueue":	返回用户排队情况，seq表示当前排队序号  
 - "playerdisconnected":	signal不在线的回调事件 
-- "ueDisConnected":	ue实例异常断开的的回调事件，企业版会触发这个事件[UE异常断线事件](https://github.com/inveta/PeerStreamEnterprise/wiki/5-UE%E5%BC%82%E5%B8%B8%E6%96%AD%E7%BA%BF%E4%BA%8B%E4%BB%B6)  
+- "ueDisConnected":	ue实例异常断开的的回调事件，企业版会触发这个事件[UE异常断线事件](https://github.com/inveta/PeerStreamEnterprise/wiki/05-UE%E5%BC%82%E5%B8%B8%E6%96%AD%E7%BA%BF%E4%BA%8B%E4%BB%B6)  
 
 ## signal.html 配置页面
 
@@ -219,3 +219,5 @@ ps.addEventListener('事件名称', e => {
 2 2024-07-26 解决了输入IP地址访问 检测webrtc失败的bug  
 3 2024-07-26 增加了ueDisConnected，便与应用层进行重连  
 4 2024-08-05 增加了像素流中文的支持，需要配合企业版使用  
+5 2024-08-10 增加了用户鼠标多久不操作就释放三维资源，需要配合企业版使用  
+6 2024-08-26 增加了获取像素流网络带宽和网络质量功能，需要配合企业版使用  
