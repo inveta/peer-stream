@@ -905,13 +905,18 @@ class PeerStream extends HTMLVideoElement {
 			data.setUint16(byteIdx, msg.charCodeAt(i), true);
 			byteIdx += 2;
 		}
-		this.dc.send(data);
+		try{
+			this.dc.send(data);
+		}catch(error){
+			console.error(error.message);
+		}
+		
 
-		return new Promise(resolve => this.addEventListener(
-			'message',
-			e => resolve(e.detail),
-			{ once: true }
-		));
+		// return new Promise(resolve => this.addEventListener(
+		// 	'message',
+		// 	e => resolve(e.detail),
+		// 	{ once: true }
+		// ));
 	}
 
 	normalize(x, y) {
